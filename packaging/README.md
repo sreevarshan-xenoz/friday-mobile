@@ -42,7 +42,7 @@ To build it locally, run this from the repository root after `cargo build --rele
 ISCC packaging\windows\friday-mobile.iss /DAppVersion=v0.7.0 /DNumericVersion=0.7.0
 ```
 
-The output goes to `release\`. `/DSourceDir=` takes the executables from another folder. The wizard's images (`wizard-*.bmp`) are rendered from `assets/brand/pocketdesk-mark-512.png`, and the icon from `pocketdesk-icon-1024.png`.
+The output goes to `release\`. `/DSourceDir=` takes the executables from another folder. The wizard's images (`wizard-*.bmp`) are FRIDAY's mark (`assets/brand/friday/friday.svg`) on obsidian, and the icon is `assets/brand/friday/friday.ico`.
 
 ## The Linux tarball
 

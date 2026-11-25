@@ -1,4 +1,4 @@
-//! The app icon: the Pocketdesk mark (`assets/brand/pocketdesk-mark.svg`),
+//! The app icon: FRIDAY's aperture-F mark (`assets/brand/friday/friday.svg`),
 //! rendered ahead of time to raw RGBA at the two sizes the app uses, so it
 //! needs no image decoder. Used for the window and, where there is one, the
 //! tray.

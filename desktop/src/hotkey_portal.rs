@@ -197,7 +197,7 @@ const OLD_HIDDEN_STUB: &str =
 /// The desktop file this program writes now (its `Exec=` aside). When it
 /// changes, the text it had joins [`PAST_STUBS`], so the files earlier
 /// releases wrote are still known as ours (review N10).
-const CURRENT_STUB: &str = "[Desktop Entry]\nType=Application\nName=FRIDAY Mobile\nComment=Your computer, on your Android phone\nExec=\nIcon=pocketdesk\nTerminal=false\nCategories=Network;RemoteAccess;\nX-Friday-Mobile-Stub=true\n";
+const CURRENT_STUB: &str = "[Desktop Entry]\nType=Application\nName=FRIDAY Mobile\nComment=Your computer, on your Android phone\nExec=\nIcon=dev.friday.Mobile\nTerminal=false\nCategories=Network;RemoteAccess;\nX-Friday-Mobile-Stub=true\n";
 
 /// What an `Exec=` value of ours looks like in each template.
 #[derive(Debug, Clone, Copy)]
@@ -653,7 +653,7 @@ mod tests {
             "Name=FRIDAY Mobile",
             "Comment=Your computer, on your Android phone",
             "Exec=",
-            "Icon=pocketdesk",
+            "Icon=dev.friday.Mobile",
             "Terminal=false",
             "Categories=Network;RemoteAccess;",
             "X-Friday-Mobile-Stub=true",

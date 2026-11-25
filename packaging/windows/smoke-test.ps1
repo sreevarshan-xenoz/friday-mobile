@@ -25,7 +25,7 @@ function RuleCount { @(Get-NetFirewallRule -Group 'FRIDAY Mobile' -ErrorAction S
 $log = Join-Path $env:TEMP 'friday-mobile-setup.log'
 $p = Start-Process $Setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=autostart,addtopath', "/LOG=$log" -Wait -PassThru
 Check ($p.ExitCode -eq 0) "setup exited 0 (it exited $($p.ExitCode))"
-foreach ($file in 'friday-mobile.exe', 'friday-mobile-app.exe', 'friday-mobile-tray.exe', 'pocketdesk.ico', 'unins000.exe') {
+foreach ($file in 'friday-mobile.exe', 'friday-mobile-app.exe', 'friday-mobile-tray.exe', 'friday.ico', 'unins000.exe') {
     Check (Test-Path (Join-Path $app $file)) "installed $file"
 }
 Check (Test-Path $shortcut) 'a Start menu entry'
