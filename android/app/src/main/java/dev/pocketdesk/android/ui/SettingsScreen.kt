@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -627,23 +631,26 @@ fun SettingsScreen(onBack: () -> Unit, initialQuery: String = "") {
             }
 
             SettingsGroup(stringResource(R.string.settings_appearance)) {
-                SettingsBlock(
-                    stringResource(R.string.theme_system),
-                    stringResource(R.string.theme_light),
-                    stringResource(R.string.theme_dark),
-                ) {
+                SettingsBlock(stringResource(R.string.settings_palette)) {
                 Column(Modifier.selectableGroup()) {
-                    listOf(
-                        Prefs.THEME_SYSTEM to stringResource(R.string.theme_system),
-                        Prefs.THEME_LIGHT to stringResource(R.string.theme_light),
-                        Prefs.THEME_DARK to stringResource(R.string.theme_dark),
-                    ).forEach { (value, label) ->
-                        val selected = Prefs.themeMode(context) == value
+                    val paletteNames = mapOf(
+                        "core" to R.string.palette_core,
+                        "ember" to R.string.palette_ember,
+                        "frost" to R.string.palette_frost,
+                        "moss" to R.string.palette_moss,
+                        "polar" to R.string.palette_polar,
+                        "dawn" to R.string.palette_dawn,
+                    )
+                    dev.pocketdesk.android.ui.theme.Palettes.all.forEach { p ->
+                        val selected = Prefs.palette(context) == p.id
                         ListItem(
-                            headlineContent = { Text(label, style = MaterialTheme.typography.bodyLarge) },
+                            headlineContent = {
+                                Text(stringResource(paletteNames.getValue(p.id)), style = MaterialTheme.typography.bodyLarge)
+                            },
                             leadingContent = { RadioButton(selected = selected, onClick = null) },
+                            trailingContent = { PaletteSwatch(p) },
                             modifier = Modifier.selectable(selected = selected, role = Role.RadioButton) {
-                                Prefs.setThemeMode(context, value)
+                                Prefs.setPalette(context, p.id)
                             },
                         )
                     }
@@ -932,4 +939,24 @@ private fun introduceSummary(context: android.content.Context): String {
             stringResource(R.string.introduce_last_expired, last.name)
     }
     return summary + "\n" + stringResource(R.string.settings_introduce_last, said)
+}
+
+/** A palette's background with its accent and signal colors, as a small chip. */
+@Composable
+private fun PaletteSwatch(p: dev.pocketdesk.android.ui.theme.FridayPalette) {
+    androidx.compose.foundation.layout.Row(
+        modifier = Modifier
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .background(androidx.compose.ui.graphics.Color(p.bg))
+            .border(1.dp, androidx.compose.ui.graphics.Color(p.outline), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
+    ) {
+        listOf(p.accent, p.signal, p.text).forEach { c ->
+            androidx.compose.foundation.layout.Box(
+                Modifier.size(12.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(androidx.compose.ui.graphics.Color(c)),
+            )
+        }
+    }
 }

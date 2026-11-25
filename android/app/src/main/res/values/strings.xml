@@ -32,9 +32,13 @@
     <string name="settings_title">Settings</string>
     <string name="settings_back">Back</string>
     <string name="settings_appearance">Appearance</string>
-    <string name="theme_system">Follow system</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_dark">Dark</string>
+    <string name="settings_palette">FRIDAY palette</string>
+    <string name="palette_core" translatable="false">Core</string>
+    <string name="palette_ember" translatable="false">Ember</string>
+    <string name="palette_frost" translatable="false">Frost</string>
+    <string name="palette_moss" translatable="false">Moss</string>
+    <string name="palette_polar" translatable="false">Polar</string>
+    <string name="palette_dawn" translatable="false">Dawn (light)</string>
     <string name="settings_dynamic">Material You colors</string>
     <string name="settings_dynamic_summary">Match the palette to your wallpaper (Android 12+)</string>
     <string name="settings_session">Session</string>

@@ -362,6 +362,13 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             PocketdeskTheme {
+                // FRIDAY's frosted glass: the palette's wallpaper under every
+                // screen (not with Material You colors, which are opaque).
+                if (!Prefs.dynamicColor(this)) {
+                    dev.pocketdesk.android.ui.theme.FridayBackdrop(
+                        dev.pocketdesk.android.ui.theme.Palettes.byId(Prefs.palette(this)),
+                    )
+                }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var sessionKey by rememberSaveable { mutableStateOf<String?>(null) }
                     // Home-family route (home list / add form / settings),
