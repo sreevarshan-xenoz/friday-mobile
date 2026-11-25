@@ -219,6 +219,7 @@ object RustCore {
     private external fun nativeTakeFileOffers(): String
     private external fun nativeSendLink(address: String, port: Int, url: String): String
     private external fun nativeSendNote(address: String, port: Int, text: String): String
+    private external fun nativeSendAsk(address: String, port: Int, text: String, question: String): String
     private external fun nativeTakeLinks(): String
     private external fun nativeTakeCommands(): String
     private external fun nativeTakeDials(): String
@@ -1230,6 +1231,10 @@ object RustCore {
     /** Add [text] to the computer's notes file (BF4); a refusal fails with its reason alone. */
     fun sendNote(address: String, port: Int, text: String): Result<Unit> =
         envelope(nativeSendNote(address, port, text)).map { }
+
+    /** Ask FRIDAY on the computer (Ask FRIDAY); a refusal or error fails with its reason. */
+    fun sendAsk(address: String, port: Int, text: String, question: String? = null): Result<String> =
+        envelope(nativeSendAsk(address, port, text, question.orEmpty()))
 
     /** Each computer's last word on whether it is in use (N7), by "address:port". */
     fun inUseAnswers(): Map<String, dev.pocketdesk.android.notify.ToastWhere.Answer> =

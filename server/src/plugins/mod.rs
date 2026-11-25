@@ -6,6 +6,7 @@ pub mod computer_media;
 pub mod deck;
 pub mod exec;
 pub mod file_browse;
+pub mod friday_ask;
 pub mod in_use;
 pub mod input;
 pub mod link_role;
@@ -48,6 +49,7 @@ pub async fn answer_denied(packet: &NetworkPacket, sender: &dyn DeviceSender) {
     tasks::answer_denied(packet, sender).await;
     peek::answer_denied(packet, sender).await;
     note::answer_denied(packet, sender).await;
+    friday_ask::answer_denied(packet, sender).await;
 }
 
 /// Packets the computer sends from outside its plugins: pushes and what a
@@ -123,6 +125,7 @@ pub fn register_all() -> PluginSet {
     registry.register(peek::PeekPlugin);
     registry.register(crate::asks::AskPlugin);
     registry.register(note::NotePlugin);
+    registry.register(friday_ask::FridayAskPlugin::new());
     registry.register(crate::remote_devices::RemoteDevicesPlugin);
     registry.register(crate::introductions::IntroductionsPlugin);
     registry.register(crate::wake_helper::WakeHelperPlugin);
