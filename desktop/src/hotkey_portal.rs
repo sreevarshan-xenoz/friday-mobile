@@ -613,7 +613,7 @@ mod tests {
             "[Desktop Entry]\nType=Application\nName=My Pocketdesk\nExec=pocketdesk-app --x\n";
         // Ours, edited in a menu editor (the mark kept): renamed, hidden,
         // or with a line more. Neither rewritten nor removed.
-        let renamed = ours("pocketdesk-app").replace("Name=Pocketdesk", "Name=My Pocketdesk");
+        let renamed = ours("pocketdesk-app").replace("Name=FRIDAY Mobile", "Name=My FRIDAY Mobile");
         let hidden = format!("{}Hidden=true\n", ours("pocketdesk-app"));
         let old_more = format!("{OLD}Icon=x\n");
         for edited in [written, &renamed, &hidden, &old_more] {
