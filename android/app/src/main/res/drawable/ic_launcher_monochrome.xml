@@ -1,19 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The mark in one colour (assets/brand/pocketdesk-mark-mono.svg), for
-     Android 13+ themed icons, which tint it. Same group as the foreground. -->
+<!-- FRIDAY's aperture-F mark in monochrome for Android 13+ themed icons -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="512" android:viewportHeight="512">
-    <group android:scaleX="0.6" android:scaleY="0.6"
-        android:pivotX="256" android:pivotY="256"
-        android:translateY="-9">
-        <group android:rotation="9" android:pivotX="266" android:pivotY="216">
-            <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
-                android:pathData="M188,79 H344 A43,43 0 0 1 387,122 V306 A43,43 0 0 1 344,349 H188 A43,43 0 0 1 145,306 V122 A43,43 0 0 1 188,79 Z M188,105 A17,17 0 0 0 171,122 V306 A17,17 0 0 0 188,323 H344 A17,17 0 0 0 361,306 V122 A17,17 0 0 0 344,105 Z"/>
-            <path android:fillColor="#FFFFFFFF"
-                android:pathData="M193,144 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z M231,144 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z M269,144 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z"/>
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="21"
+        android:translateY="21"
+        android:scaleX="0.66"
+        android:scaleY="0.66">
+        <group
+            android:translateX="5"
+            android:translateY="5"
+            android:scaleX="0.9"
+            android:scaleY="0.9">
+            <path
+                android:fillColor="#FFFFFFFF"
+                android:pathData="M50.00,6.00 A44,44 0 0,1 78.28,16.29 Q81.38,39.80 66.74,52.95 Q71.28,33.38 50.00,6.00 Z M88.11,28.00 A44,44 0 0,1 93.33,57.64 Q74.52,72.08 55.81,65.97 Q75.03,60.11 88.11,28.00 Z M88.11,72.00 A44,44 0 0,1 65.05,91.35 Q43.14,82.28 39.07,63.02 Q53.76,76.74 88.11,72.00 Z M50.00,94.00 A44,44 0 0,1 21.72,83.71 Q18.62,60.20 33.26,47.05 Q28.72,66.62 50.00,94.00 Z M11.89,72.00 A44,44 0 0,1 6.67,42.36 Q25.48,27.92 44.19,34.03 Q24.97,39.89 11.89,72.00 Z M11.89,28.00 A44,44 0 0,1 34.95,8.65 Q56.86,17.72 60.93,36.98 Q46.24,23.26 11.89,28.00 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:strokeColor="#00000000"
+                android:strokeWidth="13"
+                android:strokeLineJoin="round"
+                android:pathData="M44.40,24.00 L82.40,24.00 L71.70,33.00 L52.70,33.00 L48.40,44.00 L66.40,44.00 L57.00,52.00 L45.00,52.00 L36.40,74.00 L24.00,82.00 Z" />
+            <path
+                android:fillColor="#FFFFFFFF"
+                android:pathData="M44.40,24.00 L82.40,24.00 L71.70,33.00 L52.70,33.00 L48.40,44.00 L66.40,44.00 L57.00,52.00 L45.00,52.00 L36.40,74.00 L24.00,82.00 Z" />
         </group>
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M90,240 Q90,222 108,226 L256,272 L404,226 Q422,222 422,240 L422,358 Q422,398 384,412 L286,450 Q256,460 226,450 L128,412 Q90,398 90,358 Z"/>
     </group>
 </vector>

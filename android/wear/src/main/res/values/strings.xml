@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Pocketdesk</string>
-    <string name="tile_label" translatable="false">Pocketdesk</string>
+    <string name="app_name" translatable="false">FRIDAY Mobile</string>
+    <string name="tile_label" translatable="false">FRIDAY Mobile</string>
     <string name="complication_text" translatable="false">PD</string>
 
     <!-- The tile\'s buttons -->
@@ -26,7 +26,7 @@
     <string name="said_answered">Said No</string>
 
     <!-- The short list -->
-    <string name="main_title">Pocketdesk</string>
+    <string name="main_title">FRIDAY Mobile</string>
     <string name="main_need_permission">Allow nearby devices so this watch can reach your phone</string>
     <string name="main_allow">Allow</string>
     <string name="main_pair_title">Pair with your phone</string>

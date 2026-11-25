@@ -1,26 +1,20 @@
-<p align="center">
-  <img src="assets/brand/pocketdesk-banner.png" alt="Pocketdesk: your desktop. Anywhere." width="100%">
-</p>
+<h1 align="center">FRIDAY Mobile</h1>
 
-<h1 align="center">Pocketdesk</h1>
-
-<p align="center"><b>Your Windows or Linux computer on your Android phone, and your computers on each other.</b><br>
+<p align="center"><b>FRIDAY Mobile is FRIDAY's phone app, built from <a href="https://github.com/sreevarshan-xenoz/Pocketdesk">Pocketdesk</a> (MIT OR Apache-2.0).</b><br>
+Your Windows or Linux computer on your Android phone, and your computers on each other.<br>
 Its live screen under your fingers, its sound, and the clipboard, files, notifications and texts moving both ways: on your network, through Tailscale, or over the internet with no port forward and no account.</p>
 
 <p align="center">
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/server%20and%20desktop%20app-Rust-orange?logo=rust" alt="Server and desktop app written in Rust"></a>
   <a href="#license"><img src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue" alt="License: MIT OR Apache-2.0"></a>
-  <a href="https://github.com/sreevarshan-xenoz/Pocketdesk/actions"><img src="https://github.com/sreevarshan-xenoz/Pocketdesk/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/sreevarshan-xenoz/Pocketdesk/issues"><img src="https://img.shields.io/github/issues/sreevarshan-xenoz/Pocketdesk" alt="Issues"></a>
+  <a href="https://github.com/sreevarshan-xenoz/friday-mobile/actions"><img src="https://github.com/sreevarshan-xenoz/friday-mobile/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/sreevarshan-xenoz/friday-mobile/issues"><img src="https://img.shields.io/github/issues/sreevarshan-xenoz/friday-mobile" alt="Issues"></a>
   <a href="docs/guide.md#roadmap"><img src="https://img.shields.io/badge/status-beta-orange" alt="Status: beta"></a>
 </p>
 
-<p align="center">
-  <a href="assets/brand/pocketdesk-launch.mp4"><img src="assets/brand/pocketdesk-launch.gif" alt="Pocketdesk in 32 seconds: drive the computer from the phone, the phone's notifications, calls and screen on the computer, files and the clipboard both ways, the computer's state, deck and music on the phone, from anywhere" width="800"></a><br>
-  <sub>▶ <a href="assets/brand/pocketdesk-launch.mp4">Watch it with sound (32 seconds)</a></sub>
-</p>
+Command names stay `pocketdesk` for now (step 2 renames them).
 
-## What is Pocketdesk?
+## What is FRIDAY Mobile?
 
 A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop app to manage it, and a native Android app. The server and desktop app are written in Rust and the phone app in Kotlin with a Rust bridge. Video encoding uses FFmpeg, as a library or as the `ffmpeg` program (Windows needs `ffmpeg.exe`). Together they give you:
 
@@ -52,7 +46,7 @@ A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop
 **From anywhere, and yours alone**
 - On your network, through Tailscale, or over the internet with no port forward and no VPN (iroh punches a direct path, or uses a relay).
 - **Over Bluetooth when Wi-Fi drops**, between a Windows computer and the Android phone bonded with it: the light features (the clipboard, notifications, the remote, small files) keep working when neither the network nor the internet reaches the computer; the screen does not go over Bluetooth yet, and none of it is checked on a device yet ([how](docs/guide.md#bluetooth-when-wi-fi-drops)).
-- No account and no Pocketdesk server. Each end holds the other to its key (TLS 1.3), and each phone has its own permissions.
+- No account and no FRIDAY Mobile server. Each end holds the other to its key (TLS 1.3), and each phone has its own permissions.
 
 **KDE Plasma**
 - Screen sharing through the desktop portal gets a picture, and the grant can be remembered or allowed ahead (checked headless only).
@@ -92,7 +86,7 @@ Something not working? The desktop app's **Diagnostics** page checks the server,
 
 ## How it compares
 
-| Feature | Pocketdesk | RustDesk | Sunshine / Moonlight | KDE Connect | Phone Link | LocalSend | Deskflow | scrcpy |
+| Feature | FRIDAY Mobile | RustDesk | Sunshine / Moonlight | KDE Connect | Phone Link | LocalSend | Deskflow | scrcpy |
 |---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | See and drive the computer from a phone | ✅ | ✅ | ✅ | ⚠️ keyboard and touchpad only | ❌ | ❌ | ❌ | ❌ |
 | See and drive the phone from the computer | ✅ | ⚠️ Android only, needs permissions | ❌ | ❌ | ✅ supported phones | ❌ | ❌ | ✅ |
@@ -107,7 +101,7 @@ Something not working? The desktop app's **Diagnostics** page checks the server,
 | Works with KDE Connect devices | ⚠️ Pairs, ping, clipboard, battery, ring, notifications, files both ways | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Open source | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
 
-Close calls were checked against each project's documentation on 2026-10-31 (the rest were not rechecked). The other columns come from those projects' public documentation and may be out of date. Each tool is good at what it was made for, and some do things Pocketdesk does not: Phone Link and scrcpy are mature at showing a phone on a computer, and LocalSend and Deskflow are small and focused. If a cell is wrong, [open an issue](https://github.com/sreevarshan-xenoz/Pocketdesk/issues/new/choose).
+Close calls were checked against each project's documentation on 2026-10-31 (the rest were not rechecked). The other columns come from those projects' public documentation and may be out of date. Each tool is good at what it was made for, and some do things FRIDAY Mobile does not: Phone Link and scrcpy are mature at showing a phone on a computer, and LocalSend and Deskflow are small and focused. If a cell is wrong, [open an issue](https://github.com/sreevarshan-xenoz/Pocketdesk/issues/new/choose).
 
 **Status: beta.** 0.9.0 is the latest release (its Linux tarball runs on other distros again; 0.8.3's did not start on Arch). Partly device-checked: Hyprland on a laptop and Sway in a VM (on Linux, not yet files, notifications or sound), and Windows with a Galaxy A71 and an OPPO phone. KDE Plasma 6 has been checked headless only (the screen, input and remembered grants through its portal, with no phone); GNOME 51 has been checked headless too, and not yet with a phone. Your computers paired both ways and their window onto each other's screen (new in 0.8.3, with its extras) have run between throwaway servers and from the Linux laptop viewing Windows, view-only; at a desk with two real computers, not yet. The shared keyboard and mouse (new in 0.8, with Linux driving too from 0.8.2) is checked only in parts: from scripts, its receiving end on the Linux laptop and the phone as a screen, and live on Hyprland, Linux driving through its portal; two real computers at a desk, and Linux driving on GNOME and KDE, are not yet. Bluetooth when Wi-Fi drops (Windows and Android) is not yet checked on a device. [What works where](docs/guide.md#what-works-where) has the details, and [the checklist](docs/device-verification-checklist.md) every check still open.
 
@@ -128,7 +122,7 @@ Close calls were checked against each project's documentation on 2026-10-31 (the
 
 ## License
 
-Pocketdesk is licensed under either of
+FRIDAY Mobile is licensed under either of
 
 - Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
 - MIT license ([LICENSE-MIT](LICENSE-MIT))
@@ -139,4 +133,4 @@ above, without any additional terms or conditions.
 
 ---
 
-**Stars, forks, and PRs are welcome!** If Pocketdesk sounds interesting to you, drop a ⭐ and say hi.
+**Stars, forks, and PRs are welcome!** If FRIDAY Mobile sounds interesting to you, drop a ⭐ and say hi.

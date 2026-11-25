@@ -47,8 +47,8 @@ class PureParts(unittest.TestCase):
         dump = (
             "MEDIA SESSION SERVICE (dumpsys media_session)\n"
             "  Sessions Stack - have 2 sessions:\n"
-            "    Pocketdesk computer dev.pocketdesk.android/Pocketdesk computer (userId=0)\n"
-            "      package=dev.pocketdesk.android\n"
+            "    Pocketdesk computer dev.friday.mobile/Pocketdesk computer (userId=0)\n"
+            "      package=dev.friday.mobile\n"
             "      active=true\n"
             "      metadata: size=3, description=N5 check 1, N5 artist, N5 player\n"
             "    Player dev.pocketdesk.fixture/Player (userId=0)\n"
@@ -56,9 +56,9 @@ class PureParts(unittest.TestCase):
             "      active=true\n"
             "      metadata: size=2, description=Other song, Artist\n"
         )
-        self.assertTrue(dc.media_session_shows(dump, "dev.pocketdesk.android", "N5 check 1"))
-        self.assertFalse(dc.media_session_shows(dump, "dev.pocketdesk.android", "Other song"))
-        self.assertFalse(dc.media_session_shows(dump.replace("active=true", "active=false", 1), "dev.pocketdesk.android", "N5 check 1"))
+        self.assertTrue(dc.media_session_shows(dump, "dev.friday.mobile", "N5 check 1"))
+        self.assertFalse(dc.media_session_shows(dump, "dev.friday.mobile", "Other song"))
+        self.assertFalse(dc.media_session_shows(dump.replace("active=true", "active=false", 1), "dev.friday.mobile", "N5 check 1"))
 
     def test_the_fixture_field_s_text(self):
         dump = (
@@ -165,9 +165,9 @@ class PureParts(unittest.TestCase):
             "uid=1, opPkg=com.coloros.alarmclock, reason=null}\n"
             "    createTime: 10-23 14:39:06.370, startTime: 10-23 14:39:06.376, durationMs: 30009, "
             "status: cancelled_by_user, callerInfo: CallerInfo{ attrs=VibrationAttributes: Usage=ALARM "
-            "uid=2, opPkg=dev.pocketdesk.android, reason=null}\n"
+            "uid=2, opPkg=dev.friday.mobile, reason=null}\n"
         )
-        self.assertEqual(dc.alarm_vibrations(dump, "dev.pocketdesk.android"), [("10-23 14:39:06", 30009)])
+        self.assertEqual(dc.alarm_vibrations(dump, "dev.friday.mobile"), [("10-23 14:39:06", 30009)])
 
     def test_torch_turns_since_a_time(self):
         dump = (
@@ -602,7 +602,7 @@ class SessionParts(unittest.TestCase):
 
     def test_the_app_s_shortcut_ids_from_dumpsys(self):
         """AZ1: only this app's ids, from its own package block."""
-        dump = '  Package: com.example.launcher  UID: 10001\n      ShortcutInfo {id=other, flags=0x1}\n  Package: dev.pocketdesk.android  UID: 10308\n      ShortcutInfo {id=connect:0123456789abcdef:paired:pc-a@127.0.0.1, flags=0x403}\n      ShortcutInfo {id=wake:192.0.2.1, flags=0x1}\n  Package: com.example.other  UID: 10400\n      ShortcutInfo {id=theirs, flags=0x1}'
+        dump = '  Package: com.example.launcher  UID: 10001\n      ShortcutInfo {id=other, flags=0x1}\n  Package: dev.friday.mobile  UID: 10308\n      ShortcutInfo {id=connect:0123456789abcdef:paired:pc-a@127.0.0.1, flags=0x403}\n      ShortcutInfo {id=wake:192.0.2.1, flags=0x1}\n  Package: com.example.other  UID: 10400\n      ShortcutInfo {id=theirs, flags=0x1}'
         self.assertEqual(
             dc.app_shortcut_ids(dump),
             ["connect:0123456789abcdef:paired:pc-a@127.0.0.1", "wake:192.0.2.1"],
@@ -610,9 +610,9 @@ class SessionParts(unittest.TestCase):
 
     def test_the_ring_s_notification_and_who_holds_focus(self):
         """AZ5: what a silent alarm is read by, never an app's name."""
-        self.assertEqual(dc.ring_posted('    NotificationRecord(0x1: pkg=dev.pocketdesk.android user=UserHandle{0} id=7 tag=null importance=2 key=k\n    NotificationRecord(0x2: pkg=dev.pocketdesk.android user=UserHandle{0} id=7301 tag=null importance=4 key=k'), "4")
+        self.assertEqual(dc.ring_posted('    NotificationRecord(0x1: pkg=dev.friday.mobile user=UserHandle{0} id=7 tag=null importance=2 key=k\n    NotificationRecord(0x2: pkg=dev.friday.mobile user=UserHandle{0} id=7301 tag=null importance=4 key=k'), "4")
         self.assertIsNone(dc.ring_posted("nothing"))
-        self.assertEqual(dc.focus_holder('Audio Focus stack entries (last is top of stack):\n  source:a -- pack: com.example.music -- client: c -- gain: GAIN\n  source:b -- pack: dev.pocketdesk.android -- client: d -- gain: GAIN\n\nNo external focus policy'), "this app")
+        self.assertEqual(dc.focus_holder('Audio Focus stack entries (last is top of stack):\n  source:a -- pack: com.example.music -- client: c -- gain: GAIN\n  source:b -- pack: dev.friday.mobile -- client: d -- gain: GAIN\n\nNo external focus policy'), "this app")
         self.assertEqual(dc.focus_holder("Audio Focus stack entries (last is top of stack):" + chr(10) * 3), "none")
 
     def test_the_throwaway_s_bluetooth_service_is_never_the_owner_s(self):
@@ -660,7 +660,7 @@ class SessionParts(unittest.TestCase):
         self.assertEqual(dc.takeover_verdict(None), "TIMEOUT")
 
     def test_a_file_that_waits_for_wi_fi(self):
-        mine = ('  NotificationRecord(0x1: pkg=dev.pocketdesk.android user=UserHandle{0} id=3 importance=2\n'
+        mine = ('  NotificationRecord(0x1: pkg=dev.friday.mobile user=UserHandle{0} id=3 importance=2\n'
                 '      android.title=String (Waits for Wi-Fi: over 8 MB does not go by Bluetooth)\n')
         other = ('  NotificationRecord(0x2: pkg=com.example.other user=UserHandle{0} id=1 importance=3\n'
                  '      android.title=String (Waits for Wi-Fi)\n')
