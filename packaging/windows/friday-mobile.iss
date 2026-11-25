@@ -50,8 +50,8 @@ WizardStyle=modern
 InfoBeforeFile=privacy.txt
 WizardImageFile=wizard-large.bmp,wizard-large-200.bmp
 WizardSmallImageFile=wizard-small.bmp,wizard-small-200.bmp
-SetupIconFile={#RepoRoot}\assets\brand\pocketdesk.ico
-UninstallDisplayIcon={app}\pocketdesk.ico
+SetupIconFile={#RepoRoot}\assets\brand\friday\friday.ico
+UninstallDisplayIcon={app}\friday.ico
 UninstallDisplayName=FRIDAY Mobile
 OutputDir={#OutputDir}
 OutputBaseFilename=friday-mobile-{#AppVersion}-windows-x86_64-setup
@@ -90,7 +90,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#SourceDir}\friday-mobile.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\friday-mobile-app.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\friday-mobile-tray.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RepoRoot}\assets\brand\pocketdesk.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RepoRoot}\assets\brand\friday\friday.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\config.toml.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -98,8 +98,8 @@ Source: "{#RepoRoot}\LICENSE-MIT"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\LICENSE-APACHE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Comment: "Your desktop, on your phone"
-Name: "{autodesktop}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Tasks: desktopicon
+Name: "{autoprograms}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\friday.ico"; Comment: "Your desktop, on your phone"
+Name: "{autodesktop}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\friday.ico"; Tasks: desktopicon
 
 [Registry]
 ; The system PATH, so `friday-mobile` works in any terminal. The uninstaller

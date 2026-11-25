@@ -45,10 +45,10 @@ sed 's|^ExecStart=.*|ExecStart=/usr/bin/friday-mobile start|' "$root/friday-mobi
 chmod 644 "$pkg/usr/lib/systemd/user/friday-mobile.service"
 install -Dm644 "$root/packaging/linux/dev.friday.Mobile.desktop" \
   "$pkg/usr/share/applications/dev.friday.Mobile.desktop"
-install -Dm644 "$root/assets/brand/pocketdesk-icon-512.png" \
-  "$pkg/usr/share/icons/hicolor/512x512/apps/pocketdesk.png"
-install -Dm644 "$root/assets/brand/pocketdesk-icon.svg" \
-  "$pkg/usr/share/icons/hicolor/scalable/apps/pocketdesk.svg"
+install -Dm644 "$root/assets/brand/friday/friday-512.png" \
+  "$pkg/usr/share/icons/hicolor/512x512/apps/dev.friday.Mobile.png"
+install -Dm644 "$root/assets/brand/friday/friday.svg" \
+  "$pkg/usr/share/icons/hicolor/scalable/apps/dev.friday.Mobile.svg"
 doc="$pkg/usr/share/doc/friday-mobile"
 for file in README.md SECURITY.md config.toml.example; do
   install -Dm644 "$root/$file" "$doc/$file"

@@ -27,7 +27,7 @@ check '[ -f /usr/share/applications/dev.friday.Mobile.desktop ]' "the menu entry
 if command -v desktop-file-validate >/dev/null 2>&1; then
   check 'desktop-file-validate /usr/share/applications/dev.friday.Mobile.desktop' "the menu entry is valid"
 fi
-check '[ -f /usr/share/icons/hicolor/512x512/apps/pocketdesk.png ]' "the icon"
+check '[ -f /usr/share/icons/hicolor/512x512/apps/dev.friday.Mobile.png ]' "the icon"
 check '[ -f /usr/share/man/man1/friday-mobile.1.gz ]' "the man page"
 check '[ -f /usr/share/doc/friday-mobile/copyright ]' "the copyright file"
 
