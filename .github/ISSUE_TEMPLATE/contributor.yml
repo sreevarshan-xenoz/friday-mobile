@@ -1,11 +1,11 @@
 name: Contributor Welcome
-description: Open a discussion about contributing to Pocketdesk
+description: Open a discussion about contributing to FRIDAY Mobile
 labels: help wanted
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest in contributing to Pocketdesk!
+        Thanks for your interest in contributing to FRIDAY Mobile!
   - type: textarea
     id: interest
     attributes:
