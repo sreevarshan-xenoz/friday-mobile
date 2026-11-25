@@ -428,14 +428,14 @@ says so in the log. Build notes: [docs/development-setup.md](development-setup.m
 
 ### Arch Linux
 
-FRIDAY Mobile is on the AUR as [`friday-mobile`](https://aur.archlinux.org/packages/pocketdesk). It builds the release's source tarball and installs the server, the desktop app and the tray, the systemd user unit, the menu entry and the man page:
+FRIDAY Mobile is on the AUR as [`friday-mobile`](https://aur.archlinux.org/packages/friday-mobile). It builds the release's source tarball and installs the server, the desktop app and the tray, the systemd user unit, the menu entry and the man page:
 
 ```bash
 yay -S friday-mobile          # or paru, or any AUR helper
 systemctl --user enable --now friday-mobile
 ```
 
-Without a helper: `git clone https://aur.archlinux.org/pocketdesk.git && cd pocketdesk && makepkg -si`. The same PKGBUILD is in this repository's `aur/`.
+Without a helper: `git clone https://aur.archlinux.org/friday-mobile.git && cd friday-mobile && makepkg -si`. The same PKGBUILD is in this repository's `aur/`.
 
 ### Linux firewall
 

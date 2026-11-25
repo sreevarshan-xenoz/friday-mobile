@@ -25,7 +25,7 @@ source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz
 sha256sums=('a7374e01f466b7116f831f30b3133936a3ae81a4c75afbafbd15f27801acf64e')
 
 # GitHub names the unpacked folder after the repository, not the package.
-_src="Pocketdesk-${pkgver}"
+_src="friday-mobile-${pkgver}"
 
 prepare() {
   cd "${_src}"

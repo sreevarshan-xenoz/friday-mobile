@@ -102,12 +102,12 @@ After that, F-Droid's update check (`UpdateCheckMode: Tags`) picks up each new `
 
 ## AUR (Arch Linux)
 
-`aur/PKGBUILD` builds the release's source tarball as the release workflow does (the server, then the desktop app and the tray), and installs the three programs, the PAM helper at `/usr/lib/friday-mobile/friday-mobile-pam-ask` (as the .deb does), the systemd user unit pointed at `/usr/bin`, the menu entry, the icon, the man page and the licences. Tailscale is optional, not a dependency. It is published on the AUR as [`pocketdesk`](https://aur.archlinux.org/packages/pocketdesk) (maintainer `xenoz`, from 0.7.0).
+`aur/PKGBUILD` builds the release's source tarball as the release workflow does (the server, then the desktop app and the tray), and installs the three programs, the PAM helper at `/usr/lib/friday-mobile/friday-mobile-pam-ask` (as the .deb does), the systemd user unit pointed at `/usr/bin`, the menu entry, the icon, the man page and the licences. Tailscale is optional, not a dependency. It is published on the AUR as [`friday-mobile`](https://aur.archlinux.org/packages/friday-mobile).
 
 For each release, once its tag is pushed:
 1. In `aur/`, set `pkgver`, run `updpkgsums` (it replaces `SKIP` with the tarball's checksum) and `makepkg --printsrcinfo > .SRCINFO`.
 2. `makepkg -si` on an Arch machine or in an `archlinux` container to check it builds and installs.
-3. To publish (the owner's AUR account, with its SSH key and a verified e-mail address, which the AUR requires before a push): in a clone of `ssh://aur@aur.archlinux.org/pocketdesk.git`, copy in `PKGBUILD`, `friday-mobile.install` and `.SRCINFO`, commit and push to `master`. Commit the same `aur/PKGBUILD` here, so the two stay identical.
+3. To publish (the owner's AUR account, with its SSH key and a verified e-mail address, which the AUR requires before a push): in a clone of `ssh://aur@aur.archlinux.org/friday-mobile.git`, copy in `PKGBUILD`, `friday-mobile.install` and `.SRCINFO`, commit and push to `master`. Commit the same `aur/PKGBUILD` here, so the two stay identical.
 
 ## Signing the Windows programs
 
