@@ -19,11 +19,11 @@ use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
 use base64::Engine as _;
-use pocketdesk_core::local::approve::{self as files, PhoneKey, Request, Status};
-use pocketdesk_core::protocol::approve::{Approval, KeyMessage, key_of, signed_message};
-use pocketdesk_core::protocol::ask::{ASK, Answer, ask_body};
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::approve::{self as files, PhoneKey, Request, Status};
+use friday_mobile_core::protocol::approve::{Approval, KeyMessage, key_of, signed_message};
+use friday_mobile_core::protocol::ask::{ASK, Answer, ask_body};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// The DER prefix of an EC P-256 SubjectPublicKeyInfo (as Android's
 /// `PublicKey.getEncoded()` gives it): the algorithm (id-ecPublicKey,
@@ -122,7 +122,7 @@ struct Pending {
 static PENDING: LazyLock<Mutex<HashMap<String, Pending>>> = LazyLock::new(Default::default);
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 /// Whether request `id` is one of these (the ask plugin's answers go here).
@@ -156,7 +156,7 @@ pub async fn run() {
             tokio::time::sleep(Duration::from_millis(250)).await;
         } else {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::APPROVE_DIR,
+                friday_mobile_core::local::paths::APPROVE_DIR,
                 Duration::from_millis(250),
             )
             .await;
@@ -324,7 +324,7 @@ pub fn key_heard(dir: &Path, device: &str, body: &serde_json::Value, now: u64) {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use pocketdesk_core::protocol::approve::Kind;
+    use friday_mobile_core::protocol::approve::Kind;
     use ring::rand::SystemRandom;
     use ring::signature::{ECDSA_P256_SHA256_ASN1_SIGNING, EcdsaKeyPair, KeyPair};
 

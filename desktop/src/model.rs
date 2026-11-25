@@ -3,13 +3,13 @@
 
 use std::path::Path;
 
-use pocketdesk_core::local::approval::{self, ApprovalRequest, Verdict};
-use pocketdesk_core::local::paths::{LIVE_FILE, LOG_DIR, TRUST_FILE};
-use pocketdesk_core::local::received::{self, ReceivedFile};
-use pocketdesk_core::local::sent::{self, SentFile};
-use pocketdesk_core::local::{server, sessions};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::local::approval::{self, ApprovalRequest, Verdict};
+use friday_mobile_core::local::paths::{LIVE_FILE, LOG_DIR, TRUST_FILE};
+use friday_mobile_core::local::received::{self, ReceivedFile};
+use friday_mobile_core::local::sent::{self, SentFile};
+use friday_mobile_core::local::{server, sessions};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
 
 /// A paired phone.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -33,11 +33,11 @@ pub struct Device {
     /// What the owner lets it do (roadmap F5).
     pub permissions: DevicePermissions,
     /// Its last battery report (T8b), if it ever sent one.
-    pub battery: Option<pocketdesk_core::local::phone_status::PhoneBattery>,
+    pub battery: Option<friday_mobile_core::local::phone_status::PhoneBattery>,
     /// Its Do Not Disturb as it last said (D2), if it ever did.
-    pub quiet: Option<pocketdesk_core::local::phone_quiet::PhoneQuiet>,
+    pub quiet: Option<friday_mobile_core::local::phone_quiet::PhoneQuiet>,
     /// Which of its features it has on, as it last said (L7).
-    pub switches: Option<pocketdesk_core::local::phone_switches::PhoneSwitches>,
+    pub switches: Option<friday_mobile_core::local::phone_switches::PhoneSwitches>,
     /// Another of the owner's computers, paired as one (2f).
     pub computer: bool,
     /// The Pocketdesk release it last said it runs (item 4), if it says.
@@ -62,7 +62,7 @@ pub struct Snapshot {
     pub sent: Vec<SentFile>,
     /// What each phone in a session plays, as it last said (T8d).
     pub phone_media:
-        std::collections::BTreeMap<String, pocketdesk_core::local::phone_media::PhoneMediaState>,
+        std::collections::BTreeMap<String, friday_mobile_core::local::phone_media::PhoneMediaState>,
     /// The other computers this one paired with whose link is up (2h), by
     /// id and name: files can go to them.
     pub linked_computers: Vec<(String, String)>,
@@ -74,13 +74,13 @@ pub struct Snapshot {
     /// name: a file can go to one connected now.
     pub kde_devices: Vec<(String, String)>,
     /// Files moving now, as the running server last wrote (C1).
-    pub under_way: Vec<pocketdesk_core::local::transfers::Transfer>,
+    pub under_way: Vec<friday_mobile_core::local::transfers::Transfer>,
     /// The phone folders kept on this computer, as the server last wrote
     /// them: each with its place, size and how its last run went.
-    pub kept: Vec<pocketdesk_core::local::kept_folders::KeptFolder>,
+    pub kept: Vec<friday_mobile_core::local::kept_folders::KeptFolder>,
     /// The port the running server bound (T1): its own record, not one an
     /// earlier run left.
-    pub listening: Option<pocketdesk_core::local::listening::Listening>,
+    pub listening: Option<friday_mobile_core::local::listening::Listening>,
 }
 
 impl Snapshot {
@@ -118,9 +118,9 @@ pub fn snapshot_with(state_dir: &Path, now_unix: u64, running: bool) -> Snapshot
     let shared_control = mirror.as_ref().is_some_and(|m| m.shared_control);
     let takes_files = |id: &str| mirror.as_ref().is_some_and(|m| m.files_reach(id));
     let sessions = mirror.clone().map(|m| m.sessions).unwrap_or_default();
-    let batteries = pocketdesk_core::local::phone_status::read(state_dir);
-    let quiet = pocketdesk_core::local::phone_quiet::read(state_dir);
-    let mut switches = pocketdesk_core::local::phone_switches::read(state_dir);
+    let batteries = friday_mobile_core::local::phone_status::read(state_dir);
+    let quiet = friday_mobile_core::local::phone_quiet::read(state_dir);
+    let mut switches = friday_mobile_core::local::phone_switches::read(state_dir);
     let devices = match TrustStore::load_or_create(state_dir.join(TRUST_FILE)) {
         Ok(store) => store
             .trusted_devices()
@@ -175,7 +175,7 @@ pub fn snapshot_with(state_dir: &Path, now_unix: u64, running: bool) -> Snapshot
     let listening = server::server_pid(state_dir)
         .filter(|_| running)
         .and_then(|pid| {
-            pocketdesk_core::local::listening::read(state_dir).filter(|l| l.pid == pid)
+            friday_mobile_core::local::listening::read(state_dir).filter(|l| l.pid == pid)
         });
     Snapshot {
         listening,
@@ -190,12 +190,12 @@ pub fn snapshot_with(state_dir: &Path, now_unix: u64, running: bool) -> Snapshot
         // Only a running server's: what played in an earlier run is not
         // playing now.
         phone_media: if running {
-            pocketdesk_core::local::phone_media::read(state_dir)
+            friday_mobile_core::local::phone_media::read(state_dir)
         } else {
             Default::default()
         },
         linked_computers: if running {
-            pocketdesk_core::local::computers::read(state_dir)
+            friday_mobile_core::local::computers::read(state_dir)
                 .computers
                 .into_iter()
                 .filter(|c| c.link == "linked")
@@ -204,13 +204,13 @@ pub fn snapshot_with(state_dir: &Path, now_unix: u64, running: bool) -> Snapshot
         } else {
             Vec::new()
         },
-        paired_computers: pocketdesk_core::local::computers::read(state_dir)
+        paired_computers: friday_mobile_core::local::computers::read(state_dir)
             .computers
             .into_iter()
             .map(|c| (c.device_id, c.name))
             .collect(),
         kde_devices: if running {
-            pocketdesk_core::local::kdeconnect_devices::devices(state_dir)
+            friday_mobile_core::local::kdeconnect_devices::devices(state_dir)
                 .into_iter()
                 .map(|d| (d.device_id, d.name))
                 .collect()
@@ -218,18 +218,21 @@ pub fn snapshot_with(state_dir: &Path, now_unix: u64, running: bool) -> Snapshot
             Vec::new()
         },
         under_way: if running {
-            pocketdesk_core::local::transfers::under_way(state_dir, now_unix)
+            friday_mobile_core::local::transfers::under_way(state_dir, now_unix)
         } else {
             Vec::new()
         },
         // What was kept stays kept, running or not.
-        kept: pocketdesk_core::local::kept_folders::read(state_dir),
+        kept: friday_mobile_core::local::kept_folders::read(state_dir),
     }
 }
 
 /// What a kept folder's row says of its size and last run: "12 files · 3.1
 /// MB · last run 5 min ago", or that no run has ended yet.
-pub fn kept_summary(folder: &pocketdesk_core::local::kept_folders::KeptFolder, now: u64) -> String {
+pub fn kept_summary(
+    folder: &friday_mobile_core::local::kept_folders::KeptFolder,
+    now: u64,
+) -> String {
     let held = format!(
         "{} · {}",
         crate::words::count(folder.files as usize, "file", "files"),
@@ -254,7 +257,9 @@ pub fn kept_summary(folder: &pocketdesk_core::local::kept_folders::KeptFolder, n
 /// What a kept folder's row says of deletions, if there is anything: files
 /// deleted here as the phone mirrored its own, and the ones left because
 /// this computer does not allow it.
-pub fn kept_deletions(folder: &pocketdesk_core::local::kept_folders::KeptFolder) -> Option<String> {
+pub fn kept_deletions(
+    folder: &friday_mobile_core::local::kept_folders::KeptFolder,
+) -> Option<String> {
     let mut parts = Vec::new();
     if folder.deleted > 0 {
         parts.push(format!(
@@ -273,7 +278,7 @@ pub fn kept_deletions(folder: &pocketdesk_core::local::kept_folders::KeptFolder)
 
 /// A file under way by its place: "Holiday/beach.jpg" for a file of a
 /// folder send (C1).
-pub fn transfer_title(transfer: &pocketdesk_core::local::transfers::Transfer) -> String {
+pub fn transfer_title(transfer: &friday_mobile_core::local::transfers::Transfer) -> String {
     match &transfer.folder {
         Some(folder) => format!("{folder}/{}", transfer.name),
         None => transfer.name.clone(),
@@ -281,7 +286,7 @@ pub fn transfer_title(transfer: &pocketdesk_core::local::transfers::Transfer) ->
 }
 
 /// How far a file under way is, for its bar: 0 to 1.
-pub fn transfer_fraction(transfer: &pocketdesk_core::local::transfers::Transfer) -> f32 {
+pub fn transfer_fraction(transfer: &friday_mobile_core::local::transfers::Transfer) -> f32 {
     if transfer.size == 0 {
         return 0.0;
     }
@@ -290,7 +295,7 @@ pub fn transfer_fraction(transfer: &pocketdesk_core::local::transfers::Transfer)
 
 /// What a file under way's bar says: "42 % · 3.1 MB/s", the rate left out
 /// until there is one, and the bytes when the size is not known.
-pub fn transfer_words(transfer: &pocketdesk_core::local::transfers::Transfer) -> String {
+pub fn transfer_words(transfer: &friday_mobile_core::local::transfers::Transfer) -> String {
     let rate = if transfer.rate > 0 {
         format!(" · {}/s", crate::words::human_size(transfer.rate))
     } else {
@@ -364,7 +369,7 @@ pub struct PhoneRow<'a> {
     pub clipboard: Result<(), &'static str>,
     /// What it plays, when that may show (N2: in a session, or linked
     /// with the phone's background reporter on).
-    pub playing: Option<&'a pocketdesk_core::local::phone_media::PhoneMediaState>,
+    pub playing: Option<&'a friday_mobile_core::local::phone_media::PhoneMediaState>,
 }
 
 /// A device's release in its row's words (item 4): "runs 0.8.1", and with
@@ -373,10 +378,10 @@ pub struct PhoneRow<'a> {
 /// an update, to draw it so. `None` for a device that says no release.
 pub fn version_words(version: Option<&str>, hints: bool) -> Option<(String, bool)> {
     let version = version?;
-    let this = pocketdesk_core::version::THIS_VERSION;
+    let this = friday_mobile_core::version::THIS_VERSION;
     Some((
-        pocketdesk_core::version::words(this, version, hints),
-        hints && pocketdesk_core::version::differs(this, version),
+        friday_mobile_core::version::words(this, version, hints),
+        hints && friday_mobile_core::version::differs(this, version),
     ))
 }
 
@@ -384,12 +389,12 @@ pub fn version_words(version: Option<&str>, hints: bool) -> Option<(String, bool
 pub fn version_hover() -> String {
     format!(
         "The Pocketdesk release it said it runs as it last connected. This computer runs {}. Each device updates on its own: from its package manager, the installer or the app store it came from.",
-        pocketdesk_core::version::THIS_VERSION
+        friday_mobile_core::version::THIS_VERSION
     )
 }
 
 /// What a phone plays in a line: "Song · Artist (App)", the parts it has.
-pub fn media_line(media: &pocketdesk_core::protocol::phone_media::PhoneMedia) -> String {
+pub fn media_line(media: &friday_mobile_core::protocol::phone_media::PhoneMedia) -> String {
     let what = [media.title.as_str(), media.artist.as_str()]
         .into_iter()
         .filter(|s| !s.is_empty())
@@ -486,7 +491,7 @@ pub fn phone_rows<'a>(
 /// What a phone's Do Not Disturb is now, for the Overview (D2): `None` when
 /// it is not quiet, or never said. A mute from here says how long is left.
 pub fn quiet_text(
-    quiet: Option<&pocketdesk_core::local::phone_quiet::PhoneQuiet>,
+    quiet: Option<&friday_mobile_core::local::phone_quiet::PhoneQuiet>,
     now_unix: u64,
 ) -> Option<String> {
     let quiet = quiet.filter(|q| q.quiet)?;
@@ -503,9 +508,9 @@ pub fn quiet_text(
 /// Overview: "Wi-Fi, 3 of 4 bars · 12.3 GB free of 128 GB · on silent".
 /// `None` when it said nothing of it (a KDE device, an older phone).
 pub fn phone_state_text(
-    state: &pocketdesk_core::local::phone_status::PhoneState,
+    state: &friday_mobile_core::local::phone_status::PhoneState,
 ) -> Option<String> {
-    use pocketdesk_core::local::phone_status::{Network, Ringer};
+    use friday_mobile_core::local::phone_status::{Network, Ringer};
     let mut parts = Vec::new();
     let bars = state.signal.map(|bars| format!(", {bars} of 4 bars"));
     match state.network {
@@ -549,7 +554,7 @@ pub const STATE_FRESH_SECS: u64 = 600;
 /// Whether the Overview shows a phone's state (L9 review): only while the
 /// phone is reached, and its report is recent.
 pub fn state_is_now(
-    battery: &pocketdesk_core::local::phone_status::PhoneBattery,
+    battery: &friday_mobile_core::local::phone_status::PhoneBattery,
     place: Place,
     now_unix: u64,
 ) -> bool {
@@ -590,7 +595,7 @@ impl Feature {
     /// This computer's permission for it, from core's one table (M2), which
     /// the phone's mirror reads too.
     pub fn permission(&self) -> Capability {
-        pocketdesk_core::local::phone_switches::capability(self.key)
+        friday_mobile_core::local::phone_switches::capability(self.key)
             .expect("every feature has a permission")
     }
 }
@@ -820,7 +825,7 @@ pub fn phone_action_reach(linked: bool, allowed: bool) -> Result<(), &'static st
 /// shown only once the phone said its own switch is on, so a phone that never
 /// offers it (or whose owner has not turned it on) shows nothing.
 pub fn hotspot_shown(
-    switches: Option<&pocketdesk_core::local::phone_switches::PhoneSwitches>,
+    switches: Option<&friday_mobile_core::local::phone_switches::PhoneSwitches>,
 ) -> bool {
     switches
         .and_then(|s| s.switches.get("hotspot"))
@@ -833,10 +838,12 @@ pub fn hotspot_shown(
 pub fn hotspot_reach(
     linked: bool,
     allowed: bool,
-    switches: Option<&pocketdesk_core::local::phone_switches::PhoneSwitches>,
+    switches: Option<&friday_mobile_core::local::phone_switches::PhoneSwitches>,
 ) -> Result<(), &'static str> {
     phone_action_reach(linked, allowed)?;
-    pocketdesk_core::local::phone_hotspot::offered(switches.and_then(|s| s.switches.get("hotspot")))
+    friday_mobile_core::local::phone_hotspot::offered(
+        switches.and_then(|s| s.switches.get("hotspot")),
+    )
 }
 
 /// Whether this computer can ask the phone to be its camera (F6 part 2),
@@ -876,7 +883,7 @@ pub struct SwitchRow {
 
 /// The features this computer's Settings turn off (L7 review), in core
 /// since M2, where the phone's mirror reads it too.
-pub use pocketdesk_core::local::phone_switches::settings_off;
+pub use friday_mobile_core::local::phone_switches::settings_off;
 
 /// The Devices page's rows for a phone: every feature, with advice for
 /// each side that holds back one the phone has on, this computer's first.
@@ -884,7 +891,7 @@ pub use pocketdesk_core::local::phone_switches::settings_off;
 /// so it gets none.
 pub fn switch_rows(
     permissions: &DevicePermissions,
-    switches: Option<&pocketdesk_core::local::phone_switches::PhoneSwitches>,
+    switches: Option<&friday_mobile_core::local::phone_switches::PhoneSwitches>,
     settings_off: &[(&'static str, &'static str)],
 ) -> Vec<SwitchRow> {
     FEATURES
@@ -937,7 +944,7 @@ pub const REFUSAL_SHOWN_SECS: u64 = 120;
 /// Whether the phone said no to a mute in the last two minutes (D2 review):
 /// its "Let the computer mute this phone" is off.
 pub fn mute_refused(
-    quiet: Option<&pocketdesk_core::local::phone_quiet::PhoneQuiet>,
+    quiet: Option<&friday_mobile_core::local::phone_quiet::PhoneQuiet>,
     now_unix: u64,
 ) -> bool {
     quiet
@@ -949,7 +956,7 @@ pub fn mute_refused(
 /// phone and Lock the phone (Q2 review: the Overview said "Asked" while
 /// the phone's own switch was off, and nothing came).
 pub fn phone_actions_refused(
-    switches: Option<&pocketdesk_core::local::phone_switches::PhoneSwitches>,
+    switches: Option<&friday_mobile_core::local::phone_switches::PhoneSwitches>,
 ) -> Option<&'static str> {
     let switches = switches?;
     let said = switches.switches.get("phone_actions")?;
@@ -987,14 +994,14 @@ pub fn phone_actions_refused(
 
 /// Whether the phone is in its owner's own Do Not Disturb (D2 review): the
 /// computer does not mute it then, so Mute for an hour is not offered.
-pub fn quiet_by_owner(quiet: Option<&pocketdesk_core::local::phone_quiet::PhoneQuiet>) -> bool {
+pub fn quiet_by_owner(quiet: Option<&friday_mobile_core::local::phone_quiet::PhoneQuiet>) -> bool {
     quiet.is_some_and(|q| q.quiet && !q.by_computer)
 }
 
 /// Whether the Overview offers Unmute rather than Mute for an hour: a mute
 /// asked for from a computer, still running.
 pub fn muted_from_here(
-    quiet: Option<&pocketdesk_core::local::phone_quiet::PhoneQuiet>,
+    quiet: Option<&friday_mobile_core::local::phone_quiet::PhoneQuiet>,
     now_unix: u64,
 ) -> bool {
     quiet.is_some_and(|q| q.quiet && q.by_computer && q.until_unix.is_some_and(|u| u > now_unix))
@@ -1031,7 +1038,7 @@ pub fn last_sessions(lines: &str) -> std::collections::HashMap<String, u64> {
 }
 
 /// What a live session is, as its chip says (J3).
-pub fn session_kind(session: &pocketdesk_core::local::sessions::MirrorSession) -> &'static str {
+pub fn session_kind(session: &friday_mobile_core::local::sessions::MirrorSession) -> &'static str {
     if session.webcam {
         "its camera as this computer's camera"
     } else if session.cast {
@@ -1049,7 +1056,7 @@ pub fn session_kind(session: &pocketdesk_core::local::sessions::MirrorSession) -
 
 /// The phones whose camera is this computer's camera now (F6 part 2), by
 /// device id: what the Overview's Stop camera ends.
-pub fn cameras(sessions: &[pocketdesk_core::local::sessions::MirrorSession]) -> Vec<String> {
+pub fn cameras(sessions: &[friday_mobile_core::local::sessions::MirrorSession]) -> Vec<String> {
     sessions
         .iter()
         .filter(|s| s.webcam)
@@ -1149,7 +1156,7 @@ pub fn recent_sessions(lines: &str, n: usize) -> Vec<RecentSession> {
 /// it changes (N6 review); `None` when there is no log.
 pub fn session_log_stamp(state_dir: &Path) -> Option<(u64, std::time::SystemTime)> {
     let meta =
-        std::fs::metadata(state_dir.join(pocketdesk_core::local::paths::SESSIONS_FILE)).ok()?;
+        std::fs::metadata(state_dir.join(friday_mobile_core::local::paths::SESSIONS_FILE)).ok()?;
     Some((meta.len(), meta.modified().ok()?))
 }
 
@@ -1158,7 +1165,7 @@ pub fn session_log_stamp(state_dir: &Path) -> Option<(u64, std::time::SystemTime
 pub fn session_log_tail(state_dir: &Path) -> String {
     use std::io::{Read, Seek, SeekFrom};
     let Ok(mut file) =
-        std::fs::File::open(state_dir.join(pocketdesk_core::local::paths::SESSIONS_FILE))
+        std::fs::File::open(state_dir.join(friday_mobile_core::local::paths::SESSIONS_FILE))
     else {
         return String::new();
     };
@@ -1231,7 +1238,11 @@ pub fn device_label(devices: &[Device], id: &str) -> String {
 
 /// Name the paired device `id` (U3); blank clears the owner's name, back
 /// to the phone's own.
-pub fn rename_device(state_dir: &Path, id: &str, name: &str) -> pocketdesk_core::error::Result<()> {
+pub fn rename_device(
+    state_dir: &Path,
+    id: &str,
+    name: &str,
+) -> friday_mobile_core::error::Result<()> {
     TrustStore::update(state_dir.join(TRUST_FILE), |store| {
         store.rename(id, Some(name))
     })
@@ -1375,7 +1386,7 @@ pub fn queue_link(
             "Not sent: \"Open its links here\" is off for {who} on Devices."
         ));
     }
-    pocketdesk_core::local::links::request(state_dir, device_id, url, now_unix)
+    friday_mobile_core::local::links::request(state_dir, device_id, url, now_unix)
         .map(|_| format!("Link sent to {who}: it waits there as a notification."))
         .map_err(|e| format!("Not sent: {e}."))
 }
@@ -1396,7 +1407,7 @@ pub fn press_phone_media(
     if !allowed {
         return Err("Not sent: Media is off for this phone (Devices tab).".to_string());
     }
-    pocketdesk_core::local::phone_media::press(state_dir, device_id, command, now_unix)
+    friday_mobile_core::local::phone_media::press(state_dir, device_id, command, now_unix)
         .map(|_| ())
         .map_err(|e| format!("Not sent: {e}."))
 }
@@ -1429,7 +1440,7 @@ pub fn queue_send_request(
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.display().to_string());
-    let request = pocketdesk_core::local::outbox::request(
+    let request = friday_mobile_core::local::outbox::request(
         state_dir,
         device_id,
         &path.display().to_string(),
@@ -1445,7 +1456,7 @@ pub fn set_permission(
     id: &str,
     capability: Capability,
     allowed: bool,
-) -> pocketdesk_core::error::Result<()> {
+) -> friday_mobile_core::error::Result<()> {
     update_permissions(state_dir, id, |p| p.set(capability, allowed))
 }
 
@@ -1456,7 +1467,7 @@ pub fn set_permissions(
     id: &str,
     capabilities: &[Capability],
     allowed: bool,
-) -> pocketdesk_core::error::Result<()> {
+) -> friday_mobile_core::error::Result<()> {
     update_permissions(state_dir, id, |p| {
         for capability in capabilities {
             p.set(*capability, allowed);
@@ -1474,7 +1485,7 @@ pub fn apply_profile(
     id: &str,
     profile: &DevicePermissions,
     shown: impl Fn(Capability) -> bool,
-) -> pocketdesk_core::error::Result<bool> {
+) -> friday_mobile_core::error::Result<bool> {
     let mut narrowed = false;
     update_permissions(state_dir, id, |p| {
         for capability in Capability::ALL {
@@ -1520,7 +1531,7 @@ pub fn set_ask_first(
     state_dir: &Path,
     id: &str,
     ask_first: bool,
-) -> pocketdesk_core::error::Result<()> {
+) -> friday_mobile_core::error::Result<()> {
     update_permissions(state_dir, id, |p| p.ask_first = ask_first)
 }
 
@@ -1541,7 +1552,7 @@ fn update_permissions(
     state_dir: &Path,
     id: &str,
     change: impl FnOnce(&mut DevicePermissions),
-) -> pocketdesk_core::error::Result<()> {
+) -> friday_mobile_core::error::Result<()> {
     TrustStore::update(state_dir.join(TRUST_FILE), |store| {
         let mut permissions = store.permissions(id);
         change(&mut permissions);
@@ -1606,7 +1617,7 @@ pub fn log_tail(state_dir: &Path, lines: usize) -> Vec<String> {
 /// dials it, so it must run, and the computer must be reachable some way,
 /// its link up or an address known. Why not, when it cannot.
 pub fn view_reach(
-    computer: &pocketdesk_core::local::computers::PeerComputer,
+    computer: &friday_mobile_core::local::computers::PeerComputer,
     server_running: bool,
 ) -> Result<(), &'static str> {
     if !server_running {
@@ -1623,7 +1634,7 @@ pub fn view_reach(
 /// that refused this one unpaired it, review M-7), and the computer told
 /// this one how to wake it.
 pub fn can_wake(
-    computer: &pocketdesk_core::local::computers::PeerComputer,
+    computer: &friday_mobile_core::local::computers::PeerComputer,
     server_running: bool,
 ) -> bool {
     server_running
@@ -1639,7 +1650,7 @@ mod tests {
     fn a_devices_release_says_what_to_update() {
         use super::version_words;
         assert_eq!(version_words(None, true), None, "an older device says none");
-        let this = pocketdesk_core::version::THIS_VERSION;
+        let this = friday_mobile_core::version::THIS_VERSION;
         assert_eq!(
             version_words(Some(this), true),
             Some((format!("runs {this}"), false))
@@ -1668,7 +1679,7 @@ mod tests {
     /// Q2: what a profile would turn off, only among the switches shown.
     #[test]
     fn a_profile_says_what_it_turns_off() {
-        use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
+        use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
         let mut current = DevicePermissions::default();
         current.set(Capability::Input, true);
         current.set(Capability::Exec, true);
@@ -1685,14 +1696,14 @@ mod tests {
     #[test]
     fn the_pages_features_are_the_phones() {
         let ours: Vec<&str> = super::FEATURES.iter().map(|f| f.key).collect();
-        assert_eq!(ours, pocketdesk_core::local::phone_switches::FEATURES);
+        assert_eq!(ours, friday_mobile_core::local::phone_switches::FEATURES);
     }
 
     /// Use my phone's hotspot: shown only when the phone's own switch is on,
     /// and working only when the phone also says Shizuku lets it.
     #[test]
     fn the_hotspot_button_is_shown_and_works_only_as_the_phone_says() {
-        use pocketdesk_core::local::phone_switches::{PhoneSwitches, from_body};
+        use friday_mobile_core::local::phone_switches::{PhoneSwitches, from_body};
         let said = |body: serde_json::Value| PhoneSwitches {
             switches: from_body(&serde_json::json!({ "switches": body })).unwrap(),
             updated_unix: 1,
@@ -1753,7 +1764,7 @@ mod tests {
     /// Q2: the phone's own switch against Screenshot and Lock, said.
     #[test]
     fn a_phone_s_switch_off_says_it_refuses_screenshots() {
-        use pocketdesk_core::local::phone_switches::{PhoneSwitches, from_body};
+        use friday_mobile_core::local::phone_switches::{PhoneSwitches, from_body};
         let said = |body: serde_json::Value| PhoneSwitches {
             switches: from_body(&serde_json::json!({ "switches": body })).unwrap(),
             updated_unix: 1,
@@ -1807,8 +1818,8 @@ mod tests {
 
     #[test]
     fn each_feature_names_the_side_that_holds_it_back() {
-        use pocketdesk_core::local::phone_switches::{PhoneSwitches, from_body};
-        use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
+        use friday_mobile_core::local::phone_switches::{PhoneSwitches, from_body};
+        use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
         let mut permissions = DevicePermissions::default();
         permissions.set(Capability::Links, false);
         let said = PhoneSwitches {
@@ -1852,7 +1863,7 @@ mod tests {
             Some("Turn on \"Open its links here\" in this phone's permissions above.")
         );
         // A computer-wide setting holds it back too (L7 review).
-        let config = pocketdesk_core::local::config::Config {
+        let config = friday_mobile_core::local::config::Config {
             phone_notifications: false,
             ..Default::default()
         };
@@ -1871,12 +1882,12 @@ mod tests {
         );
         // A phone as it comes: every feature off but links, no fault shown.
         let default_phone = PhoneSwitches {
-            switches: pocketdesk_core::local::phone_switches::FEATURES
+            switches: friday_mobile_core::local::phone_switches::FEATURES
                 .iter()
                 .map(|k| {
                     (
                         k.to_string(),
-                        pocketdesk_core::local::phone_switches::Switch {
+                        friday_mobile_core::local::phone_switches::Switch {
                             on: *k == "links",
                             android: Some(true),
                         },
@@ -1895,7 +1906,7 @@ mod tests {
     #[test]
     fn a_phones_state_is_shown_only_while_it_is_reached_and_recent() {
         use super::{Place, STATE_FRESH_SECS, state_is_now};
-        let battery = pocketdesk_core::local::phone_status::PhoneBattery {
+        let battery = friday_mobile_core::local::phone_status::PhoneBattery {
             updated_unix: 1000,
             ..Default::default()
         };
@@ -1914,7 +1925,7 @@ mod tests {
 
     #[test]
     fn a_phones_state_reads_as_one_line_of_what_it_said() {
-        use pocketdesk_core::local::phone_status::{Network, PhoneState, Ringer};
+        use friday_mobile_core::local::phone_status::{Network, PhoneState, Ringer};
         assert_eq!(super::phone_state_text(&PhoneState::default()), None);
         let full = PhoneState {
             storage_free_mb: Some(12_300),
@@ -1968,10 +1979,14 @@ mod tests {
 
     use super::*;
 
-    fn under_way(size: u64, done: u64, rate: u64) -> pocketdesk_core::local::transfers::Transfer {
-        pocketdesk_core::local::transfers::Transfer {
+    fn under_way(
+        size: u64,
+        done: u64,
+        rate: u64,
+    ) -> friday_mobile_core::local::transfers::Transfer {
+        friday_mobile_core::local::transfers::Transfer {
             id: "t1".to_string(),
-            direction: pocketdesk_core::local::transfers::Direction::ToPhone,
+            direction: friday_mobile_core::local::transfers::Direction::ToPhone,
             device_id: "phone".to_string(),
             name: "beach.jpg".to_string(),
             folder: None,
@@ -2006,8 +2021,8 @@ mod tests {
         transfer.folder = Some("Holiday".to_string());
         assert_eq!(transfer_title(&transfer), "Holiday/beach.jpg");
     }
-    use pocketdesk_core::local::paths::{LIVE_FILE, LOG_DIR, TRUST_FILE};
-    use pocketdesk_core::protocol::kdeconnect::TrustStore;
+    use friday_mobile_core::local::paths::{LIVE_FILE, LOG_DIR, TRUST_FILE};
+    use friday_mobile_core::protocol::kdeconnect::TrustStore;
     use std::time::Duration;
 
     pub(crate) fn temp_dir(name: &str) -> std::path::PathBuf {
@@ -2086,7 +2101,7 @@ mod tests {
     #[test]
     fn a_live_sessions_kind_in_words() {
         let session =
-            |cast, control_only, sound_only| pocketdesk_core::local::sessions::MirrorSession {
+            |cast, control_only, sound_only| friday_mobile_core::local::sessions::MirrorSession {
                 cast,
                 control_only,
                 sound_only,
@@ -2106,12 +2121,12 @@ mod tests {
         );
         assert_eq!(session_kind(&session(false, true, false)), "control only");
         assert_eq!(session_kind(&session(false, false, true)), "sound only");
-        let alone = pocketdesk_core::local::sessions::MirrorSession {
+        let alone = friday_mobile_core::local::sessions::MirrorSession {
             phone_sound_only: true,
             ..session(false, false, false)
         };
         assert_eq!(session_kind(&alone), "its sound here");
-        let camera = pocketdesk_core::local::sessions::MirrorSession {
+        let camera = friday_mobile_core::local::sessions::MirrorSession {
             webcam: true,
             ..session(true, false, false)
         };
@@ -2124,11 +2139,11 @@ mod tests {
             Vec::<String>::new(),
             "no device said"
         );
-        let named = pocketdesk_core::local::sessions::MirrorSession {
+        let named = friday_mobile_core::local::sessions::MirrorSession {
             device_id: Some("phone".into()),
             ..camera
         };
-        let screen = pocketdesk_core::local::sessions::MirrorSession {
+        let screen = friday_mobile_core::local::sessions::MirrorSession {
             device_id: Some("other".into()),
             ..session(true, false, false)
         };
@@ -2255,9 +2270,12 @@ mod tests {
     }
 
     /// What a phone plays, from its background reporter or not (N2).
-    fn playing(background: bool, at: u64) -> pocketdesk_core::local::phone_media::PhoneMediaState {
-        pocketdesk_core::local::phone_media::PhoneMediaState {
-            media: pocketdesk_core::protocol::phone_media::PhoneMedia {
+    fn playing(
+        background: bool,
+        at: u64,
+    ) -> friday_mobile_core::local::phone_media::PhoneMediaState {
+        friday_mobile_core::local::phone_media::PhoneMediaState {
+            media: friday_mobile_core::protocol::phone_media::PhoneMedia {
                 title: "Song".to_string(),
                 app: "Music".to_string(),
                 is_playing: true,
@@ -2349,7 +2367,7 @@ mod tests {
     /// D2: a phone's Do Not Disturb, and whether Unmute is offered.
     #[test]
     fn a_phone_s_quiet_is_said_and_a_mute_from_here_counts_down() {
-        use pocketdesk_core::local::phone_quiet::PhoneQuiet;
+        use friday_mobile_core::local::phone_quiet::PhoneQuiet;
         let own = PhoneQuiet {
             quiet: true,
             until_unix: Some(1_000 + 25 * 60 - 30),
@@ -2466,7 +2484,7 @@ mod tests {
 
     #[test]
     fn a_permission_set_here_shows_in_the_next_snapshot_and_reaches_the_store() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let dir = temp_dir("perms");
         TrustStore::load_or_create(dir.join(TRUST_FILE))
             .unwrap()
@@ -2663,7 +2681,7 @@ mod tests {
     fn a_press_is_queued_for_the_server_unless_media_is_off() {
         let dir = temp_dir("press");
         assert!(press_phone_media(&dir, "a", "next", 100).is_ok());
-        let queued = pocketdesk_core::local::phone_media::take_presses(&dir, 101);
+        let queued = friday_mobile_core::local::phone_media::take_presses(&dir, 101);
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].command, "next");
         assert!(press_phone_media(&dir, "a", "stop", 100).is_err());
@@ -2675,14 +2693,14 @@ mod tests {
         store.set_permissions("a", permissions).unwrap();
         let refused = press_phone_media(&dir, "a", "next", 100).unwrap_err();
         assert!(refused.contains("Media"), "{refused}");
-        assert!(pocketdesk_core::local::phone_media::take_presses(&dir, 101).is_empty());
+        assert!(friday_mobile_core::local::phone_media::take_presses(&dir, 101).is_empty());
     }
 
     #[test]
     fn a_link_is_queued_for_the_server_and_one_that_may_not_open_is_refused() {
         let dir = temp_dir("link");
         assert!(queue_link(&dir, "a", "A", " https://example.org/page ", 100).is_ok());
-        let queued = pocketdesk_core::local::links::take_all(&dir, 101);
+        let queued = friday_mobile_core::local::links::take_all(&dir, 101);
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].url, "https://example.org/page", "trimmed");
         assert!(queue_link(&dir, "a", "A", "javascript:alert(1)", 100).is_err());
@@ -2698,7 +2716,7 @@ mod tests {
             refused.contains("Open its links here") && refused.contains(" A "),
             "{refused}"
         );
-        assert!(pocketdesk_core::local::links::take_all(&dir, 101).is_empty());
+        assert!(friday_mobile_core::local::links::take_all(&dir, 101).is_empty());
     }
 
     #[test]
@@ -2710,17 +2728,20 @@ mod tests {
             queue_send(&dir, "a", &file, 100),
             Ok("report.pdf".to_string())
         );
-        let queued = pocketdesk_core::local::outbox::take_all(&dir, 101);
+        let queued = friday_mobile_core::local::outbox::take_all(&dir, 101);
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].device_id, "a");
         assert_eq!(queued[0].path, file.display().to_string());
         assert!(queue_send(&dir, "a", &dir.join("gone"), 100).is_err());
-        assert!(pocketdesk_core::local::outbox::take_all(&dir, 101).is_empty());
+        assert!(friday_mobile_core::local::outbox::take_all(&dir, 101).is_empty());
         // A folder goes too (T6b): the server offers it file by file.
         let folder = dir.join("Trip");
         std::fs::create_dir_all(&folder).unwrap();
         assert_eq!(queue_send(&dir, "a", &folder, 100), Ok("Trip".to_string()));
-        assert_eq!(pocketdesk_core::local::outbox::take_all(&dir, 101).len(), 1);
+        assert_eq!(
+            friday_mobile_core::local::outbox::take_all(&dir, 101).len(),
+            1
+        );
     }
 
     #[test]
@@ -2728,7 +2749,7 @@ mod tests {
         let dir = temp_dir("relative");
         // Tests run in the package folder, which holds Cargo.toml.
         assert!(queue_send(&dir, "a", std::path::Path::new("Cargo.toml"), 100).is_ok());
-        let queued = pocketdesk_core::local::outbox::take_all(&dir, 101);
+        let queued = friday_mobile_core::local::outbox::take_all(&dir, 101);
         let path = std::path::Path::new(&queued[0].path);
         assert!(path.is_absolute(), "{}", path.display());
         assert!(path.ends_with("Cargo.toml"));
@@ -2929,7 +2950,7 @@ mod tests {
 
     #[test]
     fn sent_files_are_listed_newest_first() {
-        use pocketdesk_core::local::sent::{self, SentFile, SentState};
+        use friday_mobile_core::local::sent::{self, SentFile, SentState};
         let dir = temp_dir("sent");
         for n in 0..2u64 {
             sent::record(
@@ -3009,8 +3030,8 @@ mod tests {
         files: u64,
         bytes: u64,
         last_unix: u64,
-    ) -> pocketdesk_core::local::kept_folders::KeptFolder {
-        pocketdesk_core::local::kept_folders::KeptFolder {
+    ) -> friday_mobile_core::local::kept_folders::KeptFolder {
+        friday_mobile_core::local::kept_folders::KeptFolder {
             device_id: "phone".to_string(),
             folder_id: "0".repeat(32),
             phone: "Phone".to_string(),
@@ -3069,7 +3090,7 @@ mod tests {
     fn the_kept_folders_are_read_whether_or_not_the_server_runs() {
         let dir = temp_dir("kept-folders");
         let folders = vec![kept(2, 20, 5)];
-        pocketdesk_core::local::kept_folders::write(&dir, &folders).unwrap();
+        friday_mobile_core::local::kept_folders::write(&dir, &folders).unwrap();
         assert_eq!(snapshot_with(&dir, 10, false).kept, folders);
         assert_eq!(snapshot_with(&dir, 10, true).kept, folders);
         assert!(

@@ -10,12 +10,12 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 
-use pocketdesk_core::protocol::connection::ConnectionManager;
-use pocketdesk_core::protocol::kdeconnect::{
+use friday_mobile_core::protocol::connection::ConnectionManager;
+use friday_mobile_core::protocol::kdeconnect::{
     DeviceIdentity, DeviceSender, NetworkPacket, TcpDeviceSender,
 };
-use pocketdesk_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
-use pocketdesk_core::streaming::transport::CertManager;
+use friday_mobile_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
+use friday_mobile_core::streaming::transport::CertManager;
 
 /// Accept one connection on `listener` and run the desktop's side of TLS.
 async fn accept_tls(

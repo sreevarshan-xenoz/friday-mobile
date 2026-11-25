@@ -11,7 +11,7 @@ use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::rustls;
 
@@ -159,7 +159,7 @@ pub async fn fetch(
         // (3c review: a transfer had outlived both).
         let allowed = || {
             super::link::pin_of(&dir, &device_id) == Some(pin)
-                && pocketdesk_core::local::kdeconnect_devices::permissions(&dir, &device_id)
+                && friday_mobile_core::local::kdeconnect_devices::permissions(&dir, &device_id)
                     .is_some_and(|p| p.files)
         };
         let places = Places {

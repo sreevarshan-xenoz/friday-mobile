@@ -183,7 +183,7 @@ fn current() -> Option<String> {
 /// asks on its own every [`EVERY`]).
 #[cfg(all(target_os = "linux", not(test)))]
 fn current() -> Option<String> {
-    use pocketdesk_core::local::{config::Config, diagnostics, listening, paths};
+    use friday_mobile_core::local::{config::Config, diagnostics, listening, paths};
     type Kept = Option<(Instant, (u16, u16), Option<String>)>;
     static KEPT: Mutex<Kept> = Mutex::new(None);
     let config = Config::load().unwrap_or_default();

@@ -28,8 +28,8 @@ use std::io;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
-use pocketdesk_core::streaming::{AudioConfig, AudioEncoder, InputPacket};
+use friday_mobile_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
+use friday_mobile_core::streaming::{AudioConfig, AudioEncoder, InputPacket};
 
 /// The frames' length: the phone's, which the other computer's relay takes.
 pub const FRAME_MS: u32 = 20;
@@ -814,7 +814,8 @@ mod tests {
         assert_eq!(sent.len(), 4, "{sent:?}");
         assert!(matches!(&sent[0], InputPacket::Mic { enabled: true, opus } if opus.is_empty()));
         let mut decoder =
-            pocketdesk_core::streaming::AudioDecoder::new(MIC_SAMPLE_RATE, MIC_CHANNELS).unwrap();
+            friday_mobile_core::streaming::AudioDecoder::new(MIC_SAMPLE_RATE, MIC_CHANNELS)
+                .unwrap();
         for packet in &sent[1..] {
             let InputPacket::Mic { enabled, opus } = packet else {
                 panic!("a mic frame: {packet:?}");

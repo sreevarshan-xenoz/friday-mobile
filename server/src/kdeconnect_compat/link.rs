@@ -9,9 +9,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::local::kdeconnect::{self, SeenDevice};
-use pocketdesk_core::local::kdeconnect_devices::{self as devices, KdeDevice, Pending};
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::kdeconnect::{self, SeenDevice};
+use friday_mobile_core::local::kdeconnect_devices::{self as devices, KdeDevice, Pending};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader};
 use tokio::sync::mpsc;
 
@@ -207,7 +207,7 @@ struct Waiting {
 }
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 /// At most `per_minute` in any minute.
@@ -1122,7 +1122,7 @@ mod tests {
         // The pins do not read: nothing can be added to them.
         std::fs::write(
             s.dir
-                .join(pocketdesk_core::local::paths::KDECONNECT_DEVICES_FILE),
+                .join(friday_mobile_core::local::paths::KDECONNECT_DEVICES_FILE),
             "not json",
         )
         .unwrap();

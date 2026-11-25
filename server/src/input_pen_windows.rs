@@ -8,7 +8,7 @@
 //! DPI aware, so physical ones), unlike `SendInput`'s 0..=65535.
 
 use anyhow::{Context, Result};
-use pocketdesk_core::streaming::{PEN_BARREL, PEN_ERASER, PenSample};
+use friday_mobile_core::streaming::{PEN_BARREL, PEN_ERASER, PenSample};
 use tracing::warn;
 use windows::Win32::Foundation::POINT;
 use windows::Win32::UI::Controls::{
@@ -179,7 +179,7 @@ impl Drop for WindowsPen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::{PEN_CONTACT, PEN_IN_RANGE};
+    use friday_mobile_core::streaming::{PEN_CONTACT, PEN_IN_RANGE};
 
     #[test]
     fn each_step_has_windows_flags_and_only_a_touch_presses() {

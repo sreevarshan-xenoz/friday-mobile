@@ -34,12 +34,12 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk, FitSize};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::view::{self as wire, Message, Phase, ViewFit};
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::computers::{self, ComputerAsk, FitSize};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::view::{self as wire, Message, Phase, ViewFit};
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// B's outputs, as `name width height`.
 fn outputs(command: &str) -> Vec<(String, u32, u32)> {
@@ -194,11 +194,11 @@ fn a_window_gets_a_screen_of_its_size_that_follows_it() {
     for (config, state) in [(&a_config, &a_state), (&b_config, &b_state)] {
         let mut server = pocketdesk(config, state);
         if !real {
-            server.env(pocketdesk_core::streaming::test_pattern::VAR, "1");
+            server.env(friday_mobile_core::streaming::test_pattern::VAR, "1");
         }
         server
             .env(
-                pocketdesk_server::computer_view::SOUND_SEAM,
+                friday_mobile_server::computer_view::SOUND_SEAM,
                 state.parent().unwrap().join("view-sound.wav"),
             )
             .env("WAYLAND_DISPLAY", &nested)

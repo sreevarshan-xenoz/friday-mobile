@@ -9,8 +9,8 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::phone_camera::{self, CameraAsk};
-use pocketdesk_core::protocol::phone_photos::{FETCH, LIST, TAKE};
+use friday_mobile_core::protocol::phone_camera::{self, CameraAsk};
+use friday_mobile_core::protocol::phone_photos::{FETCH, LIST, TAKE};
 
 /// Requests waiting for the app, at most; the oldest go first.
 const MAX_WAITING: usize = 20;

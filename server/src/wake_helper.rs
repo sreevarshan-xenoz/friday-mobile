@@ -30,14 +30,14 @@ use std::net::IpAddr;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::computers::{self, ComputersFile};
-use pocketdesk_core::local::device_keys;
-use pocketdesk_core::local::wake::{Adapter, facts_for_peer};
-use pocketdesk_core::local::wake_helper::{self as store, Taken};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-pub use pocketdesk_core::protocol::wake_helper::{DUTY, INFO, OFFER};
-use pocketdesk_core::protocol::wake_helper::{
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::computers::{self, ComputersFile};
+use friday_mobile_core::local::device_keys;
+use friday_mobile_core::local::wake::{Adapter, facts_for_peer};
+use friday_mobile_core::local::wake_helper::{self as store, Taken};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+pub use friday_mobile_core::protocol::wake_helper::{DUTY, INFO, OFFER};
+use friday_mobile_core::protocol::wake_helper::{
     Duty, DutyMessage, HelperInfo, Info, Offer, parse_mac,
 };
 use serde_json::Value;
@@ -98,7 +98,7 @@ pub(crate) struct Snapshot {
 pub(crate) fn snapshot(dir: &std::path::Path, trust: &std::path::Path) -> Option<Snapshot> {
     let store_file = TrustStore::read(trust).ok()?;
     let file = computers::read(dir);
-    let me = pocketdesk_core::local::identity::device_id(dir)?;
+    let me = friday_mobile_core::local::identity::device_id(dir)?;
     let mut held = store::read(dir);
     let owner = |id: &str| crate::introductions::is_owner_phone(&store_file, &file, id);
     if let Some(helper) = &held.helper
@@ -149,9 +149,9 @@ pub(crate) fn requesters(snap: &Snapshot, helper: &str) -> Vec<String> {
         .keys
         .iter()
         .filter(|(id, _)| id.as_str() != helper && snap.owners.contains(*id))
-        .map(|(_, key)| pocketdesk_core::protocol::wake_helper::key_form(key))
-        .filter(|key| pocketdesk_core::protocol::wake_helper::valid_key(key))
-        .take(pocketdesk_core::protocol::wake_helper::MAX_REQUESTERS)
+        .map(|(_, key)| friday_mobile_core::protocol::wake_helper::key_form(key))
+        .filter(|key| friday_mobile_core::protocol::wake_helper::valid_key(key))
+        .take(friday_mobile_core::protocol::wake_helper::MAX_REQUESTERS)
         .collect();
     keys.sort();
     keys.dedup();
@@ -273,7 +273,7 @@ pub(crate) async fn tick(told: &mut HashMap<String, (u64, Instant)>) {
             .as_ref()
             .is_some_and(|h| h.device_id == client.device_id());
         if helper_here && adapters.is_none() {
-            adapters = tokio::task::spawn_blocking(pocketdesk_core::local::wake::adapters)
+            adapters = tokio::task::spawn_blocking(friday_mobile_core::local::wake::adapters)
                 .await
                 .ok();
         }
@@ -374,7 +374,7 @@ impl Plugin for WakeHelperPlugin {
         };
         let body = packet.body.clone();
         let who = device.clone();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let outcome = tokio::task::spawn_blocking(move || take_in(&dir, &trust, &who, &body, now))
             .await
             .ok()
@@ -398,7 +398,7 @@ impl Plugin for WakeHelperPlugin {
                     // Told at once, so its switch goes off on the phone.
                     let me = crate::state::state_dir()
                         .ok()
-                        .and_then(|d| pocketdesk_core::local::identity::device_id(&d));
+                        .and_then(|d| friday_mobile_core::local::identity::device_id(&d));
                     if let Some(computer) = me {
                         let refused = DutyMessage::Refused { computer };
                         sender

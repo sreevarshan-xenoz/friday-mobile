@@ -12,7 +12,7 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::alerts::{self, Ended, TAIL_LINES};
+use friday_mobile_core::local::alerts::{self, Ended, TAIL_LINES};
 
 /// The exit code for bad arguments, as the other commands use.
 const BAD_ARGUMENTS: i32 = 2;
@@ -84,11 +84,16 @@ fn tell(title: &str, text: &str) {
             return;
         }
     };
-    if !pocketdesk_core::local::server::is_running(&dir) {
+    if !friday_mobile_core::local::server::is_running(&dir) {
         eprintln!("pocketdesk done: no Pocketdesk server is running to tell the phone");
         return;
     }
-    if let Err(e) = alerts::request(&dir, title, text, pocketdesk_core::local::pin::now_unix()) {
+    if let Err(e) = alerts::request(
+        &dir,
+        title,
+        text,
+        friday_mobile_core::local::pin::now_unix(),
+    ) {
         eprintln!("pocketdesk done: could not leave the alert: {e}");
     }
 }

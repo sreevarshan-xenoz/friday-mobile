@@ -3,7 +3,7 @@
 //! phone's several fingers.
 //!
 //! The model, its file and the key to finger state machine are
-//! `pocketdesk_core::local::keymap`; this is the window's side of them. Each
+//! `friday_mobile_core::local::keymap`; this is the window's side of them. Each
 //! app window has one [`Keys`] (the phone's own screen window has none: its
 //! input goes through accessibility gestures, too slow for a game, and a
 //! phone without Shizuku has no app windows). While "Keys to taps" is on and
@@ -17,11 +17,11 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use eframe::egui;
-use pocketdesk_core::local::keymap::{
+use friday_mobile_core::local::keymap::{
     self, Binding, Keymap, MOUSE_LEFT, MOUSE_MIDDLE, MOUSE_RIGHT, Point, RADIUS_RANGE, Runner,
     SENSITIVITY_RANGE, SWIPE_MS_RANGE, token_label,
 };
-use pocketdesk_core::streaming::cast_control::ControlEvent;
+use friday_mobile_core::streaming::cast_control::ControlEvent;
 
 use crate::video::fraction;
 use crate::view_pointer::{self, PointerLock, ReleaseChord};
@@ -949,7 +949,7 @@ mod tests {
                 matches!(
                     e,
                     ControlEvent::Pointer {
-                        action: pocketdesk_core::streaming::cast_control::TouchAction::Down,
+                        action: friday_mobile_core::streaming::cast_control::TouchAction::Down,
                         ..
                     }
                 )
@@ -1141,7 +1141,7 @@ mod tests {
         assert!(matches!(
             quiet[0],
             ControlEvent::Pointer {
-                action: pocketdesk_core::streaming::cast_control::TouchAction::Move,
+                action: friday_mobile_core::streaming::cast_control::TouchAction::Move,
                 x: 100,
                 y: 100,
                 ..

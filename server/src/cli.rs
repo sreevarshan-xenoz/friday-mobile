@@ -1,8 +1,8 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
-#[command(name = "pocketdesk", version)]
-#[command(about = "Pocketdesk - your desktop from your phone, over LAN, Tailscale or iroh")]
+#[command(name = "friday-mobile", version)]
+#[command(about = "FRIDAY Mobile - your desktop from your phone, over LAN, Tailscale or iroh")]
 pub struct Cli {
     #[arg(short, long)]
     pub verbose: bool,
@@ -21,7 +21,7 @@ pub enum Commands {
         #[arg(long)]
         background: bool,
     },
-    /// Register Pocketdesk to start at logon, start it now, and open its
+    /// Register FRIDAY Mobile to start at logon, start it now, and open its
     /// firewall ports (asks for administrator rights once, for the firewall)
     #[cfg(windows)]
     Install {
@@ -44,7 +44,7 @@ pub enum Commands {
     #[cfg(windows)]
     #[command(hide = true)]
     FirewallRemove,
-    /// Stop a running server process started with `pocketdesk start`
+    /// Stop a running server process started with `friday-mobile start`
     Stop,
     /// Print local tailscale status
     Status {
@@ -111,7 +111,7 @@ pub enum Commands {
     /// the server
     Ask {
         /// How long to wait for an answer, in seconds (1 to 3600)
-        #[arg(long, default_value_t = pocketdesk_core::protocol::ask::DEFAULT_WAIT_SECS)]
+        #[arg(long, default_value_t = friday_mobile_core::protocol::ask::DEFAULT_WAIT_SECS)]
         wait: u64,
         /// The question; its words are joined with spaces. Options go
         /// before it: after it, they are words of the question
@@ -242,7 +242,7 @@ pub enum Commands {
         uri: String,
     },
     /// Open tel: and callto: links on the phone (M8), or stop with
-    /// --remove. On Windows, pick Pocketdesk when Windows asks, or in
+    /// --remove. On Windows, pick FRIDAY Mobile when Windows asks, or in
     /// Default apps
     TelHandler {
         /// Remove it
@@ -265,7 +265,7 @@ pub enum Commands {
         #[arg(long)]
         json: bool,
     },
-    /// Print what Pocketdesk does as it happens, until stopped: sessions,
+    /// Print what FRIDAY Mobile does as it happens, until stopped: sessions,
     /// phones, batteries, notifications, texts, files and links (the event log)
     Events {
         /// Print the events already in the log first
@@ -276,7 +276,7 @@ pub enum Commands {
         #[arg(long)]
         json: bool,
     },
-    /// The host the Pocketdesk browser extension talks to (browsers start it
+    /// The host the FRIDAY Mobile browser extension talks to (browsers start it
     /// themselves); --install registers it with the browsers found
     BrowserHost {
         /// Register it with the browsers found
@@ -317,7 +317,7 @@ pub enum Commands {
         /// Frames to encode; the first 30 are discarded as warm-up
         #[arg(
             long,
-            default_value_t = pocketdesk_core::streaming::bench::DEFAULT_FRAMES
+            default_value_t = friday_mobile_core::streaming::bench::DEFAULT_FRAMES
         )]
         frames: u32,
         /// Repeat the clip and keep the fastest run: other work on the machine
@@ -408,7 +408,7 @@ pub enum Commands {
         /// Peer hostname, MagicDNS name, or Tailscale IP
         peer: String,
         /// Control port to connect to
-        #[arg(short, long, default_value_t = pocketdesk_core::DEFAULT_CONTROL_PORT)]
+        #[arg(short, long, default_value_t = friday_mobile_core::DEFAULT_CONTROL_PORT)]
         port: u16,
     },
     /// Set or generate a temporary pairing PIN
@@ -459,7 +459,7 @@ pub enum Commands {
         /// Contact address for Let's Encrypt
         #[arg(long, requires = "hostname")]
         email: Option<String>,
-        /// Admit this endpoint id (repeatable; see `pocketdesk relay-ids`)
+        /// Admit this endpoint id (repeatable; see `friday-mobile relay-ids`)
         #[arg(long)]
         allow: Vec<String>,
         /// Admit this desktop and its paired phones (when the relay runs here)
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn the_version_flag_prints_the_crate_version() {
         use clap::Parser;
-        let err = super::Cli::try_parse_from(["pocketdesk", "--version"]).unwrap_err();
+        let err = super::Cli::try_parse_from(["friday-mobile", "--version"]).unwrap_err();
         assert_eq!(err.kind(), clap::error::ErrorKind::DisplayVersion);
         assert!(err.to_string().contains(env!("CARGO_PKG_VERSION")), "{err}");
     }
@@ -538,7 +538,7 @@ mod tests {
     fn install_can_leave_the_firewall_to_the_installer() {
         use clap::Parser;
         let parsed =
-            super::Cli::try_parse_from(["pocketdesk", "install", "--no-firewall"]).unwrap();
+            super::Cli::try_parse_from(["friday-mobile", "install", "--no-firewall"]).unwrap();
         assert!(matches!(
             parsed.command,
             Some(super::Commands::Install {
@@ -546,7 +546,7 @@ mod tests {
                 no_firewall: true
             })
         ));
-        let parsed = super::Cli::try_parse_from(["pocketdesk", "install"]).unwrap();
+        let parsed = super::Cli::try_parse_from(["friday-mobile", "install"]).unwrap();
         assert!(matches!(
             parsed.command,
             Some(super::Commands::Install {

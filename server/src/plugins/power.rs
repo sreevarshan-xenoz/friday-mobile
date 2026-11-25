@@ -1,5 +1,5 @@
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 #[cfg(not(windows))]
 use tokio::process::Command;
 
@@ -49,7 +49,7 @@ impl Plugin for PowerPlugin {
             if let Some(action) = windows_power::Action::parse(action) {
                 return tokio::task::spawn_blocking(move || windows_power::perform(action))
                     .await
-                    .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+                    .map_err(|e| friday_mobile_core::error::PocketdeskError::Other {
                         detail: e.to_string(),
                     })?;
             }
@@ -110,7 +110,7 @@ async fn execute_systemctl(action: &str) -> Result<()> {
         .arg(action)
         .output()
         .await
-        .map_err(|e| pocketdesk_core::error::PocketdeskError::Io {
+        .map_err(|e| friday_mobile_core::error::PocketdeskError::Io {
             operation: "systemctl",
             detail: e.to_string(),
         })?;
@@ -120,7 +120,7 @@ async fn execute_systemctl(action: &str) -> Result<()> {
         Ok(())
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(pocketdesk_core::error::PocketdeskError::Other {
+        Err(friday_mobile_core::error::PocketdeskError::Other {
             detail: format!("Power action '{action}' failed: {stderr}"),
         })
     }
@@ -131,7 +131,7 @@ async fn execute_systemctl(action: &str) -> Result<()> {
 /// `SeShutdownPrivilege` every interactive user holds but has disabled.
 #[cfg(windows)]
 mod windows_power {
-    use pocketdesk_core::error::{PocketdeskError, Result};
+    use friday_mobile_core::error::{PocketdeskError, Result};
     use windows::Win32::Foundation::{CloseHandle, HANDLE, LUID};
     use windows::Win32::Security::{
         AdjustTokenPrivileges, LUID_AND_ATTRIBUTES, LookupPrivilegeValueW, SE_PRIVILEGE_ENABLED,

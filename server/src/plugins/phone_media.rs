@@ -13,11 +13,11 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::phone_media::{MediaPress, PhoneMediaState};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::phone_media::{MediaReport, PHONE_MEDIA, PHONE_MEDIA_CONTROL};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::phone_media::{MediaPress, PhoneMediaState};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::phone_media::{MediaReport, PHONE_MEDIA, PHONE_MEDIA_CONTROL};
 
 /// How often the reports are written, at most.
 pub const WRITE_EVERY: Duration = Duration::from_secs(2);
@@ -97,7 +97,7 @@ fn cover(
     had: bool,
 ) -> Option<String> {
     use base64::Engine;
-    use pocketdesk_core::local::phone_media::{art_name, forget_art, has_art, keep_art};
+    use friday_mobile_core::local::phone_media::{art_name, forget_art, has_art, keep_art};
     let id = match report {
         MediaReport::Playing(media) => media.art_id.as_deref(),
         MediaReport::Nothing => None,
@@ -181,11 +181,11 @@ impl Plugin for PhoneMediaPlugin {
         REPORTS.lock().unwrap_or_else(|e| e.into_inner()).take(
             sender.device_id(),
             report,
-            pocketdesk_core::local::pin::now_unix(),
+            friday_mobile_core::local::pin::now_unix(),
             art,
         );
         // Written out now, not at the inbox's next sweep (R6c).
-        crate::inbox::nudge(pocketdesk_core::local::paths::PHONE_MEDIA_DIR);
+        crate::inbox::nudge(friday_mobile_core::local::paths::PHONE_MEDIA_DIR);
         Ok(())
     }
 }
@@ -201,7 +201,8 @@ pub async fn run_watcher() {
     };
     REPORTS.lock().unwrap_or_else(|e| e.into_inner()).dirty = true;
     // Nor are an earlier run's covers.
-    let _ = std::fs::remove_dir_all(dir.join(pocketdesk_core::local::paths::PHONE_MEDIA_ART_DIR));
+    let _ =
+        std::fs::remove_dir_all(dir.join(friday_mobile_core::local::paths::PHONE_MEDIA_ART_DIR));
     let mut last_write = tokio::time::Instant::now() - WRITE_EVERY;
     loop {
         // Wait for a press, or, with a report waiting, for the throttle to
@@ -210,7 +211,7 @@ pub async fn run_watcher() {
         let throttled = WRITE_EVERY.saturating_sub(last_write.elapsed());
         if !dirty || !throttled.is_zero() {
             crate::inbox::wait_at_most(
-                pocketdesk_core::local::paths::PHONE_MEDIA_DIR,
+                friday_mobile_core::local::paths::PHONE_MEDIA_DIR,
                 if dirty {
                     throttled
                 } else {
@@ -220,8 +221,8 @@ pub async fn run_watcher() {
             )
             .await;
         }
-        let now = pocketdesk_core::local::pin::now_unix();
-        for press in pocketdesk_core::local::phone_media::take_presses(&dir, now) {
+        let now = friday_mobile_core::local::pin::now_unix();
+        for press in friday_mobile_core::local::phone_media::take_presses(&dir, now) {
             let clients = crate::state::clone_clients().await;
             // Paired too: the permissions of an id that is not paired are
             // the defaults, and a phone just unpaired may still be connected.
@@ -259,13 +260,13 @@ pub async fn run_watcher() {
             (reports.phones.clone(), gone)
         };
         for device in gone {
-            pocketdesk_core::local::phone_media::forget_art(&dir, &device);
+            friday_mobile_core::local::phone_media::forget_art(&dir, &device);
         }
         // Off the runtime: on Windows a replace can wait up to about half a
         // second for another program's handle on the file.
         let at = dir.clone();
         let kept = tokio::task::spawn_blocking(move || {
-            pocketdesk_core::local::phone_media::write(&at, &phones)
+            friday_mobile_core::local::phone_media::write(&at, &phones)
         })
         .await
         .unwrap_or_else(|e| Err(std::io::Error::other(e)));
@@ -285,7 +286,7 @@ fn showable(connected: &[String], store: &TrustStore) -> std::collections::HashS
             store.is_trusted(id)
                 && store
                     .permissions(id)
-                    .allows(pocketdesk_core::protocol::permissions::Capability::Media)
+                    .allows(friday_mobile_core::protocol::permissions::Capability::Media)
         })
         .cloned()
         .collect()
@@ -315,7 +316,7 @@ async fn push(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_media::PhoneMedia;
+    use friday_mobile_core::protocol::phone_media::PhoneMedia;
 
     fn song(title: &str) -> MediaReport {
         MediaReport::Playing(PhoneMedia {
@@ -364,7 +365,7 @@ mod tests {
         assert!(first.is_some(), "the bytes kept");
         assert_eq!(cover(&dir, "phone", &song("Plain"), None, false), None);
         assert!(
-            pocketdesk_core::local::phone_media::has_art(&dir, "phone", &id),
+            friday_mobile_core::local::phone_media::has_art(&dir, "phone", &id),
             "no cover before: the folder is not looked at"
         );
         assert_eq!(
@@ -395,7 +396,7 @@ mod tests {
             None,
             "a track with none"
         );
-        assert!(!pocketdesk_core::local::phone_media::has_art(
+        assert!(!friday_mobile_core::local::phone_media::has_art(
             &dir, "phone", &id
         ));
         assert_eq!(

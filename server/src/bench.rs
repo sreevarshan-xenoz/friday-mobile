@@ -13,7 +13,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use pocketdesk_core::streaming::bench::{self, BenchRecord, BenchTarget};
+use friday_mobile_core::streaming::bench::{self, BenchRecord, BenchTarget};
 
 /// Everything measured fine and the tail is inside its allowance.
 pub const EXIT_PASS: i32 = 0;
@@ -299,8 +299,8 @@ fn read_record(path: &Path) -> Result<BenchRecord> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::metrics::Summary;
-    use pocketdesk_core::streaming::bench::RECORD_SCHEMA;
+    use friday_mobile_core::metrics::Summary;
+    use friday_mobile_core::streaming::bench::RECORD_SCHEMA;
 
     fn record(host: &str, backend: &str) -> BenchRecord {
         BenchRecord {

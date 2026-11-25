@@ -6,8 +6,8 @@
 use std::net::SocketAddr;
 use std::time::Duration;
 
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     InputPacket, QuinnConnection, SharedConnection, StreamingClient, StreamingConfig,
     StreamingServer,
 };
@@ -65,7 +65,7 @@ async fn an_input_only_session_carries_input_and_no_picture() {
         Some("remote-test"),
         None,
         None,
-        pocketdesk_core::streaming::SessionMode::InputOnly,
+        friday_mobile_core::streaming::SessionMode::InputOnly,
     )
     .await
     .expect("client connect");

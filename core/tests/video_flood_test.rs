@@ -2,8 +2,8 @@ use anyhow::Result;
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy};
-use pocketdesk_core::streaming::transport::{
+use friday_mobile_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy};
+use friday_mobile_core::streaming::transport::{
     CertManager, StreamClient, StreamServer, StreamTransportConfig,
 };
 

@@ -6,7 +6,7 @@
 #[cfg(not(test))]
 pub fn now() -> bool {
     crate::state::state_dir().is_ok_and(|dir| {
-        pocketdesk_core::local::pause::current(&dir, pocketdesk_core::local::pin::now_unix())
+        friday_mobile_core::local::pause::current(&dir, friday_mobile_core::local::pin::now_unix())
             .is_some()
     })
 }

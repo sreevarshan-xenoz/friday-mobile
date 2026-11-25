@@ -1,15 +1,15 @@
 //! The phone as another screen for this computer's keyboard and mouse
 //! (BK5): what a paired phone says of itself
-//! ([`SCREEN`](pocketdesk_core::protocol::phone_screen::SCREEN)), kept for
+//! ([`SCREEN`](friday_mobile_core::protocol::phone_screen::SCREEN)), kept for
 //! the driver and, as a block, in `shared_screens.json` for the Keyboard
 //! and mouse page; and its answers to the driver's pings
-//! ([`PONG`](pocketdesk_core::protocol::phone_screen::PONG)). Neither is an
+//! ([`PONG`](friday_mobile_core::protocol::phone_screen::PONG)). Neither is an
 //! action, so no permission gates them; only a paired phone's screen is
 //! taken (another computer is never a phone).
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::phone_screen::{INPUT, PONG, SCREEN, ScreenReport, pong_of};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::phone_screen::{INPUT, PONG, SCREEN, ScreenReport, pong_of};
 
 use crate::shared_input::phone;
 
@@ -34,8 +34,8 @@ fn keep_screen(device_id: &str, report: &ScreenReport) {
         .and_then(|path| TrustStore::read(path).ok())
         .and_then(|store| store.name(device_id).map(str::to_string))
         .unwrap_or_default();
-    let now = pocketdesk_core::local::pin::now_unix();
-    if let Err(e) = pocketdesk_core::local::shared_input::update(&dir, |file| {
+    let now = friday_mobile_core::local::pin::now_unix();
+    if let Err(e) = friday_mobile_core::local::shared_input::update(&dir, |file| {
         file.heard_phone(device_id, &name, &report.screen, now)
     }) {
         tracing::debug!("Shared input: the phone's screen was not kept: {e}");

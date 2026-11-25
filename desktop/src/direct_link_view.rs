@@ -5,7 +5,7 @@
 //! only (its mobile data stays on for everything else) and pairs.
 //!
 //! This only asks and shows: the server makes and removes the access point
-//! (`pocketdesk_core::local::direct_link` is the contract), and the code is
+//! (`friday_mobile_core::local::direct_link` is the contract), and the code is
 //! the usual pairing link with the network's name and passphrase on the end.
 //!
 //! Where the card cannot host its own network beside its own connection (or
@@ -16,12 +16,12 @@
 use std::path::Path;
 
 use eframe::egui::{self, RichText, TextureHandle, TextureOptions};
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::direct_link::{
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::direct_link::{
     self as dl, Action, Band, Mode, Plan, Request, State, Status, Unavailable,
 };
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::pin;
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::pin;
 
 use crate::model::Device;
 use crate::pair_view::{Whose, link_for, qr_image, qr_modules, whose_for};
@@ -502,7 +502,7 @@ impl DirectLinkCard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::direct_link::WifiJoin;
+    use friday_mobile_core::local::direct_link::WifiJoin;
 
     fn plan(disconnects: bool) -> Result<Plan, Unavailable> {
         Ok(Plan {

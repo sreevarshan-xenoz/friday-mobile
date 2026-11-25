@@ -7,7 +7,7 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use pocketdesk_desktop::{
+use friday_mobile_desktop::{
     hotkey, model, tray::Tray, tray_instance, tray_menu::TrayAction, tray_watch,
 };
 
@@ -15,7 +15,7 @@ use pocketdesk_desktop::{
 const REFRESH: Duration = Duration::from_secs(1);
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 fn main() {
@@ -25,11 +25,11 @@ fn main() {
     };
     // K7: before any window, as Windows asks.
     #[cfg(windows)]
-    pocketdesk_desktop::phone_player::prepare();
-    let state_dir = match pocketdesk_core::local::paths::state_dir() {
+    friday_mobile_desktop::phone_player::prepare();
+    let state_dir = match friday_mobile_core::local::paths::state_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            eprintln!("Pocketdesk tray: {e}");
+            eprintln!("FRIDAY Mobile tray: {e}");
             std::process::exit(1);
         }
     };
@@ -40,11 +40,11 @@ fn main() {
         // phone's player in the media controls and opens the window for
         // what asks the owner. The window never counted on its icon.
         Err(e) if cfg!(target_os = "linux") => {
-            eprintln!("Pocketdesk tray: no tray icon ({e}); running without one");
+            eprintln!("FRIDAY Mobile tray: no tray icon ({e}); running without one");
             None
         }
         Err(e) => {
-            eprintln!("Pocketdesk tray: no tray icon ({e})");
+            eprintln!("FRIDAY Mobile tray: no tray icon ({e})");
             std::process::exit(1);
         }
     };
@@ -53,8 +53,8 @@ fn main() {
     #[cfg(target_os = "linux")]
     let portal = {
         let wake = wake.clone();
-        pocketdesk_desktop::hotkey_portal::PortalKeys::start(move |id| {
-            let _ = wake.send(if id == pocketdesk_desktop::hotkey_portal::CLIPBOARD {
+        friday_mobile_desktop::hotkey_portal::PortalKeys::start(move |id| {
+            let _ = wake.send(if id == friday_mobile_desktop::hotkey_portal::CLIPBOARD {
                 Wake::Clipboard
             } else {
                 Wake::Typing
@@ -86,7 +86,7 @@ fn main() {
     // K7: a phone's player in this computer's media controls.
     // N10: an MPRIS player on Linux.
     #[cfg(any(windows, target_os = "linux"))]
-    let mut player = pocketdesk_desktop::phone_player::Watch::default();
+    let mut player = friday_mobile_desktop::phone_player::Watch::default();
     loop {
         let (pressed, typing_pressed) = wait(&woken, REFRESH);
         if tray.as_ref().is_some_and(Tray::closed) {
@@ -142,7 +142,7 @@ fn main() {
             if seen.any_new(tray_watch::waiting(&state_dir, &approvals, now))
                 && let Err(e) = open_window(&state_dir, "overview", None)
             {
-                eprintln!("Pocketdesk tray: the window did not start ({e})");
+                eprintln!("FRIDAY Mobile tray: the window did not start ({e})");
             }
             let rows = model::phone_rows(&snapshot, &log.1);
             // A press queued before its key was taken back is not acted on (H3 review).
@@ -162,32 +162,32 @@ fn main() {
                     act(&state_dir, TrayAction::Type(id.to_string()));
                 }
             }
-            let mut entries = pocketdesk_desktop::tray_menu::with_pause(
-                pocketdesk_desktop::tray_menu::menu(&rows, &snapshot.devices, now),
-                pocketdesk_core::local::pause::current(&state_dir, now).as_ref(),
+            let mut entries = friday_mobile_desktop::tray_menu::with_pause(
+                friday_mobile_desktop::tray_menu::menu(&rows, &snapshot.devices, now),
+                friday_mobile_core::local::pause::current(&state_dir, now).as_ref(),
                 now,
             );
             // The shared keyboard and mouse: which computer has them now,
             // while sharing is on and the server runs.
             let sharing = keyboard_status(&state_dir, snapshot.running).filter(|s| s.sharing_on);
             let keyboard = sharing.as_ref().and_then(|status| {
-                pocketdesk_desktop::tray_menu::keyboard_line(
+                friday_mobile_desktop::tray_menu::keyboard_line(
                     Some(status),
                     &computer_names(&state_dir, &snapshot),
                 )
             });
-            entries = pocketdesk_desktop::tray_menu::with_keyboard(entries, keyboard);
+            entries = friday_mobile_desktop::tray_menu::with_keyboard(entries, keyboard);
             // PC6: the owner's computers, to show or wake.
-            entries = pocketdesk_desktop::tray_menu::with_computers(
+            entries = friday_mobile_desktop::tray_menu::with_computers(
                 entries,
-                &pocketdesk_core::local::computers::read(&state_dir).computers,
+                &friday_mobile_core::local::computers::read(&state_dir).computers,
                 snapshot.running,
             );
             // H4: the key names itself where its action is.
             if key.status.registered
                 && let Some(phone) = hotkey::phone(&rows)
             {
-                entries = pocketdesk_desktop::tray_menu::with_key(
+                entries = friday_mobile_desktop::tray_menu::with_key(
                     entries,
                     phone,
                     &hotkey::display(&key.status.key),
@@ -206,8 +206,8 @@ fn main() {
 fn keyboard_status(
     state_dir: &Path,
     running: bool,
-) -> Option<pocketdesk_core::local::shared_input::StatusFile> {
-    running.then(|| pocketdesk_core::local::shared_input::read_status(state_dir))
+) -> Option<friday_mobile_core::local::shared_input::StatusFile> {
+    running.then(|| friday_mobile_core::local::shared_input::read_status(state_dir))
 }
 
 /// The owner's other computers' names by device id: as they said them with
@@ -226,7 +226,7 @@ fn computer_names(
             .filter_map(|d| Some((d.id.clone(), d.name.clone()?))),
     );
     names.extend(
-        pocketdesk_core::local::shared_input::read(state_dir)
+        friday_mobile_core::local::shared_input::read(state_dir)
             .computers
             .into_iter()
             .filter(|c| !c.name.trim().is_empty())
@@ -250,7 +250,7 @@ struct Key {
     #[cfg_attr(not(windows), allow(dead_code))]
     id: i32,
     /// Its text in the config.
-    field: fn(&pocketdesk_core::local::config::Config) -> String,
+    field: fn(&friday_mobile_core::local::config::Config) -> String,
     /// Where Settings reads what became of it.
     file: &'static str,
     text: Option<String>,
@@ -269,7 +269,7 @@ const RETRY_TAKEN: Duration = Duration::from_secs(30);
 impl Key {
     fn new(
         id: i32,
-        field: fn(&pocketdesk_core::local::config::Config) -> String,
+        field: fn(&friday_mobile_core::local::config::Config) -> String,
         file: &'static str,
     ) -> Self {
         Self {
@@ -314,7 +314,7 @@ impl Key {
     fn follow(&mut self, state_dir: &Path) {
         // A key another app held is tried again now and then (H3 review).
         let retry = self.status.taken && self.tried.is_none_or(|at| at.elapsed() >= RETRY_TAKEN);
-        let stamp = pocketdesk_core::local::config::Config::path()
+        let stamp = friday_mobile_core::local::config::Config::path()
             .ok()
             .and_then(|p| std::fs::metadata(p).ok())
             .and_then(|m| m.modified().ok());
@@ -323,7 +323,7 @@ impl Key {
         }
         // A config that does not read (a typo, a save under way) keeps the
         // key as it is (H3 review); it is read again when it changes.
-        let text = match pocketdesk_core::local::config::Config::load() {
+        let text = match friday_mobile_core::local::config::Config::load() {
             Ok(config) => (self.field)(&config).trim().to_string(),
             Err(_) if self.text.is_some() => return,
             Err(_) => String::new(),
@@ -428,47 +428,50 @@ fn act(state_dir: &Path, action: TrayAction) -> bool {
     let now = now_unix();
     let done = match &action {
         TrayAction::Ring(id) => {
-            pocketdesk_core::local::rings::request(state_dir, id, now).map(|_| ())
+            friday_mobile_core::local::rings::request(state_dir, id, now).map(|_| ())
         }
         TrayAction::Mute(id, minutes) => {
-            pocketdesk_core::local::quiet::request(state_dir, id, *minutes, now).map(|_| ())
+            friday_mobile_core::local::quiet::request(state_dir, id, *minutes, now).map(|_| ())
         }
         TrayAction::SendClipboard(id) => {
-            pocketdesk_core::local::clip_history::request_current(state_dir, id, now).map(|_| ())
+            friday_mobile_core::local::clip_history::request_current(state_dir, id, now).map(|_| ())
         }
         TrayAction::Open => open_window(state_dir, "overview", None),
         TrayAction::Pair => open_window(state_dir, "pair", None),
         TrayAction::SendFile(id) => open_window(state_dir, "files", Some(id)),
         // N9: the window opens its typing window for the phone.
-        TrayAction::Type(id) => {
-            open_window(state_dir, pocketdesk_core::local::app_open::TYPE, Some(id))
-        }
-        TrayAction::TakePhoto(id) => pocketdesk_core::local::phone_photos::request(
+        TrayAction::Type(id) => open_window(
+            state_dir,
+            friday_mobile_core::local::app_open::TYPE,
+            Some(id),
+        ),
+        TrayAction::TakePhoto(id) => friday_mobile_core::local::phone_photos::request(
             state_dir,
             id,
-            pocketdesk_core::local::phone_photos::Ask::Take,
+            friday_mobile_core::local::phone_photos::Ask::Take,
             now,
         )
         .map(|_| ()),
         TrayAction::PhoneAction(id, action) => {
-            pocketdesk_core::local::phone_actions::request(state_dir, id, *action, now).map(|_| ())
+            friday_mobile_core::local::phone_actions::request(state_dir, id, *action, now)
+                .map(|_| ())
         }
         TrayAction::Pause(minutes) => {
-            pocketdesk_core::local::pause::pause(state_dir, *minutes, now).map(|_| ())
+            friday_mobile_core::local::pause::pause(state_dir, *minutes, now).map(|_| ())
         }
-        TrayAction::Resume => pocketdesk_core::local::pause::resume(state_dir),
+        TrayAction::Resume => friday_mobile_core::local::pause::resume(state_dir),
         TrayAction::PhoneMedia(id, command) => {
             model::press_phone_media(state_dir, id, command, now).map_err(std::io::Error::other)
         }
         // PC6: the window shows it, or offers to wake it first.
         TrayAction::ShowComputer(id) => open_window(
             state_dir,
-            pocketdesk_core::local::app_open::COMPUTER_VIEW,
+            friday_mobile_core::local::app_open::COMPUTER_VIEW,
             Some(id),
         ),
-        TrayAction::WakeComputer(id) => pocketdesk_core::local::computers::request(
+        TrayAction::WakeComputer(id) => friday_mobile_core::local::computers::request(
             state_dir,
-            pocketdesk_core::local::computers::ComputerAsk::Wake {
+            friday_mobile_core::local::computers::ComputerAsk::Wake {
                 device_id: id.clone(),
             },
             now,
@@ -476,9 +479,9 @@ fn act(state_dir: &Path, action: TrayAction) -> bool {
         .map(|_| ()),
         TrayAction::Quit => {
             // The window goes too, when it runs (E2).
-            let _ = pocketdesk_core::local::app_open::request(
+            let _ = friday_mobile_core::local::app_open::request(
                 state_dir,
-                pocketdesk_core::local::app_open::QUIT,
+                friday_mobile_core::local::app_open::QUIT,
                 None,
                 now,
             );
@@ -486,7 +489,7 @@ fn act(state_dir: &Path, action: TrayAction) -> bool {
         }
     };
     if let Err(e) = done {
-        eprintln!("Pocketdesk tray: {action:?} failed: {e}");
+        eprintln!("FRIDAY Mobile tray: {action:?} failed: {e}");
         // The tray program has no console (K2a review): a pause that failed
         // opens the Overview, which says what became of it.
         if matches!(action, TrayAction::Pause(_) | TrayAction::Resume) {
@@ -499,7 +502,7 @@ fn act(state_dir: &Path, action: TrayAction) -> bool {
 /// Ask the window for `page` (for `phone`), and start it: a window that
 /// runs already is raised by the new one, which then exits.
 fn open_window(state_dir: &Path, page: &str, phone: Option<&str>) -> std::io::Result<()> {
-    pocketdesk_core::local::app_open::request(state_dir, page, phone, now_unix())?;
+    friday_mobile_core::local::app_open::request(state_dir, page, phone, now_unix())?;
     let exe = std::env::current_exe()?;
     let window = exe.with_file_name(if cfg!(windows) {
         "pocketdesk-app.exe"

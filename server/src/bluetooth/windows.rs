@@ -443,12 +443,12 @@ fn pump(socket: Arc<Accepted>, runtime: tokio::runtime::Handle) -> DuplexStream 
 mod tests {
     use super::*;
 
-    use pocketdesk_core::protocol::bluetooth::SERVICE_NAME;
+    use friday_mobile_core::protocol::bluetooth::SERVICE_NAME;
 
     #[test]
     fn service_record_names_the_uuid() {
         let service =
-            uuid::Uuid::parse_str(pocketdesk_core::protocol::bluetooth::SERVICE_UUID).unwrap();
+            uuid::Uuid::parse_str(friday_mobile_core::protocol::bluetooth::SERVICE_UUID).unwrap();
         let bound = SOCKADDR_BTH {
             addressFamily: AF_BTH,
             port: 5,
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn the_transfer_record_names_its_own_service() {
-        use pocketdesk_core::protocol::bluetooth::{LINK_SERVICE_NAME, SERVICE_UUID, link_uuid};
+        use friday_mobile_core::protocol::bluetooth::{LINK_SERVICE_NAME, SERVICE_UUID, link_uuid};
         let control = uuid::Uuid::parse_str(SERVICE_UUID).unwrap();
         let record = service_record(
             link_uuid(control),
@@ -501,7 +501,7 @@ mod tests {
 
     #[test]
     fn the_screen_record_names_its_own_service() {
-        use pocketdesk_core::protocol::bluetooth::{
+        use friday_mobile_core::protocol::bluetooth::{
             SERVICE_UUID, STREAM_SERVICE_NAME, link_uuid, stream_uuid,
         };
         let control = uuid::Uuid::parse_str(SERVICE_UUID).unwrap();

@@ -6,7 +6,7 @@
 
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE;
+use friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE;
 
 /// What the computer's clipboard held.
 #[derive(Debug, Clone, PartialEq, Eq)]

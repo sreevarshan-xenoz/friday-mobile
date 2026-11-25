@@ -2,13 +2,13 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 fuzz_target!(|data: &[u8]| {
     let Ok(line) = std::str::from_utf8(data) else {
         return;
     };
     if let Ok(packet) = NetworkPacket::from_wire(line) {
-        pocketdesk_server::fuzzing::clipboard_body(&packet.body);
+        friday_mobile_server::fuzzing::clipboard_body(&packet.body);
     }
 });

@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
-const EXE: &str = env!("CARGO_BIN_EXE_pocketdesk");
+const EXE: &str = env!("CARGO_BIN_EXE_friday-mobile");
 const CONTROL: u16 = 18926;
 
 /// Well under the 10 s `stop` waits, which the server once outlasted.

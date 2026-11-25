@@ -3,7 +3,7 @@
 //! as they would arrive, and nothing else: no state is read or written.
 //! Behaviour stays where it is; these only reach `pub(crate)` parsers.
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use tokio::io::BufReader;
 
 /// A current-thread runtime for the readers, which are async but never
@@ -71,7 +71,7 @@ pub fn clipboard_body(body: &serde_json::Value) {
 
 /// Remote revoke's request and answer.
 pub fn remote_devices_body(body: &serde_json::Value) {
-    use pocketdesk_core::protocol::remote_devices as wire;
+    use friday_mobile_core::protocol::remote_devices as wire;
     let _ = wire::Request::parse(body);
     let _ = wire::read_answer(body);
 }
@@ -79,7 +79,7 @@ pub fn remote_devices_body(body: &serde_json::Value) {
 /// Introductions: the phone's ask and answer, the computer's introduction,
 /// cancel and answer.
 pub fn introductions_body(body: &serde_json::Value) {
-    use pocketdesk_core::protocol::introductions as wire;
+    use friday_mobile_core::protocol::introductions as wire;
     let _ = wire::PhoneRequest::parse(body);
     let _ = wire::read_phone_answer(body);
     let _ = wire::Introduction::parse(body);

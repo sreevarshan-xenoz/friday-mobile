@@ -7,7 +7,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::notification_action::{
+use friday_mobile_core::protocol::notification_action::{
     NOTIFICATION_ACTION, NOTIFICATION_OPEN, NOTIFICATION_REPLY, NOTIFICATION_REQUEST, cancel_key,
     valid_action, valid_answer_id, valid_key, valid_reply,
 };

@@ -11,7 +11,7 @@ pub struct TrayClaim {
 }
 
 #[cfg(windows)]
-const MUTEX_NAME: &str = "Local\\PocketdeskTray";
+const MUTEX_NAME: &str = "Local\\FRIDAYMobileTray";
 
 #[cfg(windows)]
 fn wide(text: &str) -> Vec<u16> {
@@ -61,7 +61,7 @@ fn socket_path() -> std::path::PathBuf {
     let dir = std::env::var_os("XDG_RUNTIME_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(std::env::temp_dir);
-    dir.join("pocketdesk-tray.sock")
+    dir.join("friday-mobile-tray.sock")
 }
 
 /// Claim the tray; `None` when another tray program holds it. Binding

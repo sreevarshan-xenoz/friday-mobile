@@ -3,11 +3,11 @@
 //! Tests that each registered plugin correctly handles its expected
 //! packet types and produces appropriate responses.
 
-use pocketdesk_core::error::Result;
+use friday_mobile_core::error::Result;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
 
 /// A mock sender that captures packets sent by plugins for verification.
 #[derive(Clone)]
@@ -40,8 +40,8 @@ impl DeviceSender for MockSender {
     }
 }
 
-fn build_test_registry() -> pocketdesk_server::plugins::PluginSet {
-    pocketdesk_server::plugins::register_all()
+fn build_test_registry() -> friday_mobile_server::plugins::PluginSet {
+    friday_mobile_server::plugins::register_all()
 }
 
 #[tokio::test]
@@ -60,7 +60,7 @@ async fn test_battery_plugin() {
 
 #[tokio::test]
 async fn test_clipboard_plugin_set() {
-    pocketdesk_core::local::paths::use_test_dirs("server-it");
+    friday_mobile_core::local::paths::use_test_dirs("server-it");
     let registry = build_test_registry();
     let sender = MockSender::new();
     let request = NetworkPacket::new("kdeconnect.clipboard")
@@ -104,7 +104,7 @@ async fn test_share_plugin_url_is_not_echoed() {
 
 #[tokio::test]
 async fn test_file_browse_plugin() {
-    pocketdesk_core::local::paths::use_test_dirs("server-it");
+    friday_mobile_core::local::paths::use_test_dirs("server-it");
     let registry = build_test_registry();
     let sender = MockSender::new();
     let request = NetworkPacket::new("kdeconnect.filebrowse.request")
@@ -144,7 +144,7 @@ async fn test_unknown_packet_type() {
 
 #[tokio::test]
 async fn test_clipboard_connect_request() {
-    pocketdesk_core::local::paths::use_test_dirs("server-it");
+    friday_mobile_core::local::paths::use_test_dirs("server-it");
     let registry = build_test_registry();
     let sender = MockSender::new();
     let request = NetworkPacket::new("kdeconnect.clipboard.connect");

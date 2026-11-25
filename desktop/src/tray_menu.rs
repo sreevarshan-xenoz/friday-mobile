@@ -24,7 +24,10 @@ pub enum TrayAction {
     /// N9: open the window that types on this phone (M4).
     Type(String),
     /// O2: a screenshot of the phone, or its screen locked.
-    PhoneAction(String, pocketdesk_core::protocol::phone_action::PhoneAction),
+    PhoneAction(
+        String,
+        friday_mobile_core::protocol::phone_action::PhoneAction,
+    ),
     /// K2a: pause for these minutes, or until resumed with `None`.
     Pause(Option<u32>),
     /// K2a: end the pause.
@@ -44,7 +47,7 @@ fn phone_action_reach(row: &crate::model::PhoneRow) -> bool {
         row.device.linked,
         row.device
             .permissions
-            .allows(pocketdesk_core::protocol::permissions::Capability::PhoneActions),
+            .allows(friday_mobile_core::protocol::permissions::Capability::PhoneActions),
     )
     .is_ok()
 }
@@ -75,7 +78,7 @@ pub fn span(minutes: u32) -> String {
 
 /// How a pause in force reads (K2a): "Paused, 42 min left" or "Paused
 /// until resumed".
-pub fn pause_text(pause: &pocketdesk_core::local::pause::Pause, now_unix: u64) -> String {
+pub fn pause_text(pause: &friday_mobile_core::local::pause::Pause, now_unix: u64) -> String {
     match pause.minutes_left(now_unix) {
         Some(minutes) => format!("Paused, {minutes} min left"),
         None => "Paused until resumed".to_string(),
@@ -86,7 +89,7 @@ pub fn pause_text(pause: &pocketdesk_core::local::pause::Pause, now_unix: u64) -
 /// long and Resume; else Pause with its three.
 pub fn with_pause(
     mut entries: Vec<Entry>,
-    pause: Option<&pocketdesk_core::local::pause::Pause>,
+    pause: Option<&friday_mobile_core::local::pause::Pause>,
     now_unix: u64,
 ) -> Vec<Entry> {
     let at = entries
@@ -253,7 +256,7 @@ pub fn menu(rows: &[PhoneRow], devices: &[Device], now_unix: u64) -> Vec<Entry> 
                         phone_action_reach(row).then(|| {
                             TrayAction::PhoneAction(
                                 id(),
-                                pocketdesk_core::protocol::phone_action::PhoneAction::Screenshot,
+                                friday_mobile_core::protocol::phone_action::PhoneAction::Screenshot,
                             )
                         }),
                     ),
@@ -262,7 +265,7 @@ pub fn menu(rows: &[PhoneRow], devices: &[Device], now_unix: u64) -> Vec<Entry> 
                         phone_action_reach(row).then(|| {
                             TrayAction::PhoneAction(
                                 id(),
-                                pocketdesk_core::protocol::phone_action::PhoneAction::Lock,
+                                friday_mobile_core::protocol::phone_action::PhoneAction::Lock,
                             )
                         }),
                     ),
@@ -271,10 +274,9 @@ pub fn menu(rows: &[PhoneRow], devices: &[Device], now_unix: u64) -> Vec<Entry> 
                     item(
                         "Type on the phone",
                         (row.device.linked
-                            && row
-                                .device
-                                .permissions
-                                .allows(pocketdesk_core::protocol::permissions::Capability::Cast))
+                            && row.device.permissions.allows(
+                                friday_mobile_core::protocol::permissions::Capability::Cast,
+                            ))
                         .then(|| TrayAction::Type(id())),
                     ),
                 ])
@@ -314,7 +316,7 @@ pub fn with_key(mut entries: Vec<Entry>, phone: &str, key: &str) -> Vec<Entry> {
 /// runs, which reaches them.
 pub fn with_computers(
     mut entries: Vec<Entry>,
-    computers: &[pocketdesk_core::local::computers::PeerComputer],
+    computers: &[friday_mobile_core::local::computers::PeerComputer],
     running: bool,
 ) -> Vec<Entry> {
     if computers.is_empty() {
@@ -325,9 +327,9 @@ pub fn with_computers(
         .rposition(|e| matches!(e, Entry::Separator))
         .unwrap_or(entries.len());
     let mut added = vec![Entry::Separator];
-    for computer in pocketdesk_core::local::computers::by_recent(computers) {
+    for computer in friday_mobile_core::local::computers::by_recent(computers) {
         let name =
-            pocketdesk_core::local::shared_input::display_name(&computer.name, COMPUTER_CHARS);
+            friday_mobile_core::local::shared_input::display_name(&computer.name, COMPUTER_CHARS);
         let wakes = model::can_wake(computer, running);
         let shows = wakes || model::view_reach(computer, running).is_ok();
         added.push(Entry::Item {
@@ -355,7 +357,7 @@ const COMPUTER_CHARS: usize = 48;
 /// are on, by its name in `names` (by device id). None while sharing is
 /// off.
 pub fn keyboard_line(
-    status: Option<&pocketdesk_core::local::shared_input::StatusFile>,
+    status: Option<&friday_mobile_core::local::shared_input::StatusFile>,
     names: &std::collections::BTreeMap<String, String>,
 ) -> Option<String> {
     let status = status.filter(|s| s.sharing_on)?;
@@ -365,7 +367,7 @@ pub fn keyboard_line(
     } else {
         let name = names
             .get(on)
-            .map(|n| pocketdesk_core::local::shared_input::display_name(n, COMPUTER_CHARS))
+            .map(|n| friday_mobile_core::local::shared_input::display_name(n, COMPUTER_CHARS))
             .unwrap_or_default();
         if name.is_empty() {
             "another computer".to_string()
@@ -415,8 +417,8 @@ mod tests {
         snapshot.devices = vec![device];
         snapshot.phone_media.insert(
             "p".to_string(),
-            pocketdesk_core::local::phone_media::PhoneMediaState {
-                media: pocketdesk_core::protocol::phone_media::PhoneMedia {
+            friday_mobile_core::local::phone_media::PhoneMediaState {
+                media: friday_mobile_core::protocol::phone_media::PhoneMedia {
                     title: "A song whose name runs on and on and on past the tray".to_string(),
                     is_playing: true,
                     can_play_pause: true,
@@ -472,7 +474,7 @@ mod tests {
         };
         assert_eq!(label, "Pause notifications");
         assert_eq!(items.len(), 3);
-        let pause = pocketdesk_core::local::pause::Pause {
+        let pause = friday_mobile_core::local::pause::Pause {
             since_unix: 1_000,
             until_unix: Some(1_000 + 2_520),
         };
@@ -491,7 +493,7 @@ mod tests {
                 action: Some(TrayAction::Resume)
             }
         );
-        let forever = pocketdesk_core::local::pause::Pause {
+        let forever = friday_mobile_core::local::pause::Pause {
             since_unix: 1,
             until_unix: None,
         };
@@ -504,9 +506,9 @@ mod tests {
 
     use super::*;
     use crate::model::Snapshot;
-    use pocketdesk_core::local::phone_quiet::PhoneQuiet;
-    use pocketdesk_core::local::phone_status::PhoneBattery;
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::local::phone_quiet::PhoneQuiet;
+    use friday_mobile_core::local::phone_status::PhoneBattery;
+    use friday_mobile_core::protocol::permissions::Capability;
 
     fn labels(entries: &[Entry]) -> Vec<(String, bool)> {
         entries
@@ -613,14 +615,14 @@ mod tests {
                     label: "Screenshot of the phone".to_string(),
                     action: Some(TrayAction::PhoneAction(
                         "ready".to_string(),
-                        pocketdesk_core::protocol::phone_action::PhoneAction::Screenshot
+                        friday_mobile_core::protocol::phone_action::PhoneAction::Screenshot
                     ))
                 },
                 Entry::Item {
                     label: "Lock the phone".to_string(),
                     action: Some(TrayAction::PhoneAction(
                         "ready".to_string(),
-                        pocketdesk_core::protocol::phone_action::PhoneAction::Lock
+                        friday_mobile_core::protocol::phone_action::PhoneAction::Lock
                     ))
                 },
                 Entry::Item {
@@ -759,7 +761,7 @@ mod tests {
     #[test]
     fn keyboard_line_from_status() {
         use super::*;
-        use pocketdesk_core::local::shared_input::StatusFile;
+        use friday_mobile_core::local::shared_input::StatusFile;
         let names = std::collections::BTreeMap::from([
             ("L".to_string(), "Laptop".to_string()),
             ("W".to_string(), "Desk".to_string()),
@@ -829,7 +831,7 @@ mod tests {
     #[test]
     fn computers_come_before_quit_to_show_or_wake() {
         use super::*;
-        use pocketdesk_core::local::computers::{ComputerWake, PeerComputer};
+        use friday_mobile_core::local::computers::{ComputerWake, PeerComputer};
         let computer = |id: &str, name: &str, link: &str, viewed: u64| PeerComputer {
             device_id: id.to_string(),
             name: name.to_string(),

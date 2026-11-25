@@ -47,7 +47,7 @@ mod tests {
     /// out as long and as loud as it went in.
     #[tokio::test]
     async fn a_tone_reaches_the_seam() {
-        use pocketdesk_core::streaming::audio::{AudioConfig, AudioEncoder};
+        use friday_mobile_core::streaming::audio::{AudioConfig, AudioEncoder};
         let dir = std::env::temp_dir().join(format!("pd-k5-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();

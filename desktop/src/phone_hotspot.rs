@@ -4,13 +4,13 @@
 //! Settings that is already a saved connection here. The phone's password is
 //! never asked for, kept or passed: `nmcli connection up id <name>` uses what
 //! NetworkManager already holds. The decisions and the commands are
-//! `pocketdesk_core::local::phone_hotspot`'s, pure and tested there.
+//! `friday_mobile_core::local::phone_hotspot`'s, pure and tested there.
 
 use std::io;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
-use pocketdesk_core::local::phone_hotspot as hotspot;
+use friday_mobile_core::local::phone_hotspot as hotspot;
 
 /// How many times joining is tried, and how long between tries: the phone's
 /// network takes a few seconds to appear after its hotspot starts.

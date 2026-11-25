@@ -1,5 +1,5 @@
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde_json::json;
 use std::path::{Component, Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -35,8 +35,8 @@ fn resolve_in(home: &Path, requested: &str) -> Option<(PathBuf, PathBuf)> {
 /// store, the PIN) and its config. Both may lie inside home.
 pub(crate) fn private_dirs() -> Vec<PathBuf> {
     [
-        pocketdesk_core::local::paths::state_dir(),
-        pocketdesk_core::local::paths::config_dir(),
+        friday_mobile_core::local::paths::state_dir(),
+        friday_mobile_core::local::paths::config_dir(),
     ]
     .into_iter()
     .filter_map(|dir| dir.ok()?.canonicalize().ok())

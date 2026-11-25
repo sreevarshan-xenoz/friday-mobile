@@ -16,11 +16,11 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::outbox::{self, SendRequest};
-use pocketdesk_core::local::pin::now_unix;
-use pocketdesk_core::local::sent::{self, SentFile, SentState};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TrustStore};
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::outbox::{self, SendRequest};
+use friday_mobile_core::local::pin::now_unix;
+use friday_mobile_core::local::sent::{self, SentFile, SentState};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TrustStore};
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// Pushed to the phone: a file is waiting for it, `{id, name, size}`.
 pub const OFFER: &str = "kdeconnect.pocketdesk.file_offer";
@@ -752,7 +752,7 @@ fn deliver_folder_to_computer(dir: &Path, request: SendRequest, root: PathBuf) {
             }
             Err(reason) => (Err(reason), 0),
         };
-        let name_problem = pocketdesk_core::protocol::relpath::component_problem(&folder);
+        let name_problem = friday_mobile_core::protocol::relpath::component_problem(&folder);
         let checked = match &found {
             _ if name_problem.is_some() => Err(format!(
                 "the folder's name: {}",
@@ -960,7 +960,7 @@ pub async fn run_watcher() {
         }
     }
     loop {
-        crate::inbox::wait(pocketdesk_core::local::paths::OUTBOX_DIR, POLL).await;
+        crate::inbox::wait(friday_mobile_core::local::paths::OUTBOX_DIR, POLL).await;
         for id in sweep_at(Instant::now()) {
             tracing::info!("Offer {id} expired before the phone took it");
             end_offer(&dir, &id, Err(EXPIRED.to_string()));
@@ -995,7 +995,7 @@ async fn deliver(
         return deliver_to_computer(dir, request, path);
     }
     // T6: a paired KDE Connect device, which comes for it as KDE Connect does.
-    if pocketdesk_core::local::kdeconnect_devices::devices(dir)
+    if friday_mobile_core::local::kdeconnect_devices::devices(dir)
         .iter()
         .any(|d| d.device_id == request.device_id)
     {
@@ -1094,7 +1094,7 @@ fn sent_date(path: &Path, keep: bool) -> Option<u64> {
         return None;
     }
     let modified = std::fs::metadata(path).ok()?.modified().ok()?;
-    pocketdesk_core::protocol::file_time::to_millis(modified)
+    friday_mobile_core::protocol::file_time::to_millis(modified)
 }
 
 /// `body` with the file at `path`'s date in it, when it goes with it (K1).
@@ -1105,7 +1105,7 @@ pub(crate) fn with_date(body: serde_json::Value, path: &Path) -> serde_json::Val
 /// [`with_date`] with the setting given.
 fn with_date_when(mut body: serde_json::Value, path: &Path, keep: bool) -> serde_json::Value {
     if let Some(ms) = sent_date(path, keep) {
-        body[pocketdesk_core::protocol::file_time::FIELD] = ms.into();
+        body[friday_mobile_core::protocol::file_time::FIELD] = ms.into();
     }
     body
 }
@@ -1152,7 +1152,7 @@ fn folder_files_capped(
     max_entries: usize,
 ) -> Result<FolderFiles, String> {
     use crate::plugins::file_browse::is_hidden;
-    use pocketdesk_core::protocol::relpath;
+    use friday_mobile_core::protocol::relpath;
     fn walk(
         dir: &Path,
         under: &[String],
@@ -1377,7 +1377,7 @@ async fn offer_folder(
     };
     // A folder whose own name the phone cannot make is refused, not sent
     // flat or renamed.
-    let name_problem = pocketdesk_core::protocol::relpath::component_problem(&folder);
+    let name_problem = friday_mobile_core::protocol::relpath::component_problem(&folder);
     let checked = match &found {
         _ if name_problem.is_some() => Err(format!(
             "the folder's name: {}",
@@ -1578,7 +1578,7 @@ fn update_sent(dir: &Path, id: &str, state: SentState) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::error::Result;
+    use friday_mobile_core::error::Result;
 
     /// S2: an offer the phone lost (its app killed mid-download) is offered
     /// again, as it was and in the order made, when its phone's link comes
@@ -1686,7 +1686,7 @@ mod tests {
         let path = dir.join("a.bin");
         std::fs::write(&path, b"abc").unwrap();
         let id = source_of(&path, 3);
-        assert!(pocketdesk_core::protocol::partials::valid_source(&id));
+        assert!(friday_mobile_core::protocol::partials::valid_source(&id));
         assert_eq!(id, source_of(&path, 3));
         assert_ne!(id, source_of(&path, 4), "another size");
         assert_ne!(id, source_of(&dir.join("b.bin"), 3), "another file");

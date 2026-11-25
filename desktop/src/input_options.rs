@@ -4,7 +4,7 @@
 //! they are left (Enter, or a click elsewhere).
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::config::Config;
+use friday_mobile_core::local::config::Config;
 
 /// The options, by their keys in config.toml, in page order. Settings'
 /// table names each as its row here does.

@@ -19,12 +19,14 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::local::computers::{self, PeerComputer};
-use pocketdesk_core::local::view::{self as wire, Message, Phase};
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{InputPacket, QuinnConnection, StreamingConfig, StreamingServer};
-use pocketdesk_server::computer_view::{Command, Dialer, run};
+use friday_mobile_core::local::computers::{self, PeerComputer};
+use friday_mobile_core::local::view::{self as wire, Message, Phase};
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
+    InputPacket, QuinnConnection, StreamingConfig, StreamingServer,
+};
+use friday_mobile_server::computer_view::{Command, Dialer, run};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
@@ -42,7 +44,7 @@ async fn read_message(stream: &mut TcpStream) -> Message {
 #[ignore = "runs a real encoder"]
 async fn the_real_servers_screen_reaches_the_window_and_the_window_its_input() {
     // SAFETY: this test binary has this one test, set before anything runs.
-    unsafe { std::env::set_var(pocketdesk_core::streaming::test_pattern::VAR, "1") };
+    unsafe { std::env::set_var(friday_mobile_core::streaming::test_pattern::VAR, "1") };
     let _ = rustls::crypto::ring::default_provider().install_default();
     let dir = std::env::temp_dir().join(format!("pd-view-real-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -57,7 +59,7 @@ async fn the_real_servers_screen_reaches_the_window_and_the_window_its_input() {
     // A second guard: any sound the view got would go to this file, never
     // the speakers. SAFETY: as above, the one test, before anything runs.
     let sound_seam = dir.join("view-sound.wav");
-    unsafe { std::env::set_var(pocketdesk_server::computer_view::SOUND_SEAM, &sound_seam) };
+    unsafe { std::env::set_var(friday_mobile_server::computer_view::SOUND_SEAM, &sound_seam) };
     computers::update(&dir, |file| {
         file.computers.push(PeerComputer {
             device_id: "desk".into(),

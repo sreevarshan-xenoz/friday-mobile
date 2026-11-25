@@ -3,10 +3,10 @@
 //! applies the desktop's requests ([`give`]), mirrors the driver, and tells
 //! the phones in a session when it changes ([`control_bodies`]).
 
-use pocketdesk_core::input::control::{Admit, InputControl, Policy};
-use pocketdesk_core::local::config::InputControlMode;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::streaming::InputPacket;
+use friday_mobile_core::input::control::{Admit, InputControl, Policy};
+use friday_mobile_core::local::config::InputControlMode;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::streaming::InputPacket;
 use std::collections::BTreeSet;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -97,7 +97,7 @@ pub fn device_may_drive(
 
 /// The live sessions, as [`decide`] takes them.
 pub fn live_refs() -> Vec<LiveRef> {
-    pocketdesk_core::streaming::sessions::list()
+    friday_mobile_core::streaming::sessions::list()
         .into_iter()
         .map(|s| (s.id, s.device_id))
         .collect()
@@ -136,7 +136,7 @@ pub struct Held {
     buttons: BTreeSet<u8>,
     keys: BTreeSet<u16>,
     /// The pen's last sample while in range (E3).
-    pen: Option<pocketdesk_core::streaming::PenSample>,
+    pen: Option<friday_mobile_core::streaming::PenSample>,
 }
 
 impl Held {
@@ -240,7 +240,7 @@ pub fn control_bodies(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::InputPacket;
+    use friday_mobile_core::streaming::InputPacket;
 
     fn one() -> InputControl {
         InputControl::new(Policy::One {
@@ -345,7 +345,7 @@ mod tests {
 
     #[test]
     fn a_pen_in_range_is_lifted_where_it_was_and_a_pen_gone_is_not() {
-        use pocketdesk_core::streaming::{PEN_CONTACT, PEN_IN_RANGE, PenSample};
+        use friday_mobile_core::streaming::{PEN_CONTACT, PEN_IN_RANGE, PenSample};
         let mut held = Held::default();
         let touching = PenSample {
             x_norm: 100,

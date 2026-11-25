@@ -8,11 +8,11 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{LazyLock, Mutex as StdMutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::deck::{DeckAction, DeckButton, MAX_BUTTONS, usable};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::streaming::input_packet::InputPacket;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::deck::{DeckAction, DeckButton, MAX_BUTTONS, usable};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::streaming::input_packet::InputPacket;
 use serde_json::{Value, json};
 
 use crate::input_injector::InputInjector;
@@ -223,7 +223,7 @@ impl DeckPlugin {
                     .map_err(|e| format!("the media controls failed: {e}"))?
             }
             DeckAction::Link(url) => {
-                if let Some(problem) = pocketdesk_core::protocol::link::link_problem(url) {
+                if let Some(problem) = friday_mobile_core::protocol::link::link_problem(url) {
                     return Err(format!("the link cannot be opened: {problem}"));
                 }
                 super::links::open_or_show(url)
@@ -233,7 +233,7 @@ impl DeckPlugin {
 }
 
 /// Whether the task `name` among `tasks` asks its owner before it runs.
-fn task_asks(tasks: &[pocketdesk_core::local::tasks::TaskSpec], name: &str) -> bool {
+fn task_asks(tasks: &[friday_mobile_core::local::tasks::TaskSpec], name: &str) -> bool {
     tasks.iter().any(|t| t.name == name && t.ask)
 }
 
@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn a_task_that_asks_first_is_answered_as_waiting() {
-        let tasks = [pocketdesk_core::local::tasks::TaskSpec {
+        let tasks = [friday_mobile_core::local::tasks::TaskSpec {
             name: "build".into(),
             command: "make".into(),
             ask: true,

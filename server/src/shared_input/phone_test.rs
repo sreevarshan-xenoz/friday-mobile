@@ -21,9 +21,9 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use pocketdesk_core::local::pin::now_unix;
-use pocketdesk_core::local::shared_input::PHONE_READY;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::local::pin::now_unix;
+use friday_mobile_core::local::shared_input::PHONE_READY;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
 use serde::{Deserialize, Serialize};
 
 use super::phone::{self, PhoneChannel, code_of};
@@ -243,7 +243,7 @@ fn write_whole(path: &Path, json: &str) -> std::io::Result<()> {
     }
     let tmp = path.with_extension("json.tmp");
     std::fs::write(&tmp, json)?;
-    pocketdesk_core::atomic_file::replace(&tmp, path)
+    friday_mobile_core::atomic_file::replace(&tmp, path)
 }
 
 /// The command: check the script, ask the running server to send it to
@@ -264,7 +264,7 @@ pub fn run_cli(phone: &str, script: &str) -> i32 {
             return exit::FAILED;
         }
     };
-    if !pocketdesk_core::local::server::is_running(&dir) {
+    if !friday_mobile_core::local::server::is_running(&dir) {
         eprintln!("phone-screen-test: no Pocketdesk server is running");
         return exit::NO_SERVER;
     }
@@ -582,7 +582,7 @@ mod tests {
                 .unwrap()
                 .contains("shared_input")
         );
-        let off = refusal(true, pocketdesk_core::local::shared_input::PHONE_OFF).unwrap();
+        let off = refusal(true, friday_mobile_core::local::shared_input::PHONE_OFF).unwrap();
         assert!(off.contains("not ready"), "{off}");
     }
 

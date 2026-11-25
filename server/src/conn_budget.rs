@@ -95,7 +95,7 @@ mod tests {
     /// proven attempt reaches the budget.
     #[tokio::test]
     async fn a_quic_attempt_is_counted_only_once_its_address_is_proven() {
-        use pocketdesk_core::streaming::transport::{CertManager, StreamTransportConfig};
+        use friday_mobile_core::streaming::transport::{CertManager, StreamTransportConfig};
         let _ = rustls::crypto::ring::default_provider().install_default();
         let desktop = CertManager::new().expect("desktop certs");
         let phone = CertManager::new().expect("phone certs");

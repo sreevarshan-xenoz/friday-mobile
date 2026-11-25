@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
-use pocketdesk_core::local::phone_media::PhoneMediaState;
+use friday_mobile_core::local::phone_media::PhoneMediaState;
 use zbus::zvariant::{ObjectPath, OwnedValue, Value};
 
 use super::{Button, Choice, command};
@@ -383,13 +383,13 @@ impl Watch {
         linked: &[&str],
         now_unix: u64,
     ) {
-        let stamp = pocketdesk_core::local::config::Config::path()
+        let stamp = friday_mobile_core::local::config::Config::path()
             .ok()
             .and_then(|p| std::fs::metadata(p).ok())
             .and_then(|m| m.modified().ok());
         if !self.read || stamp != self.stamp {
             // A config that does not read keeps the player as it is.
-            if let Ok(config) = pocketdesk_core::local::config::Config::load() {
+            if let Ok(config) = friday_mobile_core::local::config::Config::load() {
                 if config.phone_media_controls != self.on {
                     self.failed = None;
                 }
@@ -444,7 +444,7 @@ fn shown(state_dir: &Path, phone: &str, state: &PhoneMediaState) -> Shown {
     let art = state
         .art
         .as_deref()
-        .and_then(|name| pocketdesk_core::local::phone_media::art_path(state_dir, name))
+        .and_then(|name| friday_mobile_core::local::phone_media::art_path(state_dir, name))
         .map(|path| file_url(&path));
     Shown {
         phone: phone.to_string(),

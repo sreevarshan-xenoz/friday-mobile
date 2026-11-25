@@ -4,7 +4,7 @@
 //! Pure, so every platform's tests hold it; the devices are in
 //! `input_pen_windows` and the uinput tablet in `input_injector`.
 
-use pocketdesk_core::streaming::PenSample;
+use friday_mobile_core::streaming::PenSample;
 
 /// Where the pen is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -114,7 +114,7 @@ pub fn lifted(last: &PenSample) -> PenSample {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::{PEN_CONTACT, PEN_IN_RANGE};
+    use friday_mobile_core::streaming::{PEN_CONTACT, PEN_IN_RANGE};
 
     fn sample(flags: u8) -> PenSample {
         PenSample {

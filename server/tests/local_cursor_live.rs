@@ -37,14 +37,14 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::input::wlr_input::WlrInput;
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::view::{self as wire, Message};
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_core::protocol::cursor::{CursorMessage, CursorState};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::streaming::InputPacket;
+use friday_mobile_core::input::wlr_input::WlrInput;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::view::{self as wire, Message};
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_core::protocol::cursor::{CursorMessage, CursorState};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::streaming::InputPacket;
 
 fn stop(a_state: &Path) {
     let session_id = wire::read(a_state).map(|v| v.session_id);
@@ -141,7 +141,7 @@ fn a_computers_pointer_reaches_the_window_apart_from_its_picture() {
         run.servers.push(
             pocketdesk(config, state)
                 .env(
-                    pocketdesk_server::computer_view::SOUND_SEAM,
+                    friday_mobile_server::computer_view::SOUND_SEAM,
                     state.parent().unwrap().join("view-sound.wav"),
                 )
                 .arg("start")

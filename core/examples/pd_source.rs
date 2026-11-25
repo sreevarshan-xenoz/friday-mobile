@@ -15,7 +15,7 @@ mod linux {
     use std::os::fd::{AsFd, AsRawFd, FromRawFd, OwnedFd};
     use std::time::{Duration, Instant};
 
-    use pocketdesk_core::streaming::test_pattern;
+    use friday_mobile_core::streaming::test_pattern;
     use wayland_client::globals::{GlobalListContents, registry_queue_init};
     use wayland_client::protocol::wl_buffer::{self, WlBuffer};
     use wayland_client::protocol::wl_callback::{self, WlCallback};

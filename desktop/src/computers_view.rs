@@ -10,7 +10,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::computers::{self, ComputerAsk, ComputersFile, PeerComputer};
+use friday_mobile_core::local::computers::{self, ComputerAsk, ComputersFile, PeerComputer};
 
 /// How often the file is read again while the tab is open.
 const REFRESH: Duration = Duration::from_secs(2);
@@ -109,8 +109,8 @@ pub const WAKE_WAIT: Duration = Duration::from_secs(120);
 /// that are not both releases keep the link's.
 pub fn newer_release<'a>(link: Option<&'a str>, dialed_in: Option<&'a str>) -> Option<&'a str> {
     match (link, dialed_in) {
-        (Some(a), Some(b)) => match pocketdesk_core::version::skew(a, b) {
-            Some(pocketdesk_core::version::Skew::PeerNewer) => Some(b),
+        (Some(a), Some(b)) => match friday_mobile_core::version::skew(a, b) {
+            Some(friday_mobile_core::version::Skew::PeerNewer) => Some(b),
             _ => Some(a),
         },
         (a, b) => a.or(b),
@@ -198,9 +198,9 @@ pub fn viewed_words(computer: &PeerComputer, now_unix: u64) -> Option<String> {
 /// once cleaned of what a paste carries unseen around it
 /// ([`pair_link::clean_link`]: a byte-order mark kept Pair greyed out).
 ///
-/// [`pair_link::clean_link`]: pocketdesk_core::local::pair_link::clean_link
+/// [`pair_link::clean_link`]: friday_mobile_core::local::pair_link::clean_link
 pub fn looks_like_link(text: &str) -> bool {
-    pocketdesk_core::local::pair_link::clean_link(text).starts_with("pocketdesk://pair?")
+    friday_mobile_core::local::pair_link::clean_link(text).starts_with("pocketdesk://pair?")
 }
 
 /// What a pasted text is, as the line under the box says it (UX 1).
@@ -209,7 +209,7 @@ pub enum LinkCheck {
     /// Nothing pasted.
     Empty,
     /// A pairing link from another computer.
-    Valid(Box<pocketdesk_core::local::pair_link::PairLink>),
+    Valid(Box<friday_mobile_core::local::pair_link::PairLink>),
     /// This computer's own pairing link.
     Own,
     /// A pairing link's start, but not a whole one (PR #553 review M4).
@@ -220,14 +220,14 @@ pub enum LinkCheck {
 
 /// Check `text`, pasted on the computer whose id is `own_id`.
 pub fn check_link(text: &str, own_id: Option<&str>) -> LinkCheck {
-    let text = pocketdesk_core::local::pair_link::clean_link(text);
+    let text = friday_mobile_core::local::pair_link::clean_link(text);
     if text.is_empty() {
         return LinkCheck::Empty;
     }
     if !looks_like_link(text) {
         return LinkCheck::NotALink;
     }
-    match pocketdesk_core::local::pair_link::PairLink::from_uri(text) {
+    match friday_mobile_core::local::pair_link::PairLink::from_uri(text) {
         // Cut inside its certificate's fingerprint, it still reads.
         Ok(link) if !whole_fingerprint(link.fingerprint.as_deref()) => LinkCheck::CutOff,
         Ok(link) if own_id == Some(link.device_id.as_str()) => LinkCheck::Own,
@@ -473,7 +473,7 @@ impl ComputersView {
     fn refresh(&mut self, state_dir: &Path) {
         // Read often only while an answer can still come (PR #574 review
         // N7): one past its wait is said as none.
-        let now_unix = pocketdesk_core::local::pin::now_unix();
+        let now_unix = friday_mobile_core::local::pin::now_unix();
         let waiting_there = there_step(self.file.there.as_ref(), now_unix) == ThereStep::Asking
             || windows_step(self.file.windows_there.as_ref(), now_unix) == WindowsStep::Asking;
         let every = if self.pairing.is_some() || self.waking.is_some() || waiting_there {
@@ -485,7 +485,7 @@ impl ComputersView {
             return;
         }
         self.file = computers::read(state_dir);
-        self.own_id = pocketdesk_core::local::identity::device_id(state_dir);
+        self.own_id = friday_mobile_core::local::identity::device_id(state_dir);
         self.read_at = Some(Instant::now());
     }
 
@@ -927,7 +927,7 @@ impl ComputersView {
         }
         // What is sent, as what is checked: without what the paste
         // carried unseen around it.
-        let pasted = pocketdesk_core::local::pair_link::clean_link(&self.link).to_string();
+        let pasted = friday_mobile_core::local::pair_link::clean_link(&self.link).to_string();
         let check = check_link(&pasted, self.own_id.as_deref());
         let parsed = match &check {
             LinkCheck::Valid(link) => Some(link.as_ref().clone()),
@@ -1298,7 +1298,7 @@ pub fn outcome_words(outcome: &str, name: &str) -> Outcome {
 /// name for an outcome written before the id was kept.
 fn is_of_link(
     last: &computers::PairingOutcome,
-    link: &pocketdesk_core::local::pair_link::PairLink,
+    link: &friday_mobile_core::local::pair_link::PairLink,
 ) -> bool {
     if last.device_id.is_empty() {
         last.name == link.name
@@ -1342,7 +1342,7 @@ pub const CONSENT_BOX: &str = "That one is mine: no prompts";
 
 /// Whether `link` names an internet endpoint (an `endpointId` in its `ep`),
 /// which pairing both ways needs; the server checks it is a real key.
-fn names_endpoint(link: &pocketdesk_core::local::pair_link::PairLink) -> bool {
+fn names_endpoint(link: &friday_mobile_core::local::pair_link::PairLink) -> bool {
     link.endpoint
         .as_deref()
         .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok())
@@ -1358,7 +1358,7 @@ pub fn shown(name: &str) -> String {
 /// A link's computer name fit to show: one printable line, else
 /// "a computer".
 fn link_name(name: &str) -> String {
-    pocketdesk_core::protocol::kdeconnect::clean_device_name(name)
+    friday_mobile_core::protocol::kdeconnect::clean_device_name(name)
         .unwrap_or_else(|| "A computer".to_string())
 }
 
@@ -1517,7 +1517,7 @@ pub fn windows_words(why: &str, computer: &str) -> String {
 }
 
 /// A window's title for the picker, else its app.
-fn window_label(window: &pocketdesk_core::local::computers::LendableWindow) -> String {
+fn window_label(window: &friday_mobile_core::local::computers::LendableWindow) -> String {
     let title = window.title.trim();
     if !title.is_empty() {
         title.to_string()
@@ -1530,7 +1530,7 @@ fn window_label(window: &pocketdesk_core::local::computers::LendableWindow) -> S
 
 /// What the picker says of a window beside its title: its app, size and
 /// workspace, and that it is already lent here.
-pub fn window_facts(window: &pocketdesk_core::local::computers::LendableWindow) -> String {
+pub fn window_facts(window: &friday_mobile_core::local::computers::LendableWindow) -> String {
     let mut facts = Vec::new();
     if !window.class.is_empty() && !window.title.trim().is_empty() {
         facts.push(window.class.clone());
@@ -1580,7 +1580,7 @@ pub fn there_step(there: Option<&computers::DevicesThere>, now_unix: u64) -> The
 
 /// What the owner reads for the server's word `code` about `computer`.
 pub fn there_words(code: &str, computer: &str) -> String {
-    use pocketdesk_core::protocol::remote_devices::Refusal;
+    use friday_mobile_core::protocol::remote_devices::Refusal;
     match code {
         "no_answer" => format!("{computer} didn't answer. Is its link up?"),
         "not_linked" => format!(
@@ -1591,13 +1591,13 @@ pub fn there_words(code: &str, computer: &str) -> String {
 }
 
 /// A device there by its name, else the start of its id.
-fn device_name(device: &pocketdesk_core::protocol::remote_devices::ThereDevice) -> String {
-    pocketdesk_core::protocol::kdeconnect::clean_device_name(&device.name)
+fn device_name(device: &friday_mobile_core::protocol::remote_devices::ThereDevice) -> String {
+    friday_mobile_core::protocol::kdeconnect::clean_device_name(&device.name)
         .unwrap_or_else(|| device.id.chars().take(8).collect())
 }
 
 /// What kind of device it is there, in a few words.
-pub fn device_kind(device: &pocketdesk_core::protocol::remote_devices::ThereDevice) -> String {
+pub fn device_kind(device: &friday_mobile_core::protocol::remote_devices::ThereDevice) -> String {
     let mut words = vec![if device.computer { "computer" } else { "phone" }];
     if device.you {
         words.push("this computer");
@@ -1624,7 +1624,7 @@ pub fn remove_question(device: &str, computer: &str) -> String {
 /// in words, and whether it went.
 pub fn outcome_of_removal(outcome: &str, computer: &str) -> (bool, String) {
     if let Some(name) = outcome.strip_prefix("removed: ") {
-        let name = pocketdesk_core::protocol::kdeconnect::clean_device_name(name)
+        let name = friday_mobile_core::protocol::kdeconnect::clean_device_name(name)
             .unwrap_or_else(|| "The device".to_string());
         return (true, format!("Removed {name} from {computer}."));
     }
@@ -1685,7 +1685,7 @@ mod tests {
 
     fn sleeping(wired: bool) -> PeerComputer {
         PeerComputer {
-            wake: Some(pocketdesk_core::local::computers::ComputerWake {
+            wake: Some(friday_mobile_core::local::computers::ComputerWake {
                 mac: "00:00:5E:00:53:01".to_string(),
                 broadcast: std::net::Ipv4Addr::new(192, 0, 2, 255),
                 wired,
@@ -1773,7 +1773,7 @@ mod tests {
         dir: &std::path::Path,
         view: ComputersView,
     ) -> egui_kittest::Harness<'static, ComputersView> {
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.to_path_buf();
         let mut harness = egui_kittest::Harness::new_ui_state(
             move |ui, view: &mut ComputersView| view.show_list(ui, &state, true, now),
@@ -1800,7 +1800,7 @@ mod tests {
         harness.get_by_label(WAKE).click();
         harness.run_steps(2);
         let asked: Vec<ComputerAsk> =
-            computers::take_all(&dir, pocketdesk_core::local::pin::now_unix())
+            computers::take_all(&dir, friday_mobile_core::local::pin::now_unix())
                 .into_iter()
                 .map(|r| r.ask)
                 .collect();
@@ -1831,7 +1831,7 @@ mod tests {
             .query_by_label_contains("Waking Desk: its screen shows once it is up")
             .is_some();
         let waking = harness.state().waking().map(|w| w.device_id.clone());
-        let asked = computers::take_all(&dir, pocketdesk_core::local::pin::now_unix()).len();
+        let asked = computers::take_all(&dir, friday_mobile_core::local::pin::now_unix()).len();
         harness.get_by_label("Cancel").click();
         harness.run_steps(2);
         let cancelled = harness.state().waking().is_none();
@@ -1903,7 +1903,12 @@ mod tests {
         let waiting = view.waking().is_some();
         // Cancelled: the wait is gone, so its link opens nothing.
         let mut cancelled = ComputersView::default();
-        cancelled.wake_and_show(&dir, "b", "Desk", pocketdesk_core::local::pin::now_unix());
+        cancelled.wake_and_show(
+            &dir,
+            "b",
+            "Desk",
+            friday_mobile_core::local::pin::now_unix(),
+        );
         cancelled.waking = None;
         cancelled.tick(&dir);
         let _ = std::fs::remove_dir_all(&dir);
@@ -1919,7 +1924,12 @@ mod tests {
         let dir = temp("woken");
         computers::update(&dir, |file| file.computers.push(sleeping(true))).unwrap();
         let mut view = ComputersView::default();
-        view.wake_and_show(&dir, "b", "Desk", pocketdesk_core::local::pin::now_unix());
+        view.wake_and_show(
+            &dir,
+            "b",
+            "Desk",
+            friday_mobile_core::local::pin::now_unix(),
+        );
         view.tick(&dir);
         assert_eq!(view.take_view(), None, "still asleep");
         computers::update(&dir, |file| file.computers[0].link = "linked".to_string()).unwrap();
@@ -1989,7 +1999,7 @@ mod tests {
 
     /// [`mine_link`] with `endpoint` as its internet endpoint.
     fn mine_link_with(endpoint: Option<String>) -> String {
-        pocketdesk_core::local::pair_link::PairLink {
+        friday_mobile_core::local::pair_link::PairLink {
             name: "Test Tower".to_string(),
             device_id: "00000000-0000-4000-8000-0000000000f1".to_string(),
             addresses: vec!["192.0.2.70".to_string(), "192.0.2.71".to_string()],
@@ -2013,7 +2023,7 @@ mod tests {
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&dir);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.clone();
         let mut harness = egui_kittest::Harness::new_ui_state(
             move |ui, view: &mut ComputersView| view.show(ui, &state, true, now),
@@ -2084,7 +2094,7 @@ mod tests {
         let dir =
             std::env::temp_dir().join(format!("pd-computers-view-no-road-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.clone();
         let link = mine_link_with(None);
         let mut harness = egui_kittest::Harness::new_ui_state(
@@ -2146,7 +2156,7 @@ mod tests {
         running: bool,
         link: &str,
     ) -> egui_kittest::Harness<'static, ComputersView> {
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.to_path_buf();
         let mut harness = egui_kittest::Harness::new_ui_state(
             move |ui, view: &mut ComputersView| view.show(ui, &state, running, now),
@@ -2165,7 +2175,7 @@ mod tests {
         dir: &std::path::Path,
         running: bool,
     ) -> egui_kittest::Harness<'static, ComputersView> {
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.to_path_buf();
         let mut harness = egui_kittest::Harness::new_ui_state(
             move |ui, view: &mut ComputersView| view.show_list(ui, &state, running, now),
@@ -2178,8 +2188,8 @@ mod tests {
     fn there_device(
         id: &str,
         name: &str,
-    ) -> pocketdesk_core::protocol::remote_devices::ThereDevice {
-        pocketdesk_core::protocol::remote_devices::ThereDevice {
+    ) -> friday_mobile_core::protocol::remote_devices::ThereDevice {
+        friday_mobile_core::protocol::remote_devices::ThereDevice {
             id: id.to_string(),
             name: name.to_string(),
             computer: false,
@@ -2214,7 +2224,7 @@ mod tests {
                 listed_unix: 1,
                 devices: vec![
                     there_device("lost", "Lost phone"),
-                    pocketdesk_core::protocol::remote_devices::ThereDevice {
+                    friday_mobile_core::protocol::remote_devices::ThereDevice {
                         you: true,
                         computer: true,
                         ..there_device("me", "This desk")
@@ -2246,7 +2256,7 @@ mod tests {
             .is_some();
         harness.get_by_label("Remove").click();
         harness.run_steps(2);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let requests: Vec<ComputerAsk> = computers::take_all(&dir, now)
             .into_iter()
             .map(|r| r.ask)
@@ -2276,8 +2286,8 @@ mod tests {
         address: &str,
         title: &str,
         class: &str,
-    ) -> pocketdesk_core::local::computers::LendableWindow {
-        pocketdesk_core::local::computers::LendableWindow {
+    ) -> friday_mobile_core::local::computers::LendableWindow {
+        friday_mobile_core::local::computers::LendableWindow {
             address: address.to_string(),
             title: title.to_string(),
             class: class.to_string(),
@@ -2310,7 +2320,7 @@ mod tests {
             });
             file.windows_there = Some(computers::WindowsThere {
                 device_id: "mine-pc".to_string(),
-                listed_unix: pocketdesk_core::local::pin::now_unix(),
+                listed_unix: friday_mobile_core::local::pin::now_unix(),
                 windows: vec![lendable("0x5a", "Notes", "app.notes")],
                 ..Default::default()
             });
@@ -2329,7 +2339,7 @@ mod tests {
         harness.run_steps(2);
         let pick = harness.state_mut().take_borrow();
         let again = harness.state_mut().take_borrow();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let requests: Vec<ComputerAsk> = computers::take_all(&dir, now)
             .into_iter()
             .map(|r| r.ask)
@@ -2371,7 +2381,7 @@ mod tests {
     fn a_lent_window_is_not_borrowed_twice_and_an_open_list_is_kept_alive() {
         use egui_kittest::kittest::{NodeT, Queryable};
         let dir = temp("borrow-twice");
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         computers::update(&dir, |file| {
             file.computers.push(PeerComputer {
                 device_id: "mine-pc".to_string(),
@@ -2542,7 +2552,7 @@ mod tests {
         let (ok, words) = outcome_of_removal("refused: too_many", "Tower");
         assert!(!ok && words.contains("Too many removals"));
         assert_eq!(
-            device_kind(&pocketdesk_core::protocol::remote_devices::ThereDevice {
+            device_kind(&friday_mobile_core::protocol::remote_devices::ThereDevice {
                 owner: true,
                 connected: true,
                 ..there_device("p", "")
@@ -2602,7 +2612,7 @@ mod tests {
         let dir = temp("own");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
-            dir.join(pocketdesk_core::local::paths::DEVICE_ID_FILE),
+            dir.join(friday_mobile_core::local::paths::DEVICE_ID_FILE),
             "00000000-0000-4000-8000-0000000000f1",
         )
         .unwrap();
@@ -2621,7 +2631,7 @@ mod tests {
     fn the_link_goes_when_the_page_is_left() {
         use egui_kittest::kittest::{NodeT, Queryable};
         let dir = temp("left");
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let state = dir.clone();
         let mut harness = egui_kittest::Harness::new_ui_state(
             move |ui, (shown, view): &mut (bool, ComputersView)| {
@@ -2777,7 +2787,7 @@ mod tests {
         let waiting = harness.query_by_label("Pairing with Test Tower…").is_some()
             && harness.query_by_label("Cancel").is_some();
         // The server takes the request and answers it.
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let taken = computers::take_all(&dir, now);
         let raw = "failed: it did not answer (192.0.2.70: timeout after 8000ms during connect)";
         computers::update(&dir, |file| {
@@ -2814,7 +2824,7 @@ mod tests {
         harness.get_by_label("Cancel").click();
         harness.run_steps(2);
         let gone = harness.query_by_label("Pairing with Test Tower…").is_none();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let left = computers::take_all(&dir, now);
         let _ = std::fs::remove_dir_all(&dir);
         assert!(gone);
@@ -2830,7 +2840,7 @@ mod tests {
         let mut harness = page(&dir, true, &mine_link());
         harness.get_by_label("Pair one way").click();
         harness.run_steps(2);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let taken = computers::take_all(&dir, now);
         harness.get_by_label("Cancel").click();
         harness.run_steps(2);
@@ -2862,7 +2872,7 @@ mod tests {
             });
         })
         .unwrap();
-        let other = pocketdesk_core::local::pair_link::PairLink {
+        let other = friday_mobile_core::local::pair_link::PairLink {
             name: "Test Desk".to_string(),
             device_id: "00000000-0000-4000-8000-0000000000f2".to_string(),
             addresses: vec!["192.0.2.80".to_string()],

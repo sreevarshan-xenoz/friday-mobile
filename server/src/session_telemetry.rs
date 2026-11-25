@@ -35,19 +35,19 @@ pub fn session_log_path() -> Result<PathBuf> {
 /// every field typed, for tooling and for the benchmark regression check
 /// (roadmap 2167/2168). `pocketdesk sessions --json` prints it.
 pub fn session_record_path() -> Result<PathBuf> {
-    Ok(state::state_dir()?.join(pocketdesk_core::local::paths::SESSIONS_FILE))
+    Ok(state::state_dir()?.join(friday_mobile_core::local::paths::SESSIONS_FILE))
 }
 
 /// Install the core telemetry sink → [`record`]. Called once at server
 /// startup; a second call is a no-op (core keeps the first sink).
 pub fn init() {
-    pocketdesk_core::streaming::set_session_telemetry_callback(|report| {
+    friday_mobile_core::streaming::set_session_telemetry_callback(|report| {
         if let Err(e) = record(report) {
             tracing::warn!("Failed to record session telemetry: {e}");
         }
         // Every refused session leaves a record: not paired, denied by the
         // owner, or without the permission it needs (ecosystem 1b).
-        if report.outcome == pocketdesk_core::streaming::SessionOutcome::Rejected {
+        if report.outcome == friday_mobile_core::streaming::SessionOutcome::Rejected {
             crate::events::emit(
                 "session_refused",
                 report.device_id.as_deref(),
@@ -60,7 +60,7 @@ pub fn init() {
 
 /// Append one report to both stores: the tab-separated line for humans and the
 /// JSON record for comparison. Each rotates independently.
-pub fn record(report: &pocketdesk_core::streaming::SessionReport) -> Result<()> {
+pub fn record(report: &friday_mobile_core::streaming::SessionReport) -> Result<()> {
     append(session_log_path()?, report.format(), MAX_LOG_BYTES)?;
     let json = serde_json::to_string(report)?;
     append(session_record_path()?, json, MAX_RECORD_BYTES)
@@ -240,22 +240,22 @@ fn froze(line: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::SessionReport;
+    use friday_mobile_core::streaming::SessionReport;
     use std::io::Write;
 
     fn report(outcome: &'static str) -> SessionReport {
         // Build via the core type's fields (they're public).
         let kind = match outcome {
-            "lan_direct" => pocketdesk_core::streaming::SessionOutcome::LanDirect,
-            "wan_punched" => pocketdesk_core::streaming::SessionOutcome::WanPunched,
-            "wan_relayed" => pocketdesk_core::streaming::SessionOutcome::WanRelayed,
-            "rejected" => pocketdesk_core::streaming::SessionOutcome::Rejected,
-            _ => pocketdesk_core::streaming::SessionOutcome::Failed,
+            "lan_direct" => friday_mobile_core::streaming::SessionOutcome::LanDirect,
+            "wan_punched" => friday_mobile_core::streaming::SessionOutcome::WanPunched,
+            "wan_relayed" => friday_mobile_core::streaming::SessionOutcome::WanRelayed,
+            "rejected" => friday_mobile_core::streaming::SessionOutcome::Rejected,
+            _ => friday_mobile_core::streaming::SessionOutcome::Failed,
         };
         SessionReport {
             unix_secs: 100,
             outcome: kind,
-            ever_relayed: kind == pocketdesk_core::streaming::SessionOutcome::WanRelayed,
+            ever_relayed: kind == friday_mobile_core::streaming::SessionOutcome::WanRelayed,
             duration_secs: 60,
             rtt_avg_ms: 30,
             goodput_kbps: 5000,
@@ -319,7 +319,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("streaming_sessions.jsonl");
 
-        let tails = pocketdesk_core::metrics::Samples::new();
+        let tails = friday_mobile_core::metrics::Samples::new();
         for i in 0..300u64 {
             tails.push_micros(4_000 + i * 1_000);
         }
@@ -374,7 +374,7 @@ mod tests {
         let path = dir.join("streaming_sessions.jsonl");
 
         let mut report = report("wan_punched");
-        report.link = Some(pocketdesk_core::streaming::LinkReport {
+        report.link = Some(friday_mobile_core::streaming::LinkReport {
             lost_packets: 12,
             lost_bytes: 4096,
             datagrams_sent: 9_000,

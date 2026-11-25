@@ -13,7 +13,7 @@
 //! other computer sees the service, and the name gives away nothing. It goes
 //! when this process's D-Bus connection does.
 
-use pocketdesk_core::protocol::phone_location::Precision;
+use friday_mobile_core::protocol::phone_location::Precision;
 
 /// Avahi's service type for an NMEA source, as GeoClue browses it.
 pub const SERVICE_TYPE: &str = "_nmea-0183._tcp";

@@ -78,7 +78,7 @@ pub fn notify(summary: &str, body: &str, expire: Duration) -> bool {
 pub fn notify_send_args(summary: &str, body: &str, expire: Duration) -> Vec<String> {
     vec![
         "--app-name".to_string(),
-        "Pocketdesk".to_string(),
+        "FRIDAY Mobile".to_string(),
         "--expire-time".to_string(),
         expire.as_millis().to_string(),
         "--".to_string(),

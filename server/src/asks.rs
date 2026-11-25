@@ -10,12 +10,12 @@ use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::asks::{self, AskRequest};
-use pocketdesk_core::protocol::approve::{APPROVE_KEY, attestation_of, signature_of};
-use pocketdesk_core::protocol::ask::{ASK, ASK_ANSWER, Answer, answer_of, ask_body};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::asks::{self, AskRequest};
+use friday_mobile_core::protocol::approve::{APPROVE_KEY, attestation_of, signature_of};
+use friday_mobile_core::protocol::ask::{ASK, ASK_ANSWER, Answer, answer_of, ask_body};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// How often `pocketdesk ask` looks for its answer.
 const POLL: Duration = Duration::from_millis(250);
@@ -36,7 +36,7 @@ struct Pending {
 static PENDING: LazyLock<Mutex<HashMap<String, Pending>>> = LazyLock::new(Default::default);
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 /// `pocketdesk ask`: put `question` to the phones and wait up to
@@ -135,7 +135,7 @@ pub async fn run() {
             tokio::time::sleep(Duration::from_millis(500)).await;
         } else {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::ASKS_DIR,
+                friday_mobile_core::local::paths::ASKS_DIR,
                 Duration::from_millis(500),
             )
             .await;

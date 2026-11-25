@@ -7,10 +7,10 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::phone_files::{self as store, Kind};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::phone_files::{
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::phone_files::{self as store, Kind};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::phone_files::{
     FETCH, LIST, LISTING, Listing, MKDIR, PUT, request_body,
 };
 
@@ -56,7 +56,7 @@ impl Plugin for PhoneFilesPlugin {
         // The drive may be waiting for it (D8).
         crate::drive::live::listing_came(&device, &listing);
         let dir = crate::state::state_dir().map_err(|e| {
-            pocketdesk_core::error::PocketdeskError::Other {
+            friday_mobile_core::error::PocketdeskError::Other {
                 detail: e.to_string(),
             }
         })?;
@@ -94,7 +94,7 @@ pub async fn run_watcher() {
     let _ = store::clear(&dir);
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::PHONE_FILES_DIR,
+            friday_mobile_core::local::paths::PHONE_FILES_DIR,
             Duration::from_millis(300),
         )
         .await;

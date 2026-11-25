@@ -35,13 +35,13 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, PeerComputer};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::streaming::{
+use friday_mobile_core::local::computers::{self, PeerComputer};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::streaming::{
     StreamingConfig, VideoFrame, capture_mutter, gnome_unattended, latest_frame, window_target,
 };
-use pocketdesk_server::{lend_window, virtual_screen};
+use friday_mobile_server::{lend_window, virtual_screen};
 use serde_json::{Value, json};
 use tokio_util::sync::CancellationToken;
 

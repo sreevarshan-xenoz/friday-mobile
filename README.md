@@ -12,8 +12,6 @@ Its live screen under your fingers, its sound, and the clipboard, files, notific
   <a href="docs/guide.md#roadmap"><img src="https://img.shields.io/badge/status-beta-orange" alt="Status: beta"></a>
 </p>
 
-Command names stay `pocketdesk` for now (step 2 renames them).
-
 ## What is FRIDAY Mobile?
 
 A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop app to manage it, and a native Android app. The server and desktop app are written in Rust and the phone app in Kotlin with a Rust bridge. Video encoding uses FFmpeg, as a library or as the `ffmpeg` program (Windows needs `ffmpeg.exe`). Together they give you:
@@ -31,8 +29,8 @@ A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop
 - Phones running KDE Connect can pair with it for the basics (ping, clipboard, battery, Ring, notifications, files).
 
 **Automation and the rest of your day**
-- **`pocketdesk ask`:** a Yes or No question from a script or terminal, answered on the phone (Yes asks for its fingerprint or screen lock); the answer is the exit code.
-- **The deck, tasks, home-screen widgets and tiles:** buttons you set up on the computer press keys, run tasks or open links from the phone, with no session open. `pocketdesk done` tells the phone when a command ends.
+- **`friday-mobile ask`:** a Yes or No question from a script or terminal, answered on the phone (Yes asks for its fingerprint or screen lock); the answer is the exit code.
+- **The deck, tasks, home-screen widgets and tiles:** buttons you set up on the computer press keys, run tasks or open links from the phone, with no session open. `friday-mobile done` tells the phone when a command ends.
 - **Home Assistant** (over MQTT, no YAML) and a **browser extension** that sends a page, link or image to the phone.
 - **Quiet hours, pause, and lock when the phone leaves**, plus a privacy mode that blocks the computer's own keyboard and mouse while you drive it.
 
@@ -63,7 +61,7 @@ A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop
 - **Fit the screen to the window** (a Linux computer on Hyprland or Sway shows a screen the size of the window on another) and **Unattended on GNOME** (no dialog, off by default; [how](docs/guide.md#gnome-unattended-with-no-dialog)).
 - **Optional, with Shizuku** (off by default; never wireless debugging or root): each phone app in a window of its own, several at once; **keys to taps** for playing a phone game from the computer's keyboard and mouse; and the computer turning on the phone's hotspot for its internet.
 - **A Wear OS tile:** wake the computer, ring the phone, the computer's music and deck buttons from the watch, over Bluetooth with no Google Play services. The watch app is not in the release downloads yet: build it from `android/wear` ([how](docs/guide.md#watch-controls-a-wear-os-tile)).
-- **On Linux hosts:** a firewall check (Diagnostics reads ufw, firewalld, nftables and iptables and says which Pocketdesk ports get in; the Pair page says so when the firewall is why a pairing times out; it only reads the rules), and software encoding on stock Fedora through Cisco's OpenH264, where `ffmpeg-free` has no libx264 (tested in a container; a phone session on real Fedora is still owed).
+- **On Linux hosts:** a firewall check (Diagnostics reads ufw, firewalld, nftables and iptables and says which FRIDAY Mobile ports get in; the Pair page says so when the firewall is why a pairing times out; it only reads the rules), and software encoding on stock Fedora through Cisco's OpenH264, where `ffmpeg-free` has no libx264 (tested in a container; a phone session on real Fedora is still owed).
 
 ## Quickstart
 
@@ -71,16 +69,16 @@ A server for Linux (Wayland-native, Hyprland first) and Windows 10/11, a desktop
 
 | Computer | Install |
 |---|---|
-| Windows 10/11 | Run `pocketdesk-…-windows-x86_64-setup.exe`. It starts Pocketdesk at sign-in, opens its firewall ports and offers to install FFmpeg. A portable `…-windows-x86_64.zip` is there too (run `pocketdesk.exe install` once). |
+| Windows 10/11 | Run `friday-mobile-…-windows-x86_64-setup.exe`. It starts FRIDAY Mobile at sign-in, opens its firewall ports and offers to install FFmpeg. A portable `…-windows-x86_64.zip` is there too (run `friday-mobile.exe install` once). |
 | Windows, winget | The manifests are in [`packaging/winget/`](packaging/winget/), not yet in winget's own catalogue; the [guide](docs/guide.md#the-phone-app-and-windows-through-winget) has the command. |
-| Debian, Ubuntu | `sudo apt install ./pocketdesk-…-linux-amd64.deb` |
-| Arch | `yay -S pocketdesk` ([AUR](https://aur.archlinux.org/packages/pocketdesk)) |
+| Debian, Ubuntu | `sudo apt install ./friday-mobile-…-linux-amd64.deb` |
+| Arch | `yay -S friday-mobile` ([AUR](https://aur.archlinux.org/packages/friday-mobile)) |
 | Other Linux | `curl -fsSL https://raw.githubusercontent.com/sreevarshan-xenoz/Pocketdesk/main/scripts/install.sh \| bash` installs the portable `linux-x86_64` tarball. It needs glibc 2.39 or newer, PipeWire and FFmpeg; the script offers to install what is missing. 0.8.3's tarball did not start on Arch; that is fixed on `main`, for the next release. |
 | Fedora | The same script. It installs `ffmpeg-free` and, from 0.9.0, uses Cisco's OpenH264 for software encoding, since `ffmpeg-free` has no libx264 ([details](docs/guide.md#installation)). |
 
 **2. Install the app on your phone** (Android 8 or newer): `pocketdesk-...-android-arm64.apk` from the same release, or add `https://github.com/sreevarshan-xenoz/Pocketdesk` to [Obtainium](https://github.com/ImranR98/Obtainium) to keep it updated. F-Droid is not available yet: the metadata is ready but has not been submitted.
 
-**3. Pair them.** Open Pocketdesk on the computer and go to its **Pair** page. On the phone, tap **Scan pairing code** and point it at the QR code. Do this once with both on the same network (or tailnet); after that the phone reaches the computer from anywhere. If the app says the server is not running, press **Start server** on its Overview page.
+**3. Pair them.** Open FRIDAY Mobile on the computer and go to its **Pair** page. On the phone, tap **Scan pairing code** and point it at the QR code. Do this once with both on the same network (or tailnet); after that the phone reaches the computer from anywhere. If the app says the server is not running, press **Start server** on its Overview page.
 
 Something not working? The desktop app's **Diagnostics** page checks the server, its ports, the firewall and the internet path, and copies a report you can paste into an issue.
 

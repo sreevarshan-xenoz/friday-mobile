@@ -170,11 +170,11 @@ pub struct Item {
 
 impl ksni::Tray for Item {
     fn id(&self) -> String {
-        "pocketdesk".into()
+        "friday-mobile".into()
     }
 
     fn title(&self) -> String {
-        "Pocketdesk".into()
+        "FRIDAY Mobile".into()
     }
 
     fn category(&self) -> ksni::Category {
@@ -187,7 +187,7 @@ impl ksni::Tray for Item {
 
     fn tool_tip(&self) -> ksni::ToolTip {
         ksni::ToolTip {
-            title: "Pocketdesk".into(),
+            title: "FRIDAY Mobile".into(),
             ..Default::default()
         }
     }

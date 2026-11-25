@@ -36,8 +36,8 @@ use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::streaming::InputPacket;
-use pocketdesk_core::streaming::wheel::WheelSender;
+use friday_mobile_core::streaming::InputPacket;
+use friday_mobile_core::streaming::wheel::WheelSender;
 
 use crate::video::fraction;
 
@@ -1690,7 +1690,7 @@ mod tests {
             // Every key is one the window already sends, with a Windows
             // stroke on a Windows host and a code on a Linux one.
             for code in key.keys() {
-                assert!(pocketdesk_core::local::view::input_allowed(
+                assert!(friday_mobile_core::local::view::input_allowed(
                     &InputPacket::KeyEvent {
                         key: *code,
                         pressed: true
@@ -1949,7 +1949,7 @@ mod tests {
     /// `every_scancode_read_back_is_pressed_as_itself`).
     #[test]
     fn every_key_is_placed_once_or_unplaced_on_purpose() {
-        use pocketdesk_core::input::windows_scan::evdev_from_scan;
+        use friday_mobile_core::input::windows_scan::evdev_from_scan;
         for key in egui::Key::ALL {
             let placed = BY_POSITION.iter().filter(|(k, _)| k == key).count();
             let unplaced = UNPLACED.iter().filter(|k| *k == key).count();

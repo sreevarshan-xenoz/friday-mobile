@@ -9,9 +9,9 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use pocketdesk_core::local::computers::{self, ComputerWake, PeerComputer};
-use pocketdesk_core::local::wake::WakeFacts;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::computers::{self, ComputerWake, PeerComputer};
+use friday_mobile_core::local::wake::WakeFacts;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 /// A computer's word on how to wake it, on the link between two of the
 /// owner's computers: `{mac, broadcast, wired}`, or `{}` to forget.
@@ -61,7 +61,7 @@ fn packet_toward_as(tell: bool, addresses: &[String], local: Option<IpAddr>) -> 
     .or_else(|| local_toward(addresses));
     packet_for(
         true,
-        pocketdesk_core::local::wake::wake_facts(local).as_ref(),
+        friday_mobile_core::local::wake::wake_facts(local).as_ref(),
     )
 }
 
@@ -203,7 +203,7 @@ pub async fn heard(device_id: &str, body: &serde_json::Value, on_link: bool) {
         return;
     };
     let (device_id, body) = (device_id.to_string(), body.clone());
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let _ = tokio::task::spawn_blocking(move || {
         let is_computer = on_link || crate::plugins::pair::is_computer_device(&device_id);
         keep_from(&dir, &device_id, is_computer, &body, now)
@@ -250,7 +250,7 @@ pub fn send(computer: &PeerComputer, targets: &[SocketAddr]) -> Result<usize, St
         .wake
         .as_ref()
         .ok_or_else(|| "it never said how to wake it".to_string())?;
-    pocketdesk_core::tailscale::wol::send_wake(&wake.mac, targets).map_err(|e| failure(&e))
+    friday_mobile_core::tailscale::wol::send_wake(&wake.mac, targets).map_err(|e| failure(&e))
 }
 
 /// Why a wake was not sent, for the log (PC6 review I-2): fixed words and
@@ -275,10 +275,10 @@ pub fn wake(dir: &Path, device_id: &str) {
         tracing::info!(device_id, "Wake: no such computer");
         return;
     };
-    let adapters = pocketdesk_core::local::wake::adapters();
+    let adapters = friday_mobile_core::local::wake::adapters();
     let targets = targets(
         computer,
-        |ip| pocketdesk_core::local::wake::may_relay_to(ip, &adapters),
+        |ip| friday_mobile_core::local::wake::may_relay_to(ip, &adapters),
         WAKE_PORT,
     );
     match send(computer, &targets) {
@@ -406,8 +406,9 @@ mod tests {
         keep(&dir, "desk", &packet_for(false, None).body, 9);
         assert_eq!(computers::read(&dir).computers[0].wake, None, "forgotten");
         // A file from before PC6 reads with nothing known.
-        let raw = std::fs::read_to_string(dir.join(pocketdesk_core::local::paths::COMPUTERS_FILE))
-            .unwrap();
+        let raw =
+            std::fs::read_to_string(dir.join(friday_mobile_core::local::paths::COMPUTERS_FILE))
+                .unwrap();
         assert!(!raw.contains("\"wake\""), "none is not written");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -471,7 +472,8 @@ mod tests {
         assert_eq!(send(&computer, &to), Ok(1));
         let mut got = [0u8; 256];
         let (n, _) = listener.recv_from(&mut got).unwrap();
-        let expected = pocketdesk_core::tailscale::wol::magic_packet("00:00:5E:00:53:01").unwrap();
+        let expected =
+            friday_mobile_core::tailscale::wol::magic_packet("00:00:5E:00:53:01").unwrap();
         let matched = got[..n] == expected[..];
         println!("matched {}", if matched { "yes" } else { "no" });
         assert!(matched);
@@ -489,7 +491,7 @@ mod tests {
             "00:00:5E:00:53:01 at 192.0.2.10",
         ))
         .context("Failed to bind UDP socket for WOL");
-        let bad_mac = pocketdesk_core::tailscale::wol::magic_packet("00:00:5E:00:53:0Z")
+        let bad_mac = friday_mobile_core::tailscale::wol::magic_packet("00:00:5E:00:53:0Z")
             .expect_err("not a MAC");
         for (e, said) in [
             (core_words, "no target took the packet"),

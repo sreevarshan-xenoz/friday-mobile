@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use anyhow::Result;
 use tracing::{info, warn};
 
-use pocketdesk_core::streaming::AudioDecoder;
+use friday_mobile_core::streaming::AudioDecoder;
 
 /// The sound's rate and channels, as both senders encode it.
 pub const RATE: u32 = 48_000;

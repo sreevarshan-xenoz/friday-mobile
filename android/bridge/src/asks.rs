@@ -11,8 +11,8 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::approve::approval_of;
-use pocketdesk_core::protocol::ask::{question_of, wait_secs_of};
+use friday_mobile_core::protocol::approve::approval_of;
+use friday_mobile_core::protocol::ask::{question_of, wait_secs_of};
 
 /// How many questions wait for the app at most.
 const MAX_WAITING: usize = 8;
@@ -37,8 +37,9 @@ pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
 fn pinned_computer(host: &str) -> Option<String> {
     let ip: std::net::IpAddr = host.trim().parse().ok()?;
     let dir = crate::CERT_DIR.lock().ok()?.clone()?;
-    let manager = pocketdesk_core::streaming::transport::CertManager::load_or_create(&dir).ok()?;
-    let label = pocketdesk_core::streaming::transport::peer_label_for_ip(ip);
+    let manager =
+        friday_mobile_core::streaming::transport::CertManager::load_or_create(&dir).ok()?;
+    let label = friday_mobile_core::streaming::transport::peer_label_for_ip(ip);
     manager
         .known_peers()
         .into_iter()

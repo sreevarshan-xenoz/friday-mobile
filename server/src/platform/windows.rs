@@ -26,7 +26,7 @@ use windows::core::{HSTRING, IInspectable, Interface, PCWSTR, w};
 
 /// The identity toasts are shown under. An unpackaged app needs one registered
 /// under `HKCU\Software\Classes\AppUserModelId` for Windows to display them.
-const AUMID: &str = pocketdesk_core::local::phone_media::MEDIA_CONTROLS_APP_ID;
+const AUMID: &str = friday_mobile_core::local::phone_media::MEDIA_CONTROLS_APP_ID;
 
 /// A tool in the real System32, located by asking Windows (not `%SystemRoot%`,
 /// which the user can point anywhere).
@@ -421,7 +421,7 @@ fn register_aumid() -> windows::core::Result<()> {
             None,
         )
         .ok()?;
-        let name: Vec<u8> = "Pocketdesk\0"
+        let name: Vec<u8> = "FRIDAY Mobile\0"
             .encode_utf16()
             .flat_map(u16::to_le_bytes)
             .collect();
@@ -634,7 +634,7 @@ fn activation_answer(
     args: &ToastActivatedEventArgs,
     answers: &crate::toast_answers::Answerable,
     mute: bool,
-) -> Option<pocketdesk_core::local::phone_notes::Answer> {
+) -> Option<friday_mobile_core::local::phone_notes::Answer> {
     let arguments = args.Arguments().ok()?.to_string();
     let reply = args
         .UserInput()
@@ -776,7 +776,7 @@ pub(super) fn wait_for_exit(pid: u32, within: std::time::Duration) -> bool {
 /// Whether two executable paths name the same program file (Windows paths
 /// compare case-insensitively). `pocketdesk` and `pd` are one program.
 fn same_program(a: &std::path::Path, b: &std::path::Path) -> bool {
-    use pocketdesk_core::local::server::is_server_image;
+    use friday_mobile_core::local::server::is_server_image;
     match (a.file_name(), b.file_name()) {
         (Some(a), Some(b)) => {
             let (a, b) = (a.to_string_lossy(), b.to_string_lossy());
@@ -977,7 +977,7 @@ mod tests {
         assert!(
             !same_program(
                 Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe"),
-                Path::new(r"E:\build\pocketdesk-app.exe")
+                Path::new(r"E:\build\friday-mobile-app.exe")
             ),
             "the desktop app is not the server"
         );

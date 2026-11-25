@@ -3,21 +3,21 @@
 use std::path::Path;
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::commands::{
+use friday_mobile_core::local::commands::{
     MAX_PHONE_COMMANDS as PHONE_COMMANDS_MAX, PhoneCommandSpec,
 };
-use pocketdesk_core::local::config::{
+use friday_mobile_core::local::config::{
     Config, ConfigError, DhtPublish, InputControlMode, relay_url_problem,
 };
-use pocketdesk_core::local::deck::{DeckButton, MAX_BUTTONS as DECK_MAX_BUTTONS};
-use pocketdesk_core::local::events::{EventsDetail, KINDS, hookable};
-use pocketdesk_core::local::home_assistant as ha;
-use pocketdesk_core::local::tasks::{
+use friday_mobile_core::local::deck::{DeckButton, MAX_BUTTONS as DECK_MAX_BUTTONS};
+use friday_mobile_core::local::events::{EventsDetail, KINDS, hookable};
+use friday_mobile_core::local::home_assistant as ha;
+use friday_mobile_core::local::tasks::{
     DEFAULT_DEADLINE_SECS, MAX_DEADLINE_SECS, TaskSpec, name_problem,
 };
-use pocketdesk_core::local::wake::WakeFacts;
-use pocketdesk_core::protocol::bluetooth::RoadState;
-use pocketdesk_core::streaming::{CaptureBackend, VideoQualityPreset};
+use friday_mobile_core::local::wake::WakeFacts;
+use friday_mobile_core::protocol::bluetooth::RoadState;
+use friday_mobile_core::streaming::{CaptureBackend, VideoQualityPreset};
 
 /// Settings' sections, in page order (U5): a flat grid of about 35 rows
 /// had everyday choices beside developer ones.
@@ -1071,7 +1071,7 @@ impl SettingsForm {
             saved: config.clone(),
             running: config.clone(),
             edited: config,
-            wake: pocketdesk_core::local::wake::wake_facts(None),
+            wake: friday_mobile_core::local::wake::wake_facts(None),
             home_assistant: None,
             bluetooth: None,
             picking_downloads: None,
@@ -1228,7 +1228,7 @@ impl SettingsForm {
                 .pattern_checks
                 .borrow_mut()
                 .entry(pattern.clone())
-                .or_insert_with(|| pocketdesk_core::local::clip_filter::pattern_problem(pattern))
+                .or_insert_with(|| friday_mobile_core::local::clip_filter::pattern_problem(pattern))
                 .clone();
             if let Some(problem) = problem {
                 problems.push(("clipboard_never_like", problem));
@@ -1236,7 +1236,7 @@ impl SettingsForm {
         }
         // Q2 review: these were said only in their row, a closed section
         // hiding them, and saved unread.
-        let bad = pocketdesk_core::local::link_rules::bad_lines(&self.edited.link_rules);
+        let bad = friday_mobile_core::local::link_rules::bad_lines(&self.edited.link_rules);
         if !bad.is_empty() {
             problems.push((
                 "link_rules",
@@ -1246,7 +1246,8 @@ impl SettingsForm {
                 ),
             ));
         }
-        if let Some(problem) = pocketdesk_core::local::hold_words::problem(&self.edited.hold_words)
+        if let Some(problem) =
+            friday_mobile_core::local::hold_words::problem(&self.edited.hold_words)
         {
             problems.push(("hold_words", format!("Holding by words: {problem}")));
         }
@@ -1335,9 +1336,9 @@ impl SettingsForm {
             .is_none_or(|(at, _)| at.elapsed() >= std::time::Duration::from_secs(2));
         if stale {
             // A file a stopped server left says nothing about now.
-            let status = pocketdesk_core::local::paths::state_dir()
+            let status = friday_mobile_core::local::paths::state_dir()
                 .ok()
-                .filter(|dir| pocketdesk_core::local::server::is_running(dir))
+                .filter(|dir| friday_mobile_core::local::server::is_running(dir))
                 .and_then(|dir| ha::read_status(&dir));
             self.home_assistant = Some((std::time::Instant::now(), status));
         }
@@ -1353,14 +1354,15 @@ impl SettingsForm {
             .is_none_or(|(at, _)| at.elapsed() >= std::time::Duration::from_secs(2));
         if stale {
             // A mirror a stopped server left says nothing about now.
-            let road = pocketdesk_core::local::paths::state_dir()
+            let road = friday_mobile_core::local::paths::state_dir()
                 .ok()
-                .filter(|dir| pocketdesk_core::local::server::is_running(dir))
+                .filter(|dir| friday_mobile_core::local::server::is_running(dir))
                 .and_then(|dir| {
-                    std::fs::read_to_string(dir.join(pocketdesk_core::local::paths::LIVE_FILE)).ok()
+                    std::fs::read_to_string(dir.join(friday_mobile_core::local::paths::LIVE_FILE))
+                        .ok()
                 })
-                .and_then(|raw| pocketdesk_core::local::sessions::parse_mirror(&raw))
-                .filter(|m| m.is_fresh(pocketdesk_core::local::pin::now_unix()))
+                .and_then(|raw| friday_mobile_core::local::sessions::parse_mirror(&raw))
+                .filter(|m| m.is_fresh(friday_mobile_core::local::pin::now_unix()))
                 .and_then(|m| m.bluetooth);
             self.bluetooth = Some((std::time::Instant::now(), road));
         }
@@ -1456,10 +1458,10 @@ impl SettingsForm {
                             ui,
                             "GNOME and KDE: their screen-sharing dialog asks once, then sessions start without it until you revoke it in the desktop's own privacy settings, or Forget it here. Every session still needs a paired phone and its permissions.",
                         );
-                        let state = pocketdesk_core::local::paths::state_dir().ok();
+                        let state = friday_mobile_core::local::paths::state_dir().ok();
                         let kept = state.as_deref().is_some_and(|dir| {
-                            pocketdesk_core::portal_grant::read(dir).is_some()
-                                || pocketdesk_core::portal_grant::read_remote(dir).is_some()
+                            friday_mobile_core::portal_grant::read(dir).is_some()
+                                || friday_mobile_core::portal_grant::read_remote(dir).is_some()
                         });
                         if ui
                             .add_enabled(kept, egui::Button::new("Forget the grant"))
@@ -1468,7 +1470,7 @@ impl SettingsForm {
                             .clicked()
                             && let Some(dir) = state
                         {
-                            let _ = pocketdesk_core::portal_grant::forget(&dir);
+                            let _ = friday_mobile_core::portal_grant::forget(&dir);
                         }
                     });
                 }
@@ -1696,7 +1698,7 @@ impl SettingsForm {
                     if ui.button("Add the usual password managers").clicked() {
                         add_lines(
                             never_from,
-                            pocketdesk_core::local::clip_filter::USUAL_PROGRAMS,
+                            friday_mobile_core::local::clip_filter::USUAL_PROGRAMS,
                         );
                     }
                     note(
@@ -1714,7 +1716,7 @@ impl SettingsForm {
                     if ui.button("Add keys and tokens").clicked() {
                         add_lines(
                             never_like,
-                            pocketdesk_core::local::clip_filter::USUAL_PATTERNS,
+                            friday_mobile_core::local::clip_filter::USUAL_PATTERNS,
                         );
                     }
                     note(
@@ -1748,7 +1750,7 @@ impl SettingsForm {
                 row(ui, "clipboard_history", |ui| {
                     ui.add(
                         egui::DragValue::new(&mut e.clipboard_history)
-                            .range(0..=pocketdesk_core::local::clip_history::MAX_ENTRIES)
+                            .range(0..=friday_mobile_core::local::clip_history::MAX_ENTRIES)
                             .suffix(" texts"),
                     );
                     note(
@@ -1767,15 +1769,16 @@ impl SettingsForm {
                         );
                         let text = e.clipboard_hotkey.trim();
                         // What the tray program made of it (H3 review).
-                        let status = pocketdesk_core::local::paths::state_dir()
+                        let status = friday_mobile_core::local::paths::state_dir()
                             .ok()
-                            .and_then(|dir| pocketdesk_desktop::hotkey::read_status(&dir));
+                            .and_then(|dir| friday_mobile_desktop::hotkey::read_status(&dir));
                         if let Some(words) =
-                            pocketdesk_desktop::hotkey::status_words(text, status.as_ref())
+                            friday_mobile_desktop::hotkey::status_words(text, status.as_ref())
                         {
                             note(ui, words);
                         }
-                        if !text.is_empty() && pocketdesk_desktop::hotkey::parse(text).is_none() {
+                        if !text.is_empty() && friday_mobile_desktop::hotkey::parse(text).is_none()
+                        {
                             ui.label(
                                 egui::RichText::new(
                                     "Ctrl, Alt or Win, then a letter, a digit, F1 to F12 or an arrow, joined by +.",
@@ -1809,20 +1812,22 @@ impl SettingsForm {
                             );
                         }
                         let status =
-                            pocketdesk_core::local::paths::state_dir()
+                            friday_mobile_core::local::paths::state_dir()
                                 .ok()
                                 .and_then(|dir| {
-                                    pocketdesk_desktop::hotkey::read_status_from(
+                                    friday_mobile_desktop::hotkey::read_status_from(
                                         &dir,
-                                        pocketdesk_desktop::hotkey::TYPING_STATUS_FILE,
+                                        friday_mobile_desktop::hotkey::TYPING_STATUS_FILE,
                                     )
                                 });
-                        if let Some(words) =
-                            pocketdesk_desktop::hotkey::typing_status_words(text, status.as_ref())
-                        {
+                        if let Some(words) = friday_mobile_desktop::hotkey::typing_status_words(
+                            text,
+                            status.as_ref(),
+                        ) {
                             note(ui, words);
                         }
-                        if !text.is_empty() && pocketdesk_desktop::hotkey::parse(text).is_none() {
+                        if !text.is_empty() && friday_mobile_desktop::hotkey::parse(text).is_none()
+                        {
                             ui.label(
                                 egui::RichText::new(
                                     "Ctrl, Alt or Win, then a letter, a digit, F1 to F12 or an arrow, joined by +.",
@@ -1832,7 +1837,7 @@ impl SettingsForm {
                         }
                         note(
                             ui,
-                            "Pressed anywhere, opens the window that types on the phone (the one in the newest session when several are linked), as \"Type on the phone\" on the Overview does. It needs the tray program (pocketdesk-tray) beside the app. Empty is off.",
+                            "Pressed anywhere, opens the window that types on the phone (the one in the newest session when several are linked), as \"Type on the phone\" on the Overview does. It needs the tray program (friday-mobile-tray) beside the app. Empty is off.",
                         );
                     });
                 }
@@ -1850,9 +1855,9 @@ impl SettingsForm {
                         note(
                             ui,
                             if cfg!(windows) {
-                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), Windows' media controls show its song with Previous, Play/Pause and Next; a paused one stays five minutes. The keyboard's media keys may then go to the phone instead of a player here. It needs the tray program (pocketdesk-tray) beside the app."
+                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), Windows' media controls show its song with Previous, Play/Pause and Next; a paused one stays five minutes. The keyboard's media keys may then go to the phone instead of a player here. It needs the tray program (friday-mobile-tray) beside the app."
                             } else {
-                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), the desktop's media controls (GNOME's and KDE's, playerctl) show its song as a player named \"Pocketdesk (the phone's music)\", with Previous, Play/Pause and Next; a paused one stays five minutes. Media keys your desktop sends to the newest player may then go to the phone. It needs the tray program (pocketdesk-tray) beside the app."
+                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), the desktop's media controls (GNOME's and KDE's, playerctl) show its song as a player named \"Pocketdesk (the phone's music)\", with Previous, Play/Pause and Next; a paused one stays five minutes. Media keys your desktop sends to the newest player may then go to the phone. It needs the tray program (friday-mobile-tray) beside the app."
                             },
                         );
                     });
@@ -1984,7 +1989,7 @@ impl SettingsForm {
                         "One a line: a site, \"=\", and browser, show, or a program's path. A link to the site or any name under it (youtube.com covers m.youtube.com) opens in the browser, is shown in a notification, or is handed to the program as its one argument, never through a shell. The longest site that matches wins (an address only whole); a link no rule names goes as above, and with \"open in the browser\" off every link is only shown. A program is named by its whole path, never a .bat or .cmd file; at most 8 run at once. A link that cannot be opened is said.",
                     );
                     let lines: Vec<String> = rules.lines().map(str::to_string).collect();
-                    let bad = pocketdesk_core::local::link_rules::bad_lines(&lines);
+                    let bad = friday_mobile_core::local::link_rules::bad_lines(&lines);
                     if !bad.is_empty() {
                         ui.label(
                             RichText::new(format!(
@@ -2240,7 +2245,7 @@ impl SettingsForm {
                         ui.add(
                             egui::TextEdit::singleline(&mut e.phone_hotspot_network)
                                 .char_limit(
-                                    pocketdesk_core::local::phone_hotspot::MAX_NETWORK_BYTES,
+                                    friday_mobile_core::local::phone_hotspot::MAX_NETWORK_BYTES,
                                 )
                                 .hint_text("a saved Wi-Fi network, e.g. My phone"),
                         );
@@ -2272,7 +2277,7 @@ impl SettingsForm {
                             }
                         });
                         row(ui, "phone_camera_height", |ui| {
-                            for height in pocketdesk_core::protocol::phone_camera::HEIGHTS {
+                            for height in friday_mobile_core::protocol::phone_camera::HEIGHTS {
                                 ui.radio_value(
                                     &mut e.phone_camera_height,
                                     u32::from(height),
@@ -2281,7 +2286,7 @@ impl SettingsForm {
                             }
                         });
                         row(ui, "phone_camera_fps", |ui| {
-                            for fps in pocketdesk_core::protocol::phone_camera::FRAME_RATES {
+                            for fps in friday_mobile_core::protocol::phone_camera::FRAME_RATES {
                                 ui.radio_value(
                                     &mut e.phone_camera_fps,
                                     u32::from(fps),
@@ -2404,7 +2409,7 @@ impl SettingsForm {
                         });
                         ui.horizontal_wrapped(|ui| {
                             let days = &mut e.quiet_days;
-                            for (day, label) in pocketdesk_core::local::quiet_hours::DAYS
+                            for (day, label) in friday_mobile_core::local::quiet_hours::DAYS
                                 .iter()
                                 .zip(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
                             {
@@ -2454,11 +2459,11 @@ impl SettingsForm {
                         ui,
                         format!(
                             "One a line: words a phone notification's title or text holds (case aside), or an app's name, \": \" and the words, for that app only (start a line with \": \" for words that have one). A match is held as a pause holds it: logged on the Activity page (with the line that held it when \"Details in events\" is on), kept on the Notifications page when the phone lets this computer answer it, never shown. A call is never held. At most {} lines.",
-                            pocketdesk_core::local::hold_words::MAX_RULES
+                            friday_mobile_core::local::hold_words::MAX_RULES
                         ),
                     );
                     let lines: Vec<String> = words.lines().map(str::to_string).collect();
-                    if let Some(problem) = pocketdesk_core::local::hold_words::problem(&lines) {
+                    if let Some(problem) = friday_mobile_core::local::hold_words::problem(&lines) {
                         ui.label(RichText::new(problem).small().color(crate::theme::warn(ui)));
                     }
                 });
@@ -2958,7 +2963,8 @@ impl SettingsForm {
                     egui::ComboBox::from_id_salt("computer-view-quality")
                         .selected_text(computer_quality_label(&named))
                         .show_ui(ui, |ui| {
-                            for (name, _) in pocketdesk_core::local::config::COMPUTER_VIEW_QUALITIES
+                            for (name, _) in
+                                friday_mobile_core::local::config::COMPUTER_VIEW_QUALITIES
                             {
                                 if ui
                                     .selectable_label(named == name, computer_quality_label(name))
@@ -3451,7 +3457,7 @@ fn row(ui: &mut egui::Ui, key: &str, add: impl FnOnce(&mut egui::Ui)) {
 
 /// `days` with `day` on or off, in the week's order.
 fn with_day(days: &[String], day: &str, on: bool) -> Vec<String> {
-    pocketdesk_core::local::quiet_hours::DAYS
+    friday_mobile_core::local::quiet_hours::DAYS
         .iter()
         .filter(|d| {
             if d.eq_ignore_ascii_case(day) {
@@ -3466,7 +3472,7 @@ fn with_day(days: &[String], day: &str, on: bool) -> Vec<String> {
 
 /// What keeps quiet hours from holding anything, said beside them.
 fn quiet_problem(config: &Config) -> Option<&'static str> {
-    use pocketdesk_core::local::quiet_hours::{days_mask, parse_time};
+    use friday_mobile_core::local::quiet_hours::{days_mask, parse_time};
     if !config.quiet_hours {
         return None;
     }
@@ -3548,7 +3554,7 @@ mod tests {
             with_day(&days(&["mon", "fri"]), "mon", false),
             days(&["fri"])
         );
-        let mut config = pocketdesk_core::local::config::Config::default();
+        let mut config = friday_mobile_core::local::config::Config::default();
         assert_eq!(quiet_problem(&config), None, "off: nothing to say");
         config.quiet_hours = true;
         assert_eq!(quiet_problem(&config), None);
@@ -3649,7 +3655,7 @@ mod tests {
     }
 
     use super::*;
-    use pocketdesk_core::local::config::Config;
+    use friday_mobile_core::local::config::Config;
 
     #[test]
     fn undo_keeps_a_saved_change_waiting_for_a_restart() {
@@ -3755,17 +3761,17 @@ mod tests {
         let mut form = SettingsForm::from_config(Config::default());
         add_lines(
             &mut form.never_from_text,
-            pocketdesk_core::local::clip_filter::USUAL_PROGRAMS,
+            friday_mobile_core::local::clip_filter::USUAL_PROGRAMS,
         );
         add_lines(
             &mut form.never_from_text,
-            pocketdesk_core::local::clip_filter::USUAL_PROGRAMS,
+            friday_mobile_core::local::clip_filter::USUAL_PROGRAMS,
         );
         form.never_like_text = " -----BEGIN \n\n".into();
         form.apply_text_fields();
         assert_eq!(
             form.edited.clipboard_never_from.len(),
-            pocketdesk_core::local::clip_filter::USUAL_PROGRAMS.len(),
+            friday_mobile_core::local::clip_filter::USUAL_PROGRAMS.len(),
             "each once"
         );
         assert_eq!(

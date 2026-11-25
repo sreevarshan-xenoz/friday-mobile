@@ -116,9 +116,9 @@ async fn the_driver_loop_bench() {
     let keys: u32 = 400;
     let rest = Duration::from_secs(5);
     let state = crate::state::use_test_dirs();
-    let config_dir = pocketdesk_core::local::paths::config_dir().unwrap();
+    let config_dir = friday_mobile_core::local::paths::config_dir().unwrap();
     std::fs::create_dir_all(&config_dir).unwrap();
-    let config = pocketdesk_core::local::config::Config {
+    let config = friday_mobile_core::local::config::Config {
         shared_input: true,
         shared_input_drive: true,
         shared_input_clipboard: false,
@@ -128,11 +128,11 @@ async fn the_driver_loop_bench() {
         ..Default::default()
     };
     config
-        .save_to(&config_dir.join(pocketdesk_core::local::paths::CONFIG_FILE))
+        .save_to(&config_dir.join(friday_mobile_core::local::paths::CONFIG_FILE))
         .unwrap();
     // The computer driven, said as heard, to the right of this one.
-    pocketdesk_core::local::shared_input::update(&state, |file| {
-        file.computers = vec![pocketdesk_core::local::shared_input::ComputerScreens {
+    friday_mobile_core::local::shared_input::update(&state, |file| {
+        file.computers = vec![friday_mobile_core::local::shared_input::ComputerScreens {
             device_id: "bench-b".into(),
             name: "B".into(),
             screens: vec![screen()],

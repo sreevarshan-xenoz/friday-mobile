@@ -1,15 +1,15 @@
-# Install Pocketdesk with its setup.exe, check what it made, uninstall it,
+# Install FRIDAY Mobile with its setup.exe, check what it made, uninstall it,
 # and check that all of it went (BH1). For a throwaway Windows machine or a
-# CI runner, run as an administrator; never on a computer whose Pocketdesk
+# CI runner, run as an administrator; never on a computer whose FRIDAY Mobile
 # you use, since it installs over it and uninstalls it.
 #
-#   pwsh packaging/windows/smoke-test.ps1 release/pocketdesk-<version>-windows-x86_64-setup.exe
+#   pwsh packaging/windows/smoke-test.ps1 release/friday-mobile-<version>-windows-x86_64-setup.exe
 
 param([Parameter(Mandatory)][string]$Setup)
 $ErrorActionPreference = 'Stop'
 
-$app = Join-Path $env:ProgramFiles 'Pocketdesk'
-$shortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Pocketdesk.lnk'
+$app = Join-Path $env:ProgramFiles 'FRIDAY Mobile'
+$shortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\FRIDAY Mobile.lnk'
 $uninstallKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{8D3F6C2E-5B1A-4E7C-9A2F-3C6D1E8B4A70}_is1'
 $schtasks = Join-Path $env:SystemRoot 'System32\schtasks.exe'
 $failures = @()
@@ -18,35 +18,35 @@ function Check([bool]$ok, [string]$what) {
     if ($ok) { Write-Output "ok    $what" } else { Write-Output "FAIL  $what"; $script:failures += $what }
 }
 function OnPath { ([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';') -contains $app }
-function HasTask { & $schtasks /Query /TN Pocketdesk *> $null; $LASTEXITCODE -eq 0 }
-function RuleCount { @(Get-NetFirewallRule -Group 'Pocketdesk' -ErrorAction SilentlyContinue).Count }
+function HasTask { & $schtasks /Query /TN "FRIDAY Mobile" *> $null; $LASTEXITCODE -eq 0 }
+function RuleCount { @(Get-NetFirewallRule -Group 'FRIDAY Mobile' -ErrorAction SilentlyContinue).Count }
 
 # Install, with the tasks that need no network (not FFmpeg).
-$log = Join-Path $env:TEMP 'pocketdesk-setup.log'
+$log = Join-Path $env:TEMP 'friday-mobile-setup.log'
 $p = Start-Process $Setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=autostart,addtopath', "/LOG=$log" -Wait -PassThru
 Check ($p.ExitCode -eq 0) "setup exited 0 (it exited $($p.ExitCode))"
-foreach ($file in 'pocketdesk.exe', 'pocketdesk-app.exe', 'pocketdesk-tray.exe', 'pocketdesk.ico', 'unins000.exe') {
+foreach ($file in 'friday-mobile.exe', 'friday-mobile-app.exe', 'friday-mobile-tray.exe', 'pocketdesk.ico', 'unins000.exe') {
     Check (Test-Path (Join-Path $app $file)) "installed $file"
 }
 Check (Test-Path $shortcut) 'a Start menu entry'
 Check (Test-Path $uninstallKey) 'an Apps & features entry'
-Check (OnPath) 'Pocketdesk on the system PATH'
+Check (OnPath) 'FRIDAY Mobile on the system PATH'
 Check (HasTask) 'the logon task'
 Check ((RuleCount) -gt 0) "the firewall rules ($(RuleCount))"
-$version = & (Join-Path $app 'pocketdesk.exe') --version
-Check ($LASTEXITCODE -eq 0) "pocketdesk --version runs ($version)"
+$version = & (Join-Path $app 'friday-mobile.exe') --version
+Check ($LASTEXITCODE -eq 0) "friday-mobile --version runs ($version)"
 
-# Pocketdesk's processes running from the install folder, for the log.
+# FRIDAY Mobile's processes running from the install folder, for the log.
 function ShowProcesses([string]$when) {
     $running = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith($app, [StringComparison]::OrdinalIgnoreCase) })
-    Write-Output "      $when`: $($running.Count) Pocketdesk process(es) running from $app"
+    Write-Output "      $when`: $($running.Count) FRIDAY Mobile process(es) running from $app"
     foreach ($proc in $running) { Write-Output "        $($proc.Name) (pid $($proc.Id), started $($proc.StartTime.ToString('HH:mm:ss')))" }
 }
 ShowProcesses 'before upgrading'
 
 # Upgrade: the same setup again, over the running server the logon task
 # started. Every file must be replaced now, none left for a restart.
-$upgradeLog = Join-Path $env:TEMP 'pocketdesk-upgrade.log'
+$upgradeLog = Join-Path $env:TEMP 'friday-mobile-upgrade.log'
 $p = Start-Process $Setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=autostart,addtopath', "/LOG=$upgradeLog" -Wait -PassThru
 Check ($p.ExitCode -eq 0) "upgrade exited 0 (it exited $($p.ExitCode))"
 $upgradeText = if (Test-Path $upgradeLog) { Get-Content $upgradeLog -Raw } else { '' }
@@ -54,19 +54,19 @@ $inUse = @(Select-String -Path $upgradeLog -Pattern 'in use|replace on restart|R
 Check ($inUse.Count -eq 0) "upgrade replaced every file at once ($($inUse.Count) left for a restart)"
 foreach ($line in $inUse) { Write-Output "      | $($line.Line)" }
 Check ($upgradeText -match 'Need to restart Windows\? No') 'upgrade needs no restart'
-$version = & (Join-Path $app 'pocketdesk.exe') --version
-Check ($LASTEXITCODE -eq 0) "pocketdesk --version runs after the upgrade ($version)"
+$version = & (Join-Path $app 'friday-mobile.exe') --version
+Check ($LASTEXITCODE -eq 0) "friday-mobile --version runs after the upgrade ($version)"
 
 ShowProcesses 'before uninstalling'
 
 # Uninstall. The uninstaller copies itself to TEMP and exits at once, so wait
 # for its work (the folder's files) to go, for up to two minutes.
-$uninstallLog = Join-Path $env:TEMP 'pocketdesk-uninstall.log'
+$uninstallLog = Join-Path $env:TEMP 'friday-mobile-uninstall.log'
 Start-Process (Join-Path $app 'unins000.exe') -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$uninstallLog" -Wait
 $deadline = (Get-Date).AddMinutes(2)
-while ((Test-Path (Join-Path $app 'pocketdesk.exe')) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
+while ((Test-Path (Join-Path $app 'friday-mobile.exe')) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
 while ((Test-Path $uninstallKey) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
-$filesGone = -not (Test-Path (Join-Path $app 'pocketdesk.exe'))
+$filesGone = -not (Test-Path (Join-Path $app 'friday-mobile.exe'))
 Check $filesGone 'uninstalled the files'
 if (-not $filesGone) {
     ShowProcesses 'after uninstalling'
@@ -75,7 +75,7 @@ if (-not $filesGone) {
 }
 Check (-not (Test-Path $shortcut)) 'removed the Start menu entry'
 Check (-not (Test-Path $uninstallKey)) 'removed the Apps & features entry'
-Check (-not (OnPath)) 'took Pocketdesk off PATH'
+Check (-not (OnPath)) 'took FRIDAY Mobile off PATH'
 Check (-not (HasTask)) 'removed the logon task'
 Check ((RuleCount) -eq 0) 'removed the firewall rules'
 

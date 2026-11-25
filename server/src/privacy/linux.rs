@@ -14,7 +14,7 @@
 //!
 //! R4 E4: on a wlroots desktop that advertises `zwlr_layer_shell_v1`, grabbing
 //! also paints a full-perimeter "session active" shield (core
-//! [`pocketdesk_core::streaming::shield`]) so bystanders can see the machine is
+//! [`friday_mobile_core::streaming::shield`]) so bystanders can see the machine is
 //! being driven remotely. It rides the same lifecycle — shown on the first
 //! grab, torn down on release/expiry — and is a no-op where the protocol is
 //! absent. (Local input *blocking* is the `EVIOCGRAB` above; this box's
@@ -27,7 +27,7 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use evdev::{AttributeSetRef, Device, KeyCode};
-use pocketdesk_core::streaming::shield::{self, PrivacyShield};
+use friday_mobile_core::streaming::shield::{self, PrivacyShield};
 
 /// How long a grab lives without a refresh from the phone. The client
 /// re-arms well before this (see the Kotlin poll cadence).

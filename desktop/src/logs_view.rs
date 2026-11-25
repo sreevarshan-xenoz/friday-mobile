@@ -152,9 +152,9 @@ mod tests {
     use super::*;
 
     const WARN: &str =
-        "2026-10-20T06:13:25Z  WARN pocketdesk_server::plugins::pair: Session refused";
+        "2026-10-20T06:13:25Z  WARN friday_mobile_server::plugins::pair: Session refused";
     const ERROR: &str =
-        "2026-10-20T06:13:25Z ERROR pocketdesk_server::iroh_endpoint: WAN session error";
+        "2026-10-20T06:13:25Z ERROR friday_mobile_server::iroh_endpoint: WAN session error";
     const INFO: &str = "2026-10-20T06:13:25Z  INFO pocketdesk: Pocketdesk server starting";
 
     #[test]

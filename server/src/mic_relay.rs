@@ -28,11 +28,11 @@ use tokio::process::{Child, ChildStdin, Command};
 use tokio::sync::mpsc::Receiver;
 use tracing::{info, warn};
 
-use pocketdesk_core::streaming::{AudioDecoder, InputPacket};
+use friday_mobile_core::streaming::{AudioDecoder, InputPacket};
 
 /// Defined in `core::streaming::audio` because the phone's encoder has to match
 /// them; re-exported here so the relay reads as one file.
-pub use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
+pub use friday_mobile_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
 
 /// Minimum spacing between node spawn attempts after a failure (the phone
 /// sends a frame every 20 ms — without this a missing pw-loopback would
@@ -172,7 +172,7 @@ async fn run_mic_relay_with(program: &str, args: &[String], mut rx: Receiver<Inp
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::{AudioConfig, AudioEncoder};
+    use friday_mobile_core::streaming::{AudioConfig, AudioEncoder};
     use tokio::sync::mpsc;
 
     fn mic_frame(enabled: bool, opus: Vec<u8>) -> InputPacket {

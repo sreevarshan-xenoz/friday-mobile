@@ -31,10 +31,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::kept_folders::{self as registry, KeptFolder};
-use pocketdesk_core::local::pin::now_unix;
-use pocketdesk_core::protocol::kept::{self, KeptFile, Run};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::kept_folders::{self as registry, KeptFolder};
+use friday_mobile_core::local::pin::now_unix;
+use friday_mobile_core::protocol::kept::{self, KeptFile, Run};
 
 /// The registry is read, changed and replaced under this lock.
 static LOCK: Mutex<()> = Mutex::new(());
@@ -99,7 +99,7 @@ pub(crate) struct Accepted {
 fn is_owner_phone(device: &str) -> bool {
     crate::state::trust_store_path()
         .ok()
-        .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok())
+        .and_then(|path| friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok())
         .is_some_and(|store| store.is_owner_phone(device))
 }
 
@@ -107,7 +107,7 @@ fn is_owner_phone(device: &str) -> bool {
 fn phone_name(device: &str) -> String {
     let named = crate::state::trust_store_path()
         .ok()
-        .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok())
+        .and_then(|path| friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok())
         .and_then(|store| store.name(device).map(str::to_string));
     named.unwrap_or_else(|| format!("phone {}", device.chars().take(6).collect::<String>()))
 }
@@ -687,7 +687,7 @@ fn count(dir: &Path) -> (u64, u64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::kept::RunEnd;
+    use friday_mobile_core::protocol::kept::RunEnd;
 
     fn temp_dir(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("pd-kept-{name}-{}", std::process::id()));
@@ -820,7 +820,7 @@ mod tests {
         // A phone that names its folder like a path gets a safe name.
         let odd = new_entry(&[], root, "phone-c", &file(&"4".repeat(32), "../../etc"));
         assert_eq!(
-            pocketdesk_core::protocol::relpath::component_problem(&odd.folder_dir),
+            friday_mobile_core::protocol::relpath::component_problem(&odd.folder_dir),
             None,
             "one safe name: {}",
             odd.folder_dir
@@ -948,7 +948,7 @@ mod tests {
     /// `id` paired as one.
     fn setup(id: &str, root: &Path) -> Config {
         let trust = crate::state::trust_store_path().unwrap();
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(trust, |s| {
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(trust, |s| {
             s.trust_phone(id, true)
         })
         .unwrap();
@@ -1194,7 +1194,8 @@ mod tests {
     fn files_arriving_together_cannot_pass_the_cap_together() {
         let state = crate::state::use_test_dirs();
         // This test's own folders only: the list is shared by the process.
-        let _ = std::fs::remove_file(state.join(pocketdesk_core::local::paths::KEPT_FOLDERS_FILE));
+        let _ =
+            std::fs::remove_file(state.join(friday_mobile_core::local::paths::KEPT_FOLDERS_FILE));
         let root = temp_dir("reserve");
         let mut config = setup("kept-owner-reserve", &root);
         config.kept_folders_cap_gb = 1;
@@ -1228,14 +1229,15 @@ mod tests {
             )
             .is_ok()
         );
-        let _ = std::fs::remove_file(state.join(pocketdesk_core::local::paths::KEPT_FOLDERS_FILE));
+        let _ =
+            std::fs::remove_file(state.join(friday_mobile_core::local::paths::KEPT_FOLDERS_FILE));
         let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
     fn a_list_this_version_cannot_read_is_kept_and_nothing_is_written_over_it() {
         let state = crate::state::use_test_dirs();
-        let list = state.join(pocketdesk_core::local::paths::KEPT_FOLDERS_FILE);
+        let list = state.join(friday_mobile_core::local::paths::KEPT_FOLDERS_FILE);
         let root = temp_dir("unreadable");
         let config = setup("kept-owner-unreadable", &root);
         std::fs::write(&list, "{ records of another version").unwrap();

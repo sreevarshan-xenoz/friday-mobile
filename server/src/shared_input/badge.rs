@@ -110,7 +110,7 @@ pub fn text(event: &Event) -> String {
 /// turns or hides text (a bidirectional override, a zero-width space), is
 /// a space.
 pub fn clip(text: &str, most: usize) -> String {
-    pocketdesk_core::local::shared_input::display_name(text, most)
+    friday_mobile_core::local::shared_input::display_name(text, most)
 }
 
 #[cfg(test)]

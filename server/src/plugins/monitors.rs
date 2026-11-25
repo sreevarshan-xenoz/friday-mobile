@@ -1,6 +1,6 @@
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::streaming::MonitorInfo;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::streaming::MonitorInfo;
 
 /// F2: Monitor enumeration plugin.
 ///

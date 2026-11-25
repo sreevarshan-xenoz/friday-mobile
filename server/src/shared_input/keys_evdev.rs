@@ -14,7 +14,7 @@
 
 use std::collections::BTreeSet;
 
-use pocketdesk_core::local::hotkey::{Hotkey, MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN};
+use friday_mobile_core::local::hotkey::{Hotkey, MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN};
 
 use super::drive::Captured;
 
@@ -34,7 +34,7 @@ const MODIFIERS: [(u16, u32); 8] = [
 /// keys a switch key may name ([`hotkey::parse`]: a letter or digit, by
 /// its place on a US keyboard, F1 to F12, or an arrow).
 ///
-/// [`hotkey::parse`]: pocketdesk_core::local::hotkey::parse
+/// [`hotkey::parse`]: friday_mobile_core::local::hotkey::parse
 pub fn evdev_of_vk(vk: u32) -> Option<u16> {
     const LETTERS: [u16; 26] = [
         30, 48, 46, 32, 18, 33, 34, 35, 23, 36, 37, 38, 50, // A to M
@@ -119,7 +119,7 @@ impl Keys {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::hotkey::parse;
+    use friday_mobile_core::local::hotkey::parse;
 
     fn ev(code: u16, down: bool) -> Option<Captured> {
         Some(Captured::EvKey { code, down })

@@ -23,11 +23,11 @@ mod common;
 use std::path::Path;
 
 use common::{Cleanup, folders, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::nearby::AskState;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::nearby::AskState;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
 
 const A_ID: &str = "00000000-0000-4000-8000-0000000000a7";
 const B_ID: &str = "00000000-0000-4000-8000-0000000000b7";
@@ -101,7 +101,7 @@ fn two_computers_nearby_pair_with_a_matching_code() {
         run.servers.push(
             pocketdesk(config, state)
                 .env("POCKETDESK_NEARBY_QUIET", "1")
-                .env(pocketdesk_core::streaming::test_pattern::VAR, "1")
+                .env(friday_mobile_core::streaming::test_pattern::VAR, "1")
                 .stderr(std::fs::File::create(log).unwrap())
                 .arg("start")
                 .spawn()

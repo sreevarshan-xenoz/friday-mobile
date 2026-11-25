@@ -12,8 +12,8 @@ use std::sync::mpsc::{Receiver, SyncSender, TrySendError, sync_channel};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant, SystemTime};
 
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::events::{self, Event};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::events::{self, Event};
 use serde_json::Value;
 
 /// Hooks running at once, at most.
@@ -36,8 +36,8 @@ static CONFIG: Mutex<Option<(Option<SystemTime>, Config)>> = Mutex::new(None);
 /// config.toml now: read again only once it changed, and the last good one
 /// kept while it does not read (a save half done, a hand edit gone wrong).
 pub(crate) fn current_config() -> Config {
-    let path = pocketdesk_core::local::paths::config_dir()
-        .map(|dir| dir.join(pocketdesk_core::local::paths::CONFIG_FILE));
+    let path = friday_mobile_core::local::paths::config_dir()
+        .map(|dir| dir.join(friday_mobile_core::local::paths::CONFIG_FILE));
     let modified = path
         .as_ref()
         .ok()
@@ -55,7 +55,7 @@ pub(crate) fn current_config() -> Config {
     match read {
         Ok(config) => {
             // Noted for shared input's channels, which never read a file.
-            pocketdesk_core::streaming::wheel::set_smooth(config.smooth_scrolling);
+            friday_mobile_core::streaming::wheel::set_smooth(config.smooth_scrolling);
             *cached = Some((modified, config.clone()));
             config
         }
@@ -256,7 +256,7 @@ pub(crate) fn run_hook(command: &str, json: &str, deadline: Duration) -> io::Res
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::events::{EventsDetail, Tail};
+    use friday_mobile_core::local::events::{EventsDetail, Tail};
     use serde_json::json;
 
     fn temp(name: &str) -> std::path::PathBuf {
@@ -399,7 +399,7 @@ mod tests {
                 .contains("\"mode\":\"cast\"")
         );
         assert!(
-            !dir.join(pocketdesk_core::local::paths::EVENTS_FILE)
+            !dir.join(friday_mobile_core::local::paths::EVENTS_FILE)
                 .exists(),
             "no log with it off"
         );

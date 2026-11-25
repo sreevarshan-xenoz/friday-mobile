@@ -84,7 +84,7 @@ const FLUSH_WAIT: Duration = Duration::from_millis(300);
 
 /// Whether a window dragged to the edge goes across, as the settings say:
 /// `drag_windows_across` with `lend_windows`, and how a drag is told.
-fn drag_rules(config: &pocketdesk_core::local::config::Config) -> Rules {
+fn drag_rules(config: &friday_mobile_core::local::config::Config) -> Rules {
     Rules::from_settings(
         config.drag_windows_across,
         config.lend_windows,
@@ -94,7 +94,7 @@ fn drag_rules(config: &pocketdesk_core::local::config::Config) -> Rules {
 
 /// [`drag_rules`], or none while the settings read is `stale`: no new drag is
 /// read on settings that may be old, as the clipboard is not.
-fn drag_rules_now(config: &pocketdesk_core::local::config::Config, stale: bool) -> Rules {
+fn drag_rules_now(config: &friday_mobile_core::local::config::Config, stale: bool) -> Rules {
     if stale {
         Rules::default()
     } else {
@@ -504,7 +504,7 @@ pub(super) fn drive<B: Backend>(
     let _driving = Driving::raise();
     let _runtime = runtime.enter();
     let config = crate::events::current_config();
-    let hotkey = pocketdesk_core::local::hotkey::parse(&config.shared_input_hotkey);
+    let hotkey = friday_mobile_core::local::hotkey::parse(&config.shared_input_hotkey);
     let state_dir = crate::state::state_dir().ok();
     let (said, events): (Sender<Portal>, Receiver<Portal>) = mpsc::channel();
     let Some(backend) = start(state_dir.clone(), said) else {
@@ -978,7 +978,7 @@ mod tests {
 
     #[test]
     fn a_stale_settings_read_reads_no_new_drag_and_a_fresh_one_follows_the_settings() {
-        let config = pocketdesk_core::local::config::Config {
+        let config = friday_mobile_core::local::config::Config {
             drag_windows_across: true,
             lend_windows: true,
             drag_window_trigger: "any".to_string(),
@@ -991,18 +991,18 @@ mod tests {
             crate::shared_input::drag_window::Trigger::Any
         );
         assert!(!drag_rules_now(&config, true).on, "no drag on old settings");
-        let off = pocketdesk_core::local::config::Config {
+        let off = friday_mobile_core::local::config::Config {
             drag_windows_across: false,
             ..Default::default()
         };
         assert!(!drag_rules_now(&off, false).on, "off when turned off");
-        let no_lending = pocketdesk_core::local::config::Config {
+        let no_lending = friday_mobile_core::local::config::Config {
             lend_windows: false,
             ..Default::default()
         };
         assert!(!drag_rules_now(&no_lending, false).on, "needs lending");
         assert!(
-            drag_rules_now(&pocketdesk_core::local::config::Config::default(), false).on,
+            drag_rules_now(&friday_mobile_core::local::config::Config::default(), false).on,
             "on by default"
         );
     }

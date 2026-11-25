@@ -7,7 +7,7 @@
 //! ([`write_private`]), written whole, never logged (its `Debug` says
 //! nothing of it), and forgotten when the portal refuses it.
 //!
-//! [`write_private`]: pocketdesk_core::secure_fs::write_private
+//! [`write_private`]: friday_mobile_core::secure_fs::write_private
 
 use std::fmt;
 use std::io;
@@ -58,8 +58,8 @@ pub fn write(state_dir: &Path, token: &RestoreToken) -> io::Result<()> {
     std::fs::create_dir_all(state_dir)?;
     let path = state_dir.join(TOKEN_FILE);
     let tmp = path.with_extension("token.tmp");
-    pocketdesk_core::secure_fs::write_private(&tmp, token.0.as_bytes())?;
-    pocketdesk_core::atomic_file::replace(&tmp, &path)
+    friday_mobile_core::secure_fs::write_private(&tmp, token.0.as_bytes())?;
+    friday_mobile_core::atomic_file::replace(&tmp, &path)
 }
 
 /// Forget the token (the portal refused it, or the owner said no).

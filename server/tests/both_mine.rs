@@ -33,14 +33,14 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::paths::{LIVE_FILE, PENDING_APPROVALS_FILE, TRUST_FILE};
-use pocketdesk_core::local::view::{self as wire, Message, Phase};
-use pocketdesk_core::local::{identity, pin, sessions};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::DevicePermissions;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::paths::{LIVE_FILE, PENDING_APPROVALS_FILE, TRUST_FILE};
+use friday_mobile_core::local::view::{self as wire, Message, Phase};
+use friday_mobile_core::local::{identity, pin, sessions};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::DevicePermissions;
 
 /// What a stand-in window saw of one view.
 #[derive(Debug, Default)]
@@ -193,26 +193,27 @@ fn impostor_pairs(state: &Path, control: u16, claimed: &str, code: &str, compute
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
     let rt = tokio::runtime::Runtime::new().unwrap();
     rt.block_on(async {
-        let certs = pocketdesk_core::streaming::transport::CertManager::new().unwrap();
+        let certs = friday_mobile_core::streaming::transport::CertManager::new().unwrap();
         let fingerprint = identity::cert_fingerprint(state).unwrap();
         let label =
-            pocketdesk_core::streaming::transport::peer_label_for_address("127.0.0.1").unwrap();
+            friday_mobile_core::streaming::transport::peer_label_for_address("127.0.0.1").unwrap();
         certs.pin_peer(&label, fingerprint).unwrap();
-        let manager = pocketdesk_core::protocol::connection::ConnectionManager::new(
+        let manager = friday_mobile_core::protocol::connection::ConnectionManager::new(
             Duration::from_secs(8),
             certs.control_client_config(),
         );
-        let me = pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(claimed, "Impostor");
+        let me = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(claimed, "Impostor");
         let stream = manager.connect("127.0.0.1", control, &me).await.unwrap();
         let (reader, mut writer) = tokio::io::split(stream);
-        let ask = pocketdesk_core::protocol::kdeconnect::NetworkPacket::new("kdeconnect.pair")
+        let ask = friday_mobile_core::protocol::kdeconnect::NetworkPacket::new("kdeconnect.pair")
             .with_body(serde_json::json!({"pin": code, "computer": computer}));
         writer.write_all(&ask.to_wire().unwrap()).await.unwrap();
         writer.flush().await.unwrap();
         let mut lines = tokio::io::BufReader::new(reader).lines();
         let answer = tokio::time::timeout(Duration::from_secs(15), async {
             while let Ok(Some(line)) = lines.next_line().await {
-                let packet = pocketdesk_core::protocol::kdeconnect::NetworkPacket::from_wire(&line);
+                let packet =
+                    friday_mobile_core::protocol::kdeconnect::NetworkPacket::from_wire(&line);
                 if let Ok(packet) = packet
                     && packet.packet_type == "kdeconnect.pair"
                     && let Some(paired) = packet.body.get("pair").and_then(|v| v.as_bool())
@@ -300,9 +301,9 @@ fn both_ways(test: &str, (a_control, b_control): (u16, u16), ids: (&str, &str)) 
     for (config, state) in [(&a_config, &a_state), (&b_config, &b_state)] {
         run.servers.push(
             pocketdesk(config, state)
-                .env(pocketdesk_core::streaming::test_pattern::VAR, "1")
+                .env(friday_mobile_core::streaming::test_pattern::VAR, "1")
                 .env(
-                    pocketdesk_server::computer_view::SOUND_SEAM,
+                    friday_mobile_server::computer_view::SOUND_SEAM,
                     state.parent().unwrap().join("view-sound.wav"),
                 )
                 .stderr(std::fs::File::create(log_of(state)).unwrap())

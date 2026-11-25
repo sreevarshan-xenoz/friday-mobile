@@ -4,8 +4,8 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::protocol::remote_devices::{
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::remote_devices::{
     Ask, REMOTE_DEVICES, REMOTE_DEVICES_ANSWER, Request,
 };
 

@@ -1,5 +1,5 @@
 [package]
-name = "pocketdesk-core"
+name = "friday-mobile-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -38,7 +38,7 @@ inproc = ["encode", "dep:ffmpeg-next"]
 # and bitrate changes in place, no FFmpeg child). Off unless asked for: it
 # needs FFmpeg's development files to build and its DLLs to run
 # (docs/development-setup.md).
-inproc-windows = ["encode", "dep:pocketdesk-ffmpeg"]
+inproc-windows = ["encode", "dep:friday-mobile-ffmpeg"]
 injection = [
     "dep:evdev",
     "dep:wayland-client",
@@ -179,7 +179,7 @@ windows-future = "0.3"
 # BG8 (feature inproc-windows): the same ffmpeg-next the Linux build uses,
 # through a crate of its own (Cargo refuses one crate under two names), so
 # `encode` alone never pulls it in on Windows.
-pocketdesk-ffmpeg = { path = "../ffmpeg-shim", optional = true }
+friday-mobile-ffmpeg = { path = "../ffmpeg-shim", optional = true }
 
 [dev-dependencies]
 # The portal probe's log (tests/portal_live.rs).

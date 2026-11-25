@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use pocketdesk_core::local::phone_media::PhoneMediaState;
+use friday_mobile_core::local::phone_media::PhoneMediaState;
 
 /// How long a report counts with no word since: the phone says it again
 /// each minute while its app is in front, and is silent when it is not
@@ -127,8 +127,8 @@ mod windows_player {
     use std::sync::{Arc, Mutex};
     use std::time::SystemTime;
 
-    use pocketdesk_core::local::phone_media::PhoneMediaState;
-    use pocketdesk_core::protocol::phone_media::PhoneMedia;
+    use friday_mobile_core::local::phone_media::PhoneMediaState;
+    use friday_mobile_core::protocol::phone_media::PhoneMedia;
     use windows::Foundation::TypedEventHandler;
     use windows::Media::{
         MediaPlaybackStatus, MediaPlaybackType, SystemMediaTransportControls,
@@ -152,7 +152,7 @@ mod windows_player {
     /// The name Windows shows for it: the one the server registers for its
     /// toasts, so the flyout says Pocketdesk, not the program's file; and
     /// the one the server skips reading the computer's music (N5).
-    use pocketdesk_core::local::phone_media::MEDIA_CONTROLS_APP_ID as AUMID;
+    use friday_mobile_core::local::phone_media::MEDIA_CONTROLS_APP_ID as AUMID;
 
     /// Ready this thread and process for the media controls, before any
     /// window (K7 review): WinRT on the tray's thread, and the name the
@@ -309,7 +309,7 @@ mod windows_player {
                     updater.ClearAll()?;
                     updater.SetType(MediaPlaybackType::Music)?;
                     let cover = art.as_deref().and_then(|name| {
-                        pocketdesk_core::local::phone_media::art_path(&self.state_dir, name)
+                        friday_mobile_core::local::phone_media::art_path(&self.state_dir, name)
                     });
                     if let Some(path) = cover {
                         // A cover that will not load leaves the song shown.
@@ -408,13 +408,13 @@ mod windows_player {
             linked: &[&str],
             now_unix: u64,
         ) {
-            let stamp = pocketdesk_core::local::config::Config::path()
+            let stamp = friday_mobile_core::local::config::Config::path()
                 .ok()
                 .and_then(|p| std::fs::metadata(p).ok())
                 .and_then(|m| m.modified().ok());
             if !self.read || stamp != self.stamp {
                 // A config that does not read keeps the player as it is.
-                if let Ok(config) = pocketdesk_core::local::config::Config::load() {
+                if let Ok(config) = friday_mobile_core::local::config::Config::load() {
                     if config.phone_media_controls != self.on {
                         self.failed = None;
                     }
@@ -454,7 +454,7 @@ mod windows_player {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_media::PhoneMedia;
+    use friday_mobile_core::protocol::phone_media::PhoneMedia;
 
     fn state(title: &str, playing: bool, at: u64) -> PhoneMediaState {
         PhoneMediaState {
@@ -653,7 +653,7 @@ mod tests {
                 .map(|b| format!("{b:02x}"))
                 .collect()
         };
-        let name = pocketdesk_core::local::phone_media::keep_art(&dir, "probe", &id, &cover)
+        let name = friday_mobile_core::local::phone_media::keep_art(&dir, "probe", &id, &cover)
             .expect("the cover kept");
         let mut probe = state("K7 probe song", true, 1);
         probe.art = Some(name);
@@ -693,7 +693,7 @@ mod tests {
             done(session.TryTogglePlayPauseAsync().expect("a press")),
             Some(true)
         );
-        let outbox = dir.join(pocketdesk_core::local::paths::PHONE_MEDIA_DIR);
+        let outbox = dir.join(friday_mobile_core::local::paths::PHONE_MEDIA_DIR);
         let mut pressed = String::new();
         for _ in 0..30 {
             if let Some(file) = std::fs::read_dir(&outbox)

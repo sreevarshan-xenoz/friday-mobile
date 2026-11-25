@@ -13,10 +13,10 @@ use std::path::Path;
 use std::process::Stdio;
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers;
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_server::shared_input::share_test;
-use pocketdesk_server::shared_input::wire::Msg;
+use friday_mobile_core::local::computers;
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_server::shared_input::share_test;
+use friday_mobile_server::shared_input::wire::Msg;
 
 /// What B recorded from `from`, in the order it arrived.
 fn recorded(record: &Path, from: &str) -> Vec<Msg> {

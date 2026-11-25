@@ -61,7 +61,7 @@ pub fn file_manager_script(exe: &Path) -> String {
     let exe = shell_quote(&exe.to_string_lossy());
     format!(
         "#!/bin/sh\n\
-         # Pocketdesk: send the chosen files to your phone.\n\
+         # FRIDAY Mobile: send the chosen files to your phone.\n\
          paths=\"${{NAUTILUS_SCRIPT_SELECTED_FILE_PATHS:-$NEMO_SCRIPT_SELECTED_FILE_PATHS}}\"\n\
          if [ -n \"$paths\" ]; then\n\
          \x20   # One path per line; split only there, and expand no wildcard.\n\
@@ -91,7 +91,7 @@ pub fn places(data: &Path, exe: &Path) -> Vec<Place> {
                 .join("Microsoft")
                 .join("Windows")
                 .join("SendTo")
-                .join("Pocketdesk (phone).lnk"),
+                .join("FRIDAY Mobile (phone).lnk"),
             kind: Kind::Shortcut,
         }]
     } else {
@@ -216,20 +216,22 @@ mod tests {
 
     #[test]
     fn the_entries_run_the_server_with_the_chosen_files() {
-        let exe = Path::new("/opt/pocket desk/it's/pocketdesk");
+        let exe = Path::new("/opt/pocket desk/it's/friday-mobile");
         let script = file_manager_script(exe);
         assert!(script.starts_with("#!/bin/sh\n"));
         assert!(
-            script.contains(r#"exec '/opt/pocket desk/it'\''s/pocketdesk' send-to-phone -- "$@""#)
+            script
+                .contains(r#"exec '/opt/pocket desk/it'\''s/friday-mobile' send-to-phone -- "$@""#)
         );
         assert!(
-            script
-                .contains(r#"exec '/opt/pocket desk/it'\''s/pocketdesk' send-to-phone -- $paths"#)
+            script.contains(
+                r#"exec '/opt/pocket desk/it'\''s/friday-mobile' send-to-phone -- $paths"#
+            )
         );
         assert!(script.contains("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS"));
         assert!(script.contains("set -f"));
         let menu = dolphin_menu(exe);
-        assert!(menu.contains(r#"Exec="/opt/pocket desk/it's/pocketdesk" send-to-phone -- %F"#));
+        assert!(menu.contains(r#"Exec="/opt/pocket desk/it's/friday-mobile" send-to-phone -- %F"#));
         assert!(menu.contains("Name=Send to phone"));
     }
 
@@ -282,12 +284,12 @@ mod tests {
     fn they_are_added_and_removed_where_the_file_manager_looks() {
         let data = std::env::temp_dir().join(format!("pd-send-menu-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&data);
-        let exe = Path::new("pocketdesk");
+        let exe = Path::new("friday-mobile");
         if cfg!(windows) {
             assert!(
                 places(&data, exe)[0]
                     .path
-                    .ends_with("SendTo/Pocketdesk (phone).lnk")
+                    .ends_with("SendTo/FRIDAY Mobile (phone).lnk")
             );
         } else {
             assert!(!installed_in(&data));

@@ -1,7 +1,7 @@
 //! R4 D2 — desktop-side session visibility and kick.
 //!
 //! The truth about live sessions lives in the core registry
-//! (`pocketdesk_core::streaming::sessions`); the CLI is a separate process,
+//! (`friday_mobile_core::streaming::sessions`); the CLI is a separate process,
 //! so this module mirrors it into the state dir and consumes kick requests,
 //! both through files — the same mechanism R3 #11b uses for pairing PINs
 //! (no admin socket to attack or keep alive).
@@ -20,8 +20,8 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use pocketdesk_core::local::sessions::{self as shared, MirrorSession};
-use pocketdesk_core::streaming::sessions::LiveSession;
+use friday_mobile_core::local::sessions::{self as shared, MirrorSession};
+use friday_mobile_core::streaming::sessions::LiveSession;
 
 /// A kick request older than this is dropped unexecuted — the operator
 /// meant it for a session that is no longer (or not yet) live.
@@ -86,9 +86,9 @@ fn write_live_json(json: &str) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let tmp = pocketdesk_core::atomic_file::temp_beside(&path);
+    let tmp = friday_mobile_core::atomic_file::temp_beside(&path);
     std::fs::write(&tmp, json)?;
-    pocketdesk_core::atomic_file::replace(&tmp, &path)?;
+    friday_mobile_core::atomic_file::replace(&tmp, &path)?;
     Ok(())
 }
 
@@ -101,9 +101,9 @@ type Told = (Vec<(u64, String)>, Option<u64>);
 /// id. A session keeps what it started with, so it ends instead.
 pub fn narrowed_sessions(
     live: &[LiveSession],
-    permissions: impl Fn(&str) -> pocketdesk_core::protocol::permissions::DevicePermissions,
+    permissions: impl Fn(&str) -> friday_mobile_core::protocol::permissions::DevicePermissions,
 ) -> Vec<u64> {
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::protocol::permissions::Capability;
     live.iter()
         .filter(|s| {
             let Some(id) = s.device_id.as_deref() else {
@@ -180,7 +180,7 @@ async fn tell_phones(sessions: &[(u64, String)], driver: Option<u64>) {
 }
 
 /// What a new session is, for its notification.
-fn session_summary(streamed: &pocketdesk_core::streaming::sessions::Streamed) -> &'static str {
+fn session_summary(streamed: &friday_mobile_core::streaming::sessions::Streamed) -> &'static str {
     if streamed.webcam {
         "Pocketdesk: a phone is this computer's camera"
     } else if streamed.cast {
@@ -284,11 +284,11 @@ pub async fn run_watcher() {
         // 1. Kick requests (consume-then-act: a crash can't replay a kick),
         //    every one since the last tick.
         if let Ok(dir) = crate::state::state_dir()
-            && (crate::inbox::changed(pocketdesk_core::local::paths::KICKS_DIR) || sweep)
+            && (crate::inbox::changed(friday_mobile_core::local::paths::KICKS_DIR) || sweep)
         {
             // A device's own kick (AY3): its sessions alone.
             for device in shared::take_device_kicks(&dir, now) {
-                for s in pocketdesk_core::streaming::sessions::kick_device(&device) {
+                for s in friday_mobile_core::streaming::sessions::kick_device(&device) {
                     tracing::info!(
                         device_id = s.device_id.as_deref().unwrap_or("<unannounced>"),
                         peer = %s.peer,
@@ -297,7 +297,7 @@ pub async fn run_watcher() {
                 }
             }
             for target in shared::take_kicks(&dir, now) {
-                let kicked = pocketdesk_core::streaming::sessions::kick(&target);
+                let kicked = friday_mobile_core::streaming::sessions::kick(&target);
                 if kicked.is_empty() {
                     tracing::warn!(target = %target, "kick: no live session matched");
                 } else {
@@ -313,7 +313,7 @@ pub async fn run_watcher() {
         }
 
         // 2. Consent notification for sessions that appeared since last tick.
-        let live = pocketdesk_core::streaming::sessions::list();
+        let live = friday_mobile_core::streaming::sessions::list();
         // A phone that stopped being paired loses its session at once,
         // however that happened.
         // The privacy grab of a phone no longer paired is given back too,
@@ -330,12 +330,12 @@ pub async fn run_watcher() {
         let _ = tokio::task::spawn_blocking(crate::plugins::privacy::unlock_tick).await;
         if !live.is_empty() {
             let store = crate::state::trust_store_path().ok().and_then(|path| {
-                pocketdesk_core::protocol::kdeconnect::TrustStore::load_or_create(path).ok()
+                friday_mobile_core::protocol::kdeconnect::TrustStore::load_or_create(path).ok()
             });
             let paired = |id: &str| store.as_ref().is_some_and(|s| s.is_trusted(id));
             if let Some(store) = &store {
                 for id in narrowed_sessions(&live, |device| store.permissions(device)) {
-                    if let Some(s) = pocketdesk_core::streaming::sessions::end_session(
+                    if let Some(s) = friday_mobile_core::streaming::sessions::end_session(
                         id,
                         b"permissions changed",
                     ) {
@@ -350,7 +350,7 @@ pub async fn run_watcher() {
             // read again at each tick (PR #604 review I1).
             let offered = crate::phone_camera::offered();
             for id in unoffered_camera_sessions(&live, offered) {
-                if pocketdesk_core::streaming::sessions::end_session(
+                if friday_mobile_core::streaming::sessions::end_session(
                     id,
                     b"phone camera not offered here",
                 )
@@ -369,7 +369,7 @@ pub async fn run_watcher() {
             };
             for id in unpaired {
                 if let Some(s) =
-                    pocketdesk_core::streaming::sessions::end_session(id, b"not paired")
+                    friday_mobile_core::streaming::sessions::end_session(id, b"not paired")
                 {
                     tracing::warn!(
                         device_id = s.device_id.as_deref().unwrap_or("<unannounced>"),
@@ -379,12 +379,12 @@ pub async fn run_watcher() {
                 }
             }
         }
-        let live = pocketdesk_core::streaming::sessions::list();
+        let live = friday_mobile_core::streaming::sessions::list();
         let live_ids: Vec<u64> = live.iter().map(|s| s.id).collect();
 
         // N7: the desktop app hands control to a session.
         if let Ok(dir) = crate::state::state_dir()
-            && (crate::inbox::changed(pocketdesk_core::local::paths::CONTROL_DIR) || sweep)
+            && (crate::inbox::changed(friday_mobile_core::local::paths::CONTROL_DIR) || sweep)
         {
             for session in shared::take_control_requests(&dir, now) {
                 if live_ids.contains(&session) && crate::driving::give(session) {
@@ -433,7 +433,7 @@ pub async fn run_watcher() {
         );
         if changed
             && let Some((paired, grant_end)) = trust_path.and_then(|path| {
-                pocketdesk_core::protocol::kdeconnect::TrustStore::read(path)
+                friday_mobile_core::protocol::kdeconnect::TrustStore::read(path)
                     .ok()
                     .map(|store| (store.trusted_devices(), store.next_grant_end()))
             })
@@ -564,7 +564,7 @@ fn changes(
 /// restarted, its texts for good); whether all of it was done. A file that
 /// cannot be read is left as it is.
 async fn forget_unpaired(dir: &std::path::Path, paired: &[String]) -> bool {
-    use pocketdesk_core::local::{phone_contacts, phone_live, phone_notes};
+    use friday_mobile_core::local::{phone_contacts, phone_live, phone_notes};
     let mut done = true;
     if let Err(e) = phone_notes::keep_only(dir, paired) {
         tracing::warn!("Could not forget the notifications of phones no longer paired: {e}");
@@ -616,7 +616,7 @@ fn pairing_changes(seen: Option<&[String]>, paired: &[String]) -> Vec<(&'static 
 /// has an address to dial back (T10d), or came by the internet road with
 /// `internet_files` on (2c).
 pub fn linked_phones(
-    clients: &[std::sync::Arc<dyn pocketdesk_core::protocol::kdeconnect::DeviceSender>],
+    clients: &[std::sync::Arc<dyn friday_mobile_core::protocol::kdeconnect::DeviceSender>],
 ) -> Vec<shared::LinkedPhone> {
     // One connection per device: the one pushes go to.
     clients
@@ -678,7 +678,7 @@ mod tests {
     /// replies waiting leave the computer's pages; a paired one's stay.
     #[tokio::test]
     async fn an_unpaired_phone_s_notes_cards_and_texts_go() {
-        use pocketdesk_core::local::{phone_live, phone_notes, sms};
+        use friday_mobile_core::local::{phone_live, phone_notes, sms};
         let dir = std::env::temp_dir().join(format!("pd-ay5-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
@@ -737,12 +737,12 @@ mod tests {
     }
 
     use super::*;
-    use pocketdesk_core::streaming::sessions::LiveSession;
+    use friday_mobile_core::streaming::sessions::LiveSession;
     use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
     #[test]
     fn each_kind_of_session_is_announced_as_what_it_is() {
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::streaming::sessions::Streamed;
         let screen = Streamed {
             input: true,
             audio: true,
@@ -843,8 +843,8 @@ mod tests {
 
     #[test]
     fn a_session_whose_permissions_were_narrowed_is_ended() {
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::streaming::sessions::Streamed;
         let all = Streamed {
             input: true,
             audio: true,
@@ -879,8 +879,8 @@ mod tests {
     /// K5: a cast whose sound plays here ends when its permission goes.
     #[test]
     fn a_cast_s_sound_ends_with_its_permission() {
-        use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+        use friday_mobile_core::streaming::sessions::Streamed;
         let mut cast = session(Some("phone"), true);
         cast.streamed = Streamed {
             cast: true,
@@ -901,8 +901,8 @@ mod tests {
     /// permission goes.
     #[test]
     fn the_phone_s_sound_alone_is_told_and_ends_with_its_permission() {
-        use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+        use friday_mobile_core::streaming::sessions::Streamed;
         let alone = Streamed {
             phone_sound: true,
             ..Streamed::default()
@@ -927,8 +927,8 @@ mod tests {
     /// camera; a screen cast is left to its own permissions.
     #[test]
     fn a_camera_ends_with_its_permission_and_the_offer() {
-        use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+        use friday_mobile_core::streaming::sessions::Streamed;
         let mut camera = session(Some("phone"), true);
         camera.streamed = Streamed {
             cast: true,
@@ -955,7 +955,7 @@ mod tests {
     /// M7: the phone's sound alone is its own kind, not sound only.
     #[test]
     fn the_phone_s_sound_alone_is_its_own_kind() {
-        use pocketdesk_core::streaming::sessions::Streamed;
+        use friday_mobile_core::streaming::sessions::Streamed;
         let mut alone = session(Some("phone"), true);
         alone.streamed = Streamed {
             phone_sound: true,
@@ -1034,7 +1034,7 @@ mod tests {
 
     #[test]
     fn status_says_how_the_bluetooth_road_stands_while_the_server_writes() {
-        use pocketdesk_core::protocol::bluetooth::RoadState;
+        use friday_mobile_core::protocol::bluetooth::RoadState;
         for (road, line) in [
             (RoadState::Listening, "Bluetooth: listening"),
             (RoadState::NoRadio, "Bluetooth: no radio"),

@@ -7,7 +7,7 @@
 //! monitor's, under the name `kde:<n>` (`window_target`'s table, the number
 //! being the one the window table gave the window's uuid, see
 //! `window_kde`), and the borrower's session captures it alone, through the
-//! screen-sharing portal ([`pocketdesk_core::streaming::capture_kde`]):
+//! screen-sharing portal ([`friday_mobile_core::streaming::capture_kde`]):
 //! **one dialog on the owner's screen for each window the first time**, and
 //! none after that (the grant is kept for the window). The viewer cannot tell
 //! the difference except that the first picture of a new window waits for
@@ -34,7 +34,7 @@
 use std::io;
 use std::sync::Arc;
 
-use pocketdesk_core::streaming::window_kde::{self, Refusal, Snapshot};
+use friday_mobile_core::streaming::window_kde::{self, Refusal, Snapshot};
 
 use super::place::{Shell, ShellWindow};
 
@@ -447,8 +447,8 @@ mod tests {
     use super::*;
     use crate::lend_window::place::PlaceEnv;
     use crate::lend_window::{Lends, lend_with, list_with, return_with};
-    use pocketdesk_core::streaming::window_kde::KdeWindow;
-    use pocketdesk_core::streaming::window_target;
+    use friday_mobile_core::streaming::window_kde::KdeWindow;
+    use friday_mobile_core::streaming::window_target;
     use std::sync::Mutex;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::Instant;

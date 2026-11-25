@@ -4,7 +4,7 @@
 //! has it on this session: waiting for the display except on Wayland) showing a
 //! throwaway server's test pattern, with the window's stage trace
 //! ([`crate::view_present_trace`]) joined to the host's
-//! ([`pocketdesk_core::streaming::latency_trace`]) by the pattern's frame
+//! ([`friday_mobile_core::streaming::latency_trace`]) by the pattern's frame
 //! number. For every picture the window painted the table gives each step
 //! from the host's frame to the GPU finishing the picture, in milliseconds
 //! (p50 and p95). What it leaves out is the display itself: the compositor's
@@ -29,8 +29,8 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::latency_probe;
-use pocketdesk_core::streaming::latency_trace::{self, Event};
+use friday_mobile_core::streaming::latency_probe;
+use friday_mobile_core::streaming::latency_trace::{self, Event};
 
 use crate::computer_view::ComputerView;
 use crate::view_live::{StopViewOnDrop, start_pair, trace_file};
@@ -406,7 +406,7 @@ impl eframe::App for Show {
                 &self.device,
                 "Probe",
                 0,
-                pocketdesk_core::streaming::input_packet::PRESET_AUTO,
+                friday_mobile_core::streaming::input_packet::PRESET_AUTO,
                 true,
                 false,
             )

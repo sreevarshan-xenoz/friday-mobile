@@ -12,7 +12,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::phone_location::{Fix, Precision};
+use friday_mobile_core::protocol::phone_location::{Fix, Precision};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -320,7 +320,7 @@ async fn client(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_location::Precision;
+    use friday_mobile_core::protocol::phone_location::Precision;
 
     fn fix(lat: f64, lon: f64, accuracy_m: u32) -> Fix {
         Fix {

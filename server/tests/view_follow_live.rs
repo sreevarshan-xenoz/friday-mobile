@@ -32,13 +32,13 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use common::{Cleanup, clipboard, downloads, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::sent::{self, SentState};
-use pocketdesk_core::local::view::{self as wire, Message, Phase};
-use pocketdesk_core::local::{identity, outbox, pause, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::sent::{self, SentState};
+use friday_mobile_core::local::view::{self as wire, Message, Phase};
+use friday_mobile_core::local::{identity, outbox, pause, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 use sha2::{Digest, Sha256};
 
 /// What the stand-in window has heard: whether B let A in and takes its
@@ -172,11 +172,11 @@ fn the_clipboard_and_files_follow_the_window() {
     for (config, state) in [(&a_config, &a_state), (&b_config, &b_state)] {
         run.servers.push(
             pocketdesk(config, state)
-                .env(pocketdesk_core::streaming::test_pattern::VAR, "1")
+                .env(friday_mobile_core::streaming::test_pattern::VAR, "1")
                 // No sound is sent (B's entry for A has Audio off); were
                 // any to come, A writes it here, never to the speakers.
                 .env(
-                    pocketdesk_server::computer_view::SOUND_SEAM,
+                    friday_mobile_server::computer_view::SOUND_SEAM,
                     state.parent().unwrap().join("view-sound.wav"),
                 )
                 .arg("start")

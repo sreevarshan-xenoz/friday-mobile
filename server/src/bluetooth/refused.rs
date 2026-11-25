@@ -143,7 +143,9 @@ pub(crate) fn refused(device_id: &str, what: What, why: Refused) {
         std::thread::spawn(move || {
             let name = crate::state::trust_store_path()
                 .ok()
-                .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok())
+                .and_then(|path| {
+                    friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok()
+                })
                 .and_then(|store| store.name(&device_id).map(str::to_string))
                 .unwrap_or_else(|| {
                     format!("Device {}", device_id.chars().take(6).collect::<String>())

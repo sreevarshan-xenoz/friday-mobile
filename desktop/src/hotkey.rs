@@ -118,7 +118,7 @@ fn status_words_saying(
 /// The key combination as `RegisterHotKey` takes it, and how Settings' text
 /// reads as one: core's, which the server's shared keyboard and mouse reads
 /// its key with too.
-pub use pocketdesk_core::local::hotkey::{
+pub use friday_mobile_core::local::hotkey::{
     Hotkey, MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, MOD_SHIFT, MOD_WIN, parse,
 };
 
@@ -144,7 +144,7 @@ pub fn portal_trigger(text: &str) -> Option<String> {
         })
         .collect();
     // Keysym names: "F5", "Right"; a letter or digit as it is.
-    out.push(if pocketdesk_core::local::hotkey::is_arrow(last) {
+    out.push(if friday_mobile_core::local::hotkey::is_arrow(last) {
         let mut name = last.clone();
         name[..1].make_ascii_uppercase();
         name
@@ -182,7 +182,7 @@ pub fn typing_phone<'a>(rows: &'a [PhoneRow<'a>]) -> Option<&'a str> {
             r.device.linked
                 && r.device
                     .permissions
-                    .allows(pocketdesk_core::protocol::permissions::Capability::Cast)
+                    .allows(friday_mobile_core::protocol::permissions::Capability::Cast)
         })
         .max_by_key(|r| r.last_session.unwrap_or(0))
         .map(|r| r.device.id.as_str())
@@ -369,7 +369,7 @@ mod tests {
     /// may control, the newest session's first.
     #[test]
     fn the_typing_key_goes_to_a_linked_phone_it_may_control() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let device = |id: &str, linked: bool, cast: bool| {
             let mut d = Device {
                 id: id.to_string(),

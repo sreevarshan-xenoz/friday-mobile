@@ -200,7 +200,7 @@ fn missing(what: &str) -> io::Error {
     )
 }
 
-/// `<config dir>/pocketdesk` (`%APPDATA%\pocketdesk`, `~/.config/pocketdesk`).
+/// `<config dir>/friday-mobile` (`%APPDATA%\friday-mobile`, `~/.config/friday-mobile`).
 /// `POCKETDESK_CONFIG_DIR` names another folder, so a second server (for
 /// tests, or a second set of settings) has its own `config.toml` (its own
 /// ports) and its own iroh identity; set `POCKETDESK_STATE_DIR` with it for
@@ -303,7 +303,7 @@ mod harness {
         SAID.call_once(|| {
             sweep_stale(&std::env::temp_dir());
             eprintln!(
-                "pocketdesk: a test binary reached the {what} folder with no override; using throwaway pd-harness-{} folders",
+                "friday-mobile: a test binary reached the {what} folder with no override; using throwaway pd-harness-{} folders",
                 std::process::id()
             );
         });
@@ -372,7 +372,7 @@ mod harness {
     }
 }
 
-/// `<state dir>/pocketdesk`, falling back to local data (`%LOCALAPPDATA%` on
+/// `<state dir>/friday-mobile`, falling back to local data (`%LOCALAPPDATA%` on
 /// Windows, which has no state dir). `POCKETDESK_STATE_DIR` names another
 /// folder (a portable install, or a separate set of pairings).
 pub fn state_dir() -> io::Result<PathBuf> {
@@ -436,12 +436,12 @@ fn dir_from_env(name: &str, value: Option<std::ffi::OsString>) -> Option<io::Res
 }
 
 /// The folder name under the config and state directories.
-pub const DIR_NAME: &str = "pocketdesk";
+pub const DIR_NAME: &str = "friday-mobile";
 
 /// The name before the rename, moved to [`DIR_NAME`] on first use.
-pub const OLD_DIR_NAME: &str = "linux-link";
+pub const OLD_DIR_NAME: &str = "pocketdesk";
 
-/// `<base>/pocketdesk`. A folder from before the rename (`<base>/linux-link`)
+/// `<base>/friday-mobile`. A folder from before the rename (`<base>/pocketdesk`)
 /// is moved there the first time, so pairings, keys and settings carry
 /// over; an existing new folder is never touched. If the move fails (a file
 /// held open), the old folder keeps being used rather than starting empty.
@@ -541,32 +541,34 @@ mod tests {
         use harness::is_harness_path;
         use std::path::Path;
         assert!(is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk_server-afd6384e55342381"
+            "/w/target/debug/deps/friday_mobile_server-afd6384e55342381"
         )));
         assert!(is_harness_path(Path::new(
-            "E:/w/target/debug/deps/pocketdesk_server-afd6384e55342381.exe"
+            "E:/w/target/debug/deps/friday_mobile_server-afd6384e55342381.exe"
         )));
         // `cargo run`, an install, and a hashless name in a deps folder.
-        assert!(!is_harness_path(Path::new("/w/target/debug/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/usr/bin/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/opt/deps/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/opt/deps/pocketdesk-server")));
+        assert!(!is_harness_path(Path::new("/w/target/debug/friday-mobile")));
+        assert!(!is_harness_path(Path::new("/usr/bin/friday-mobile")));
+        assert!(!is_harness_path(Path::new("/opt/deps/friday-mobile")));
+        assert!(!is_harness_path(Path::new(
+            "/opt/deps/friday-mobile-server"
+        )));
         // Near misses: 15 or 17 digits, a letter past f, a hashed binary
         // outside deps, and a build script.
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e5534238"
+            "/w/target/debug/deps/friday-mobile-afd6384e5534238"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e553423811"
+            "/w/target/debug/deps/friday-mobile-afd6384e553423811"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e5534238g"
+            "/w/target/debug/deps/friday-mobile-afd6384e5534238g"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/pocketdesk-afd6384e55342381"
+            "/w/target/debug/friday-mobile-afd6384e55342381"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/build/pocketdesk-core-afd6384e55342381/build-script-build"
+            "/w/target/debug/build/friday-mobile-core-afd6384e55342381/build-script-build"
         )));
     }
 

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-const EXE: &str = env!("CARGO_BIN_EXE_pocketdesk");
+const EXE: &str = env!("CARGO_BIN_EXE_friday-mobile");
 const CONTROL: u16 = 18916;
 
 /// Stops the server and removes its folders however the test ends.

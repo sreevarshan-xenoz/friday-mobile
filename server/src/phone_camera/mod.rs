@@ -1,5 +1,5 @@
 //! The phone's camera as this computer's camera (F6 part 2). A camera cast
-//! (a cast that said [`pocketdesk_core::streaming::client::CAST_WEBCAM_FLAG`],
+//! (a cast that said [`friday_mobile_core::streaming::client::CAST_WEBCAM_FLAG`],
 //! admitted with the phone's Webcam permission and the owner's
 //! `phone_camera` setting) is decoded here by `ffmpeg`, as the desktop
 //! app's window decodes a cast, and published on Linux as a PipeWire
@@ -18,8 +18,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::phone_camera::CameraAsk;
-use pocketdesk_core::streaming::cast::CastChain;
+use friday_mobile_core::protocol::phone_camera::CameraAsk;
+use friday_mobile_core::streaming::cast::CastChain;
 
 #[cfg(target_os = "linux")]
 mod node;
@@ -54,7 +54,7 @@ pub fn camera_name(phone: Option<&str>) -> String {
         .unwrap_or("")
         .chars()
         .filter(|c| {
-            !c.is_control() && !pocketdesk_core::protocol::kdeconnect::is_invisible_format(*c)
+            !c.is_control() && !friday_mobile_core::protocol::kdeconnect::is_invisible_format(*c)
         })
         .take(NAME_CHARS)
         .collect();
@@ -249,7 +249,7 @@ impl Decoder {
         let args = decoder_args(
             width,
             height,
-            pocketdesk_core::streaming::ffmpeg_flags::fps_mode_flag(program),
+            friday_mobile_core::streaming::ffmpeg_flags::fps_mode_flag(program),
         );
         Self::spawn(program, &args, width, height, latest)
     }
@@ -759,7 +759,7 @@ impl Worker {
 /// The camera of session `session_id` failed: its session ends, telling
 /// the phone (which closes its camera), and the owner is told here.
 fn fail(session_id: u64, why: &io::Error) {
-    let _ = pocketdesk_core::streaming::sessions::end_session(session_id, CAMERA_FAILED);
+    let _ = friday_mobile_core::streaming::sessions::end_session(session_id, CAMERA_FAILED);
     let body = format!("The phone's camera was taken away: {why}.");
     if !crate::platform::notify(
         "Pocketdesk: the phone's camera stopped",
@@ -773,7 +773,7 @@ fn fail(session_id: u64, why: &io::Error) {
 /// The name the owner knows the phone `device_id` by.
 fn phone_name(device_id: &str) -> Option<String> {
     let path = crate::state::trust_store_path().ok()?;
-    let store = pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok()?;
+    let store = friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok()?;
     store.name(device_id).map(str::to_string)
 }
 

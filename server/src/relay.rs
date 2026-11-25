@@ -102,15 +102,16 @@ impl AccessControl for Allowlist {
 /// expired guest grant, an unpaired phone) is left out; a missing or
 /// unreadable trust store leaves every key out.
 fn paired_wan_keys(state_dir: &std::path::Path) -> Vec<(String, EndpointId)> {
-    let trust_path = state_dir.join(pocketdesk_core::local::paths::TRUST_FILE);
+    let trust_path = state_dir.join(friday_mobile_core::local::paths::TRUST_FILE);
     if !trust_path.exists() {
         return Vec::new();
     }
-    let Ok(trust) = pocketdesk_core::protocol::kdeconnect::TrustStore::load_or_create(&trust_path)
+    let Ok(trust) =
+        friday_mobile_core::protocol::kdeconnect::TrustStore::load_or_create(&trust_path)
     else {
         return Vec::new();
     };
-    pocketdesk_core::local::device_keys::read(state_dir)
+    friday_mobile_core::local::device_keys::read(state_dir)
         .unwrap_or_default()
         .into_iter()
         .filter(|(device, _)| trust.is_trusted(device))
@@ -154,7 +155,7 @@ pub async fn run(opts: RelayOptions) -> Result<()> {
             let mut relay = RelayConfig::new(SocketAddr::from(([0, 0, 0, 0], 80)));
             // The cache holds the certificate's and the account's private keys.
             let cache = crate::state::state_dir()?.join("relay-acme");
-            pocketdesk_core::secure_fs::create_private_dir(&cache)
+            friday_mobile_core::secure_fs::create_private_dir(&cache)
                 .with_context(|| format!("could not create {}", cache.display()))?;
             let mut acme = AcmeConfig::letsencrypt(true)
                 .domains(vec![hostname.clone()])
@@ -260,19 +261,19 @@ mod tests {
     }
 
     fn trust(dir: &std::path::Path, device: &str) {
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(
-            dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
+            dir.join(friday_mobile_core::local::paths::TRUST_FILE),
             |store| store.trust_device(device),
         )
         .unwrap();
     }
 
     fn register(dir: &std::path::Path, device: &str, key: EndpointId) {
-        pocketdesk_core::local::device_keys::bind_first(dir, device, "tls-key").unwrap();
-        pocketdesk_core::local::device_keys::register(
+        friday_mobile_core::local::device_keys::bind_first(dir, device, "tls-key").unwrap();
+        friday_mobile_core::local::device_keys::register(
             dir,
             device,
-            pocketdesk_core::local::device_keys::Slot::Iroh,
+            friday_mobile_core::local::device_keys::Slot::Iroh,
             &key.to_string(),
         )
         .unwrap();
@@ -293,14 +294,14 @@ mod tests {
         assert!(list.allows(&id(9)), "this desktop still admitted");
         trust(&dir, "gone");
         assert!(list.allows(&id(4)), "paired: admitted");
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(
-            dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
+            dir.join(friday_mobile_core::local::paths::TRUST_FILE),
             |store| store.untrust_device("gone"),
         )
         .unwrap();
         assert!(!list.allows(&id(4)), "unpaired again: refused");
         std::fs::write(
-            dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+            dir.join(friday_mobile_core::local::paths::TRUST_FILE),
             "{not json",
         )
         .unwrap();

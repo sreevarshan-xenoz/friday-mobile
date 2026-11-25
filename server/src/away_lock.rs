@@ -17,8 +17,8 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// How often the links are looked at.
 const TICK: Duration = Duration::from_secs(5);
@@ -177,7 +177,7 @@ pub(crate) fn idle_secs() -> Option<u64> {
         }
     }
     // T8: Sway, Hyprland and other compositors say it themselves.
-    if let Some(secs) = pocketdesk_core::input::idle_notify::idle_secs() {
+    if let Some(secs) = friday_mobile_core::input::idle_notify::idle_secs() {
         return Some(secs);
     }
     // Never under Wayland, where XWayland sees only X clients' input (R3
@@ -268,7 +268,7 @@ fn lock_to(seam: Option<std::ffi::OsString>, phone: &str) -> Result<&'static str
             return Err("POCKETDESK_LOCK_FILE is not an absolute path".to_string());
         }
         use std::io::Write;
-        let line = format!("{} {phone}\n", pocketdesk_core::local::pin::now_unix());
+        let line = format!("{} {phone}\n", friday_mobile_core::local::pin::now_unix());
         return std::fs::OpenOptions::new()
             .create(true)
             .append(true)
@@ -295,7 +295,7 @@ fn switched() -> Option<Vec<String>> {
 
 /// The minutes away before a lock, `None` when the config does not read now.
 fn minutes() -> Option<u32> {
-    pocketdesk_core::local::config::Config::load()
+    friday_mobile_core::local::config::Config::load()
         .ok()
         .map(|c| c.away_lock_minutes.clamp(2, 60))
 }
@@ -328,7 +328,7 @@ fn nearby(peer: Option<std::net::SocketAddr>) -> bool {
 /// its address, or a Bluetooth link, which proves the phone is within a few
 /// metres (Bluetooth fallback, calls after review 1: otherwise the computer
 /// would lock with the owner beside it and Wi-Fi down).
-fn present(link: &dyn pocketdesk_core::protocol::kdeconnect::DeviceSender) -> bool {
+fn present(link: &dyn friday_mobile_core::protocol::kdeconnect::DeviceSender) -> bool {
     nearby(link.link_addr()) || link.nearby_by_radio()
 }
 
@@ -369,7 +369,8 @@ pub async fn run() {
         // its watch starts as soon as a phone has the switch on.
         #[cfg(target_os = "linux")]
         if !last_switched.is_empty() {
-            let _ = tokio::task::spawn_blocking(pocketdesk_core::input::idle_notify::watch).await;
+            let _ =
+                tokio::task::spawn_blocking(friday_mobile_core::input::idle_notify::watch).await;
         }
         // V1: present is nearby, on this computer's network, or linked by
         // Bluetooth; a phone linked by the internet road (or a tailnet) from
@@ -473,7 +474,7 @@ mod tests {
     /// it is present; the internet road's link (no address, no radio) is not.
     #[test]
     fn bluetooth_link_counts_as_near() {
-        use pocketdesk_core::protocol::kdeconnect::{DeviceSender, TcpDeviceSender};
+        use friday_mobile_core::protocol::kdeconnect::{DeviceSender, TcpDeviceSender};
         let link = |by_radio: bool| {
             TcpDeviceSender::new(tokio::io::sink(), "phone".to_string()).by_radio(by_radio)
         };

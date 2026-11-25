@@ -4,7 +4,7 @@
 //! One message is one tag byte and its fields, big-endian and fixed-size, with
 //! a string as a `u16` length and its UTF-8. On a stream a message travels as
 //! a [`frame`]: a `u16` length and then the message. The mouse and the keys
-//! mean what [`InputPacket`](pocketdesk_core::streaming::input_packet::InputPacket)
+//! mean what [`InputPacket`](friday_mobile_core::streaming::input_packet::InputPacket)
 //! says of them (buttons 0 left, 1 middle, 2 right, 3 back, 4 forward; keys are
 //! evdev codes; the wheel counts notches).
 
@@ -26,7 +26,7 @@ pub const STREAM_MAGIC: [u8; 4] = *b"PDSI";
 /// longer one is cut short at a character when encoded); and the most
 /// screens a message lists (the rest are left off when encoded). They are
 /// core's, which keeps what each computer said in `shared_screens.json`.
-pub use pocketdesk_core::local::shared_input::{MAX_NAME_BYTES, MAX_SCREENS, Screen};
+pub use friday_mobile_core::local::shared_input::{MAX_NAME_BYTES, MAX_SCREENS, Screen};
 
 const TAG_HELLO: u8 = 0;
 const TAG_SCREENS: u8 = 1;

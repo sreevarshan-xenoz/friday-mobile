@@ -121,7 +121,7 @@ impl eframe::App for Show {
                 &self.device,
                 "Probe",
                 0,
-                pocketdesk_core::streaming::input_packet::PRESET_AUTO,
+                friday_mobile_core::streaming::input_packet::PRESET_AUTO,
                 true,
                 false,
             )
@@ -232,7 +232,7 @@ fn a_window_the_compositor_does_not_show_does_not_stop_the_app() {
     };
     let pair = start_pair(
         (19536, 19636),
-        Some(pocketdesk_core::streaming::latency_probe::MODE),
+        Some(friday_mobile_core::streaming::latency_probe::MODE),
         false,
         false,
     );

@@ -27,9 +27,9 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::portal_grant;
-use pocketdesk_core::streaming::portal_input::{self, PortalEvent};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::portal_grant;
+use friday_mobile_core::streaming::portal_input::{self, PortalEvent};
+use friday_mobile_core::streaming::{
     StreamingConfig, VideoFrame, capture_linux, gnome_unattended, latest_frame,
 };
 use tokio_util::sync::CancellationToken;

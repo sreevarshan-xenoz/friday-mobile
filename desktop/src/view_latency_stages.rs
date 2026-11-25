@@ -1,7 +1,7 @@
 //! The latency probe's stage table (phase 0b): where the time between a
 //! pointer move and its picture goes. [`crate::view_latency_live`] times a
 //! move from its send to its picture; the host's trace
-//! ([`pocketdesk_core::streaming::latency_trace`]) and the stand-in
+//! ([`friday_mobile_core::streaming::latency_trace`]) and the stand-in
 //! viewer's own record of the access units it read and the pictures it was
 //! given tie that time to the steps in between. Everything is on the wall
 //! clock of one machine.
@@ -14,7 +14,7 @@
 
 use std::collections::HashMap;
 
-use pocketdesk_core::streaming::latency_trace::{Event, Step};
+use friday_mobile_core::streaming::latency_trace::{Event, Step};
 
 /// A move the stand-in sent, and the picture that showed it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

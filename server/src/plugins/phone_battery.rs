@@ -12,10 +12,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::phone_status::{BatteryReport, PhoneBattery};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::phone_status::{BatteryReport, PhoneBattery};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 
 /// The packet a phone reports its battery with.
 pub const BATTERY: &str = "kdeconnect.battery";
@@ -338,7 +338,7 @@ pub(crate) fn take_from(device: &str, body: &serde_json::Value) {
             &report,
             ALERTS.load(Ordering::Relaxed),
             crate::events::current_config().charged_alert,
-            pocketdesk_core::local::pin::now_unix(),
+            friday_mobile_core::local::pin::now_unix(),
             Instant::now(),
         );
         let changed = before != Some((report.charge, report.charging));
@@ -398,7 +398,7 @@ pub async fn run_writer() {
     };
     {
         let mut reports = REPORTS.lock().unwrap_or_else(|e| e.into_inner());
-        for (device, battery) in pocketdesk_core::local::phone_status::read(&dir) {
+        for (device, battery) in friday_mobile_core::local::phone_status::read(&dir) {
             reports.batteries.entry(device).or_insert(battery);
         }
     }
@@ -408,9 +408,9 @@ pub async fn run_writer() {
         // Paired phones, and paired KDE Connect devices (3c); either store
         // unreadable forgets no one.
         let paired: Option<std::collections::HashSet<String>> =
-            pocketdesk_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
+            friday_mobile_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
                 .ok()
-                .zip(pocketdesk_core::local::kdeconnect_devices::try_devices(&dir).ok())
+                .zip(friday_mobile_core::local::kdeconnect_devices::try_devices(&dir).ok())
                 .map(|(store, kde)| {
                     store
                         .trusted_devices()
@@ -435,7 +435,7 @@ pub async fn run_writer() {
         // second for another program's handle on the file.
         let at = dir.clone();
         let kept = tokio::task::spawn_blocking(move || {
-            pocketdesk_core::local::phone_status::write(&at, &batteries)
+            friday_mobile_core::local::phone_status::write(&at, &batteries)
         })
         .await
         .unwrap_or_else(|e| Err(std::io::Error::other(e)));
@@ -561,11 +561,11 @@ mod tests {
         assert!(reports.dirty);
         // L9: what the phone says of itself is kept beside its battery.
         let mut with_state = report(54, true);
-        with_state.state.ringer = Some(pocketdesk_core::local::phone_status::Ringer::Silent);
+        with_state.state.ringer = Some(friday_mobile_core::local::phone_status::Ringer::Silent);
         reports.take("phone-a", &with_state, true, 0, 120, now);
         assert_eq!(
             reports.batteries["phone-a"].state.ringer,
-            Some(pocketdesk_core::local::phone_status::Ringer::Silent)
+            Some(friday_mobile_core::local::phone_status::Ringer::Silent)
         );
         let warning = reports.take("phone-a", &report(12, false), true, 0, 160, now);
         assert_eq!(
@@ -610,7 +610,7 @@ mod tests {
         let _state = crate::state::use_test_dirs();
         let dir: &std::path::Path = &_state;
         std::fs::create_dir_all(dir).unwrap();
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
             dir.join("trusted_devices.json"),
             |store| store.trust_device("battery-paired"),
         )

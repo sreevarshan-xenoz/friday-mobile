@@ -9,11 +9,11 @@ use std::net::SocketAddr;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-use pocketdesk_core::streaming::cast::{self, CastEvent, CastPayload};
-use pocketdesk_core::streaming::cast_control::{ControlBatch, ControlEvent, Global};
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::streaming::cast::{self, CastEvent, CastPayload};
+use friday_mobile_core::streaming::cast_control::{ControlBatch, ControlEvent, Global};
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     InputPacket, QuinnConnection, SessionMode, SharedConnection, StreamingClient, StreamingConfig,
     StreamingServer,
 };
@@ -42,7 +42,7 @@ async fn serve(
 ) -> (
     SocketAddr,
     std::sync::Arc<CertManager>,
-    tokio::sync::broadcast::Receiver<pocketdesk_core::streaming::SessionInput>,
+    tokio::sync::broadcast::Receiver<friday_mobile_core::streaming::SessionInput>,
     tokio::task::JoinHandle<anyhow::Result<()>>,
 ) {
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -107,7 +107,9 @@ async fn connect_cast(addr: SocketAddr, cert: std::sync::Arc<CertManager>) -> St
 
 /// The next control batch the phone took, waiting up to 5 s without
 /// blocking the runtime the client receives on.
-async fn take_control(remote: &pocketdesk_core::streaming::client::RemoteFlags) -> Option<Vec<u8>> {
+async fn take_control(
+    remote: &friday_mobile_core::streaming::client::RemoteFlags,
+) -> Option<Vec<u8>> {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     loop {
         if let Some(batch) = remote.control.take(Duration::ZERO) {

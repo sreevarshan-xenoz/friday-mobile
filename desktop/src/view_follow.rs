@@ -2,7 +2,7 @@
 //! screen (PC3).
 //!
 //! **Clipboard:** while the window controls that computer, its focus is
-//! said to the server ([`pocketdesk_core::local::view::FOCUS`]) as it comes
+//! said to the server ([`friday_mobile_core::local::view::FOCUS`]) as it comes
 //! and goes, settled first ([`FocusEdges`]) so a flicker says nothing. The
 //! server pushes this computer's clipboard there as the focus comes, and
 //! asks for that computer's back as it goes.
@@ -16,7 +16,7 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::sent::{SentFile, SentState};
+use friday_mobile_core::local::sent::{SentFile, SentState};
 
 /// How long the focus holds before it is said: a flicker (a menu, a
 /// notification taking it for a moment) says nothing.

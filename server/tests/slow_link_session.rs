@@ -62,9 +62,9 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy, RateLimit};
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy, RateLimit};
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     QuinnConnection, StreamingClient, StreamingConfig, StreamingServer,
 };
 
@@ -87,7 +87,7 @@ fn env_u64(name: &str, default: u64) -> u64 {
 async fn a_session_on_a_slow_link_keeps_going() {
     let _ = tracing_subscriber::fmt()
         .with_env_filter(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "pocketdesk_core=info".into()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "friday_mobile_core=info".into()),
         )
         .with_test_writer()
         .try_init();
@@ -158,7 +158,7 @@ async fn a_session_on_a_slow_link_keeps_going() {
         Some("slow-link-test"),
         None,
         None,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )
     .await
     .expect("client connect");

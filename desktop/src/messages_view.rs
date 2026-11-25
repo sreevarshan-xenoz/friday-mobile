@@ -7,8 +7,8 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::sms::{self, Direction, Message, ReplyRequest, ReplyState};
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::sms::{self, Direction, Message, ReplyRequest, ReplyState};
+use friday_mobile_core::protocol::permissions::Capability;
 
 use crate::model::Device;
 
@@ -125,7 +125,7 @@ pub struct MessagesView {
     /// P10: the contacts' search, and the lists as last read.
     contacts_query: String,
     contacts:
-        std::collections::BTreeMap<String, pocketdesk_core::local::phone_contacts::ContactList>,
+        std::collections::BTreeMap<String, friday_mobile_core::local::phone_contacts::ContactList>,
     /// When the phone was asked for its contacts, to say when no list came.
     contacts_asked: Option<(String, u64)>,
     /// The search's last answer: phone, list's time, words, and the found
@@ -148,10 +148,10 @@ fn ragged(ui: &mut egui::Ui, text: impl Into<egui::WidgetText>) -> egui::Respons
 fn phone_allows(
     state_dir: &Path,
     phone: &str,
-    capability: pocketdesk_core::protocol::permissions::Capability,
+    capability: friday_mobile_core::protocol::permissions::Capability,
 ) -> bool {
-    pocketdesk_core::protocol::kdeconnect::TrustStore::read(
-        state_dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+    friday_mobile_core::protocol::kdeconnect::TrustStore::read(
+        state_dir.join(friday_mobile_core::local::paths::TRUST_FILE),
     )
     .map(|store| store.permissions(phone).allows(capability))
     .unwrap_or(true)
@@ -169,7 +169,7 @@ impl MessagesView {
         }
         self.messages = sms::read(state_dir);
         self.pending = sms::pending(state_dir);
-        self.contacts = pocketdesk_core::local::phone_contacts::read(state_dir);
+        self.contacts = friday_mobile_core::local::phone_contacts::read(state_dir);
         self.read_at = Some(Instant::now());
     }
 
@@ -262,7 +262,7 @@ impl MessagesView {
                     pane.horizontal(|ui| {
                         ui.strong(title(&address, name.as_deref()));
                         // L4: the phone's dialer opens with the number.
-                        if pocketdesk_core::protocol::dial::clean_number(&address).is_some()
+                        if friday_mobile_core::protocol::dial::clean_number(&address).is_some()
                             && ui
                                 .button("Call")
                                 .on_hover_text(
@@ -271,19 +271,19 @@ impl MessagesView {
                                 .clicked()
                         {
                             // Said at once with Dial off (L4 review).
-                            let allowed = pocketdesk_core::protocol::kdeconnect::TrustStore::read(
-                                state_dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+                            let allowed = friday_mobile_core::protocol::kdeconnect::TrustStore::read(
+                                state_dir.join(friday_mobile_core::local::paths::TRUST_FILE),
                             )
                             .map(|store| {
                                 store.permissions(&device).allows(
-                                    pocketdesk_core::protocol::permissions::Capability::Dial,
+                                    friday_mobile_core::protocol::permissions::Capability::Dial,
                                 )
                             })
                             .unwrap_or(true);
                             self.notice = crate::notice::Notice::outcome(if !allowed {
                                 Err("Not asked: Call numbers from here is off for this phone (Devices).".to_string())
                             } else {
-                                pocketdesk_core::local::dials::request(
+                                friday_mobile_core::local::dials::request(
                                     state_dir, &device, &address, now_unix,
                                 )
                                 .map(|_| {
@@ -385,7 +385,7 @@ impl MessagesView {
 
 /// How long the phone has to answer an ask for its contacts: the ask waits
 /// a minute for it to connect (P10 review), and a few seconds more.
-const CONTACTS_ANSWER_SECS: u64 = pocketdesk_core::local::phone_actions::ACTION_TTL_SECS + 10;
+const CONTACTS_ANSWER_SECS: u64 = friday_mobile_core::local::phone_actions::ACTION_TTL_SECS + 10;
 
 /// The most contacts shown at once: the search finds the rest.
 const CONTACTS_SHOWN: usize = 50;
@@ -393,9 +393,9 @@ const CONTACTS_SHOWN: usize = 50;
 /// The contacts `query` finds: each word in the name or a number, case
 /// aside; all with no words.
 pub fn contacts_shown<'a>(
-    contacts: &'a [pocketdesk_core::protocol::phone_action::PhoneContact],
+    contacts: &'a [friday_mobile_core::protocol::phone_action::PhoneContact],
     query: &str,
-) -> Vec<&'a pocketdesk_core::protocol::phone_action::PhoneContact> {
+) -> Vec<&'a friday_mobile_core::protocol::phone_action::PhoneContact> {
     let words: Vec<String> = query.split_whitespace().map(str::to_lowercase).collect();
     contacts
         .iter()
@@ -437,14 +437,14 @@ impl MessagesView {
                     if !phone_allows(
                         state_dir,
                         phone,
-                        pocketdesk_core::protocol::permissions::Capability::Texts,
+                        friday_mobile_core::protocol::permissions::Capability::Texts,
                     ) {
                         Err("Not asked: \"Show its texts and send replies\" is off for this phone on Devices.".to_string())
                     } else {
-                        pocketdesk_core::local::phone_actions::request(
+                        friday_mobile_core::local::phone_actions::request(
                             state_dir,
                             phone,
-                            pocketdesk_core::protocol::phone_action::PhoneAction::Contacts,
+                            friday_mobile_core::protocol::phone_action::PhoneAction::Contacts,
                             now_unix,
                         )
                         .map(|_| {
@@ -527,7 +527,7 @@ impl MessagesView {
             .as_ref()
             .map(|(_, _, _, found)| found.clone())
             .unwrap_or_default();
-        let shown: Vec<&pocketdesk_core::protocol::phone_action::PhoneContact> = places
+        let shown: Vec<&friday_mobile_core::protocol::phone_action::PhoneContact> = places
             .iter()
             .filter_map(|i| list.contacts.get(*i))
             .collect();
@@ -595,7 +595,7 @@ impl MessagesView {
             if !phone_allows(
                 state_dir,
                 phone,
-                pocketdesk_core::protocol::permissions::Capability::Dial,
+                friday_mobile_core::protocol::permissions::Capability::Dial,
             ) {
                 self.notice = crate::notice::Notice::error(
                     "Not asked: Call numbers from here is off for this phone (Devices).",
@@ -603,7 +603,7 @@ impl MessagesView {
                 return;
             }
             self.notice = crate::notice::Notice::outcome(
-                pocketdesk_core::local::dials::request(state_dir, phone, &number, now_unix)
+                friday_mobile_core::local::dials::request(state_dir, phone, &number, now_unix)
                     .map(|_| "Asked the phone to open its dialer with the number; it does with \u{201c}Calls from the computer\u{201d} on.".to_string())
                     .map_err(|e| format!("Not asked: {e}")),
             );
@@ -618,7 +618,7 @@ mod tests {
     /// P10: a contact is found by its name's words or its number's digits.
     #[test]
     fn contacts_are_found_by_name_or_number() {
-        use pocketdesk_core::protocol::phone_action::PhoneContact;
+        use friday_mobile_core::protocol::phone_action::PhoneContact;
         let contacts = vec![
             PhoneContact {
                 name: "Ann Lee".into(),
@@ -661,7 +661,7 @@ mod tests {
         assert_eq!(title("+1 555 0100", None), "+1 555 0100");
         assert_eq!(title("+1 555 0100", Some("Ann")), "Ann (+1 555 0100)");
     }
-    use pocketdesk_core::local::sms::Reply;
+    use friday_mobile_core::local::sms::Reply;
 
     fn message(
         device: &str,

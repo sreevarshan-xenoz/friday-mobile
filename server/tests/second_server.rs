@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-const EXE: &str = env!("CARGO_BIN_EXE_pocketdesk");
+const EXE: &str = env!("CARGO_BIN_EXE_friday-mobile");
 
 fn folders(name: &str, control: u16, streaming: u16) -> (PathBuf, PathBuf) {
     let base = std::env::temp_dir().join(format!("pd-second-{name}-{}", std::process::id()));

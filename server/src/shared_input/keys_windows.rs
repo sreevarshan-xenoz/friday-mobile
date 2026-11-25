@@ -1,10 +1,10 @@
 //! A key as Windows' low-level keyboard hook names it, as the evdev code
 //! the wire carries: the table lives in core
-//! ([`pocketdesk_core::input::windows_scan`]), shared with the desktop
+//! ([`friday_mobile_core::input::windows_scan`]), shared with the desktop
 //! app's keyboard grab (PC4); its round trip through `stroke_for` is
 //! tested here, beside `stroke_for`.
 
-pub use pocketdesk_core::input::windows_scan::evdev_from_scan;
+pub use friday_mobile_core::input::windows_scan::evdev_from_scan;
 
 #[cfg(all(test, windows))]
 mod tests {
@@ -32,7 +32,7 @@ mod tests {
             v if v == VK_MEDIA_PREV_TRACK => (0x10, true),
             other => panic!("no scancode known for {other:?}"),
         };
-        for code in pocketdesk_core::input::keys::phone_emittable_codes() {
+        for code in friday_mobile_core::input::keys::phone_emittable_codes() {
             let stroke = stroke_for(code).unwrap_or_else(|| panic!("{code} has no stroke"));
             let (scan, extended) = match stroke {
                 Stroke::Scan(scan, extended) => (scan, extended),

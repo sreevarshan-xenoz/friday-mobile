@@ -10,16 +10,16 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::server;
+use friday_mobile_core::local::server;
 
 pub const START_ARGS: [&str; 2] = ["start", "--background"];
 pub const STOP_ARGS: [&str; 1] = ["stop"];
 
 /// The logon task `pocketdesk install` registers on Windows.
 #[cfg(windows)]
-const TASK_NAME: &str = "Pocketdesk";
+const TASK_NAME: &str = "FRIDAY Mobile";
 /// The systemd user unit on Linux.
-const UNIT_NAME: &str = "pocketdesk";
+const UNIT_NAME: &str = "friday-mobile";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Os {
@@ -58,9 +58,9 @@ pub fn start_plan(os: Os, installed: bool, exe: PathBuf) -> StartPlan {
 
 pub fn server_file_name() -> &'static str {
     if cfg!(windows) {
-        "pocketdesk.exe"
+        "friday-mobile.exe"
     } else {
-        "pocketdesk"
+        "friday-mobile"
     }
 }
 
@@ -229,7 +229,7 @@ mod tests {
 
     #[test]
     fn an_installed_server_is_started_the_way_it_was_installed() {
-        let exe = PathBuf::from("pocketdesk");
+        let exe = PathBuf::from("friday-mobile");
         assert_eq!(
             start_plan(Os::Windows, true, exe.clone()),
             StartPlan::LogonTask

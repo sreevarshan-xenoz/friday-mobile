@@ -12,7 +12,7 @@ use std::path::Path;
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use std::time::Duration;
 
-use pocketdesk_core::local::paths::{
+use friday_mobile_core::local::paths::{
     ALERTS_DIR, ASKS_DIR, CLIPBOARD_OUT_DIR, COMMANDS_DIR, COMPUTERS_DIR, CONTROL_DIR, DIALS_DIR,
     DIRECT_LINK_DIR, KDECONNECT_OUT_DIR, KICKS_DIR, LINKS_DIR, NOTIFICATION_CLEARS_DIR,
     NOTIFICATION_OUT_DIR, OUTBOX_DIR, PHONE_FILES_DIR, PHONE_MEDIA_DIR, PHONE_PHOTOS_OUT_DIR,

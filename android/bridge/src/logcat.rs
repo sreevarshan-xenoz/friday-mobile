@@ -13,7 +13,7 @@ pub(crate) fn init() {
     static INIT: Once = Once::new();
     INIT.call_once(|| {
         let filter = tracing_subscriber::EnvFilter::new(
-            "info,pocketdesk_core=info,pocketdesk_android_bridge=debug",
+            "info,friday_mobile_core=info,pocketdesk_android_bridge=debug",
         );
         let installed = tracing_subscriber::fmt()
             .with_env_filter(filter)

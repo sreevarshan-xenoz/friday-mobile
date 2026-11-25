@@ -13,7 +13,7 @@ use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
 use crate::Road;
-use pocketdesk_core::protocol::kdeconnect::TransferIo;
+use friday_mobile_core::protocol::kdeconnect::TransferIo;
 use tokio::io::AsyncReadExt;
 
 /// A stream's key line, 32 hex digits and a newline, must come this soon.
@@ -30,7 +30,7 @@ static WAITERS: LazyLock<Mutex<HashMap<String, Arrived>>> = LazyLock::new(Defaul
 
 /// Accept the streams the computer opens on an internet control connection
 /// until it closes, each handed to the transfer its key names.
-pub(crate) fn spawn_acceptor(acceptor: pocketdesk_core::streaming::LinkAcceptor) {
+pub(crate) fn spawn_acceptor(acceptor: friday_mobile_core::streaming::LinkAcceptor) {
     tokio::spawn(async move {
         while let Some(stream) = acceptor.accept().await {
             tokio::spawn(async move {

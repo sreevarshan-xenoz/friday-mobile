@@ -23,9 +23,9 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy, RateLimit};
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy, RateLimit};
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     QuinnConnection, StreamingClient, StreamingConfig, StreamingServer,
 };
 
@@ -50,7 +50,7 @@ fn quantile(sorted: &[u64], q: f64) -> u64 {
 async fn how_smoothly_frames_arrive_on_a_lossy_link() {
     // SAFETY: this test binary has this one test, so nothing else reads the
     // environment while it is set (the runtime's workers are idle here).
-    unsafe { std::env::set_var(pocketdesk_core::streaming::test_pattern::VAR, "1") };
+    unsafe { std::env::set_var(friday_mobile_core::streaming::test_pattern::VAR, "1") };
     let state = std::env::temp_dir().join(format!("pd-lossy-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&state);
     std::fs::create_dir_all(&state).unwrap();
@@ -62,11 +62,11 @@ async fn how_smoothly_frames_arrive_on_a_lossy_link() {
         }
     }
     let _remove = Remove(state.clone());
-    pocketdesk_core::local::paths::use_state_dir(state.clone());
-    pocketdesk_server::session_telemetry::init();
+    friday_mobile_core::local::paths::use_state_dir(state.clone());
+    friday_mobile_server::session_telemetry::init();
     let _ = tracing_subscriber::fmt()
         .with_env_filter(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "pocketdesk_core=warn".into()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "friday_mobile_core=warn".into()),
         )
         .with_test_writer()
         .try_init();
@@ -139,7 +139,7 @@ async fn how_smoothly_frames_arrive_on_a_lossy_link() {
         Some("lossy-link-bench"),
         None,
         None,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )
     .await
     .expect("client connect");

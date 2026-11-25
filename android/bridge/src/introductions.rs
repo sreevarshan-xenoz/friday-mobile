@@ -6,10 +6,10 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::protocol::introductions::{
+use friday_mobile_core::protocol::introductions::{
     INTRODUCE, INTRODUCE_ANSWER, PhoneAsk, PhoneRequest,
 };
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 /// One ask at a time: the shared connection hands a waiter the first
 /// answer of its type, so two at once could each take the other's.

@@ -8,8 +8,8 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::drive::DriveInfo;
-use pocketdesk_core::local::phone_files::{self as store, Kept, Kind};
+use friday_mobile_core::local::drive::DriveInfo;
+use friday_mobile_core::local::phone_files::{self as store, Kept, Kind};
 
 use crate::model::Device;
 
@@ -36,7 +36,7 @@ pub fn why_no_folders(devices: &[Device]) -> (String, &'static str) {
     };
     let files_off = |d: &Device| {
         !d.permissions
-            .allows(pocketdesk_core::protocol::permissions::Capability::Files)
+            .allows(friday_mobile_core::protocol::permissions::Capability::Files)
     };
     if let Some(off) = linked.iter().find(|d| files_off(d)) {
         let name = crate::model::device_label(devices, &off.id);
@@ -117,7 +117,7 @@ impl PhoneFilesView {
             return;
         }
         self.listings = store::read(state_dir);
-        self.drive = pocketdesk_core::local::drive::read(state_dir);
+        self.drive = friday_mobile_core::local::drive::read(state_dir);
         self.read_at = Some(Instant::now());
     }
 
@@ -370,7 +370,7 @@ mod tests {
     fn no_folders_says_why_from_what_it_saw() {
         use super::{FILES_OFF_HOW, NO_REACH_HOW, NOT_LINKED, NOT_LINKED_HOW, why_no_folders};
         use crate::model::Device;
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let mut phone = Device {
             id: "phone-a".to_string(),
             name: Some("Pixel 8".to_string()),

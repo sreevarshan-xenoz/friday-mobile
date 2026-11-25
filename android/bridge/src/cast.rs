@@ -11,10 +11,10 @@
 use std::sync::Mutex;
 use std::time::Duration;
 
-use pocketdesk_core::streaming::SharedConnection;
-use pocketdesk_core::streaming::cast as wire;
-use pocketdesk_core::streaming::connection::Delivered;
-use pocketdesk_core::streaming::in_flight::{InFlight, MAX_VIDEO_IN_FLIGHT, in_flight_window};
+use friday_mobile_core::streaming::SharedConnection;
+use friday_mobile_core::streaming::cast as wire;
+use friday_mobile_core::streaming::connection::Delivered;
+use friday_mobile_core::streaming::in_flight::{InFlight, MAX_VIDEO_IN_FLIGHT, in_flight_window};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -250,7 +250,7 @@ pub(crate) fn take_control(timeout: Duration) -> Option<String> {
         return None;
     };
     let batch = inbox.take(timeout)?;
-    pocketdesk_core::streaming::cast_control::ControlBatch::decode(&batch)
+    friday_mobile_core::streaming::cast_control::ControlBatch::decode(&batch)
         .map(|b| b.to_json().to_string())
 }
 
@@ -303,7 +303,7 @@ pub(crate) fn window_keyframe_wanted(window: u8) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::connection::{
+    use friday_mobile_core::streaming::connection::{
         Connection, ConnectionError, ConnectionStats, InStream, OutStream, TransportFamily,
     };
     use std::sync::Arc;

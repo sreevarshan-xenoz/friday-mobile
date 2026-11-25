@@ -86,8 +86,8 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use pocketdesk_core::local::computers::LendableWindow;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::computers::LendableWindow;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 use crate::hyprland::HyprWindow;
 use crate::virtual_screen::{Desk, Output};
@@ -1291,7 +1291,7 @@ pub async fn run_watcher() {
     watch_with(|| async {
         (
             crate::virtual_screen::live_devices().await,
-            pocketdesk_core::streaming::sessions::captures(),
+            friday_mobile_core::streaming::sessions::captures(),
         )
     })
     .await;
@@ -1363,8 +1363,8 @@ struct File {
 
 /// Whether `device` is one of the owner's computers, paired both ways here.
 pub(crate) fn is_owner_computer(device: &str) -> bool {
-    use pocketdesk_core::local::computers;
-    use pocketdesk_core::protocol::kdeconnect::TrustStore;
+    use friday_mobile_core::local::computers;
+    use friday_mobile_core::protocol::kdeconnect::TrustStore;
     let (Ok(dir), Ok(trust)) = (crate::state::state_dir(), crate::state::trust_store_path()) else {
         return false;
     };
@@ -1544,7 +1544,7 @@ fn here() -> &'static dyn Env {
     {
         // Sway and Hyprland name themselves; GNOME is only asked after them.
         if crate::virtual_screen::desk().is_none()
-            && pocketdesk_core::streaming::gnome_unattended::is_gnome(
+            && friday_mobile_core::streaming::gnome_unattended::is_gnome(
                 std::env::var("XDG_CURRENT_DESKTOP").ok().as_deref(),
             )
         {
@@ -1554,7 +1554,7 @@ fn here() -> &'static dyn Env {
         }
         // KDE Plasma, likewise only after Sway and Hyprland.
         if crate::virtual_screen::desk().is_none()
-            && pocketdesk_core::streaming::window_kde::is_kde(
+            && friday_mobile_core::streaming::window_kde::is_kde(
                 std::env::var("XDG_CURRENT_DESKTOP").ok().as_deref(),
             )
         {
@@ -1748,9 +1748,9 @@ impl Env for Live {
             lent: lent.to_vec(),
         };
         let json = serde_json::to_string(&file).map_err(std::io::Error::other)?;
-        let tmp = pocketdesk_core::atomic_file::temp_beside(&path);
-        pocketdesk_core::secure_fs::write_private(&tmp, json.as_bytes())?;
-        pocketdesk_core::atomic_file::replace(&tmp, path)
+        let tmp = friday_mobile_core::atomic_file::temp_beside(&path);
+        friday_mobile_core::secure_fs::write_private(&tmp, json.as_bytes())?;
+        friday_mobile_core::atomic_file::replace(&tmp, path)
     }
 }
 

@@ -1,4 +1,4 @@
-//! Pair a computer nearby (`pocketdesk_core::local::nearby`): this
+//! Pair a computer nearby (`friday_mobile_core::local::nearby`): this
 //! computer's ask of another found on the network ([`ask`]), and the other
 //! side, a nearby computer's ask of this one ([`handle`]), answered by the
 //! owner in the app ([`answer`]). Both owners say yes before anything
@@ -22,17 +22,17 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers;
-use pocketdesk_core::local::nearby::{
+use friday_mobile_core::local::computers;
+use friday_mobile_core::local::nearby::{
     self, ANSWER_WITHIN, Answered, AskState, HostDesk, NearbyAsk, NearbyRequest, REVEAL_WITHIN,
     STEP, step,
 };
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::pin as local_pin;
-use pocketdesk_core::protocol::connection::ConnectionManager;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
-use pocketdesk_core::streaming::PeerKey;
-use pocketdesk_core::streaming::transport::{CertManager, peer_cert_fingerprint};
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::pin as local_pin;
+use friday_mobile_core::protocol::connection::ConnectionManager;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::streaming::PeerKey;
+use friday_mobile_core::streaming::transport::{CertManager, peer_cert_fingerprint};
 use serde_json::json;
 use tokio::io::{AsyncRead, AsyncWrite, BufReader};
 
@@ -257,7 +257,7 @@ async fn handle_in(dir: PathBuf, enabled: bool, packet: &NetworkPacket, sender: 
                 note_tried(&dir);
                 return;
             };
-            let Ok(own) = pocketdesk_core::local::identity::cert_fingerprint(&dir) else {
+            let Ok(own) = friday_mobile_core::local::identity::cert_fingerprint(&dir) else {
                 lock(&TAKEN).remove(&connection);
                 lock(&DESK).drop_ask(&taken.id);
                 tracing::warn!(
@@ -796,7 +796,7 @@ fn link_from(
         control_port: port("controlPort", asked.port),
         stream_port: port(
             "streamPort",
-            pocketdesk_core::streaming::client::DEFAULT_STREAMING_PORT,
+            friday_mobile_core::streaming::client::DEFAULT_STREAMING_PORT,
         ),
         pin: pin.to_string(),
         fingerprint: Some(nearby::to_hex(theirs)),
@@ -934,7 +934,10 @@ mod tests {
         fn peer_key(&self) -> Option<PeerKey> {
             Some(PeerKey::Tls(self.key))
         }
-        async fn send_packet(&self, packet: &NetworkPacket) -> pocketdesk_core::error::Result<()> {
+        async fn send_packet(
+            &self,
+            packet: &NetworkPacket,
+        ) -> friday_mobile_core::error::Result<()> {
             lock(&self.sent).push(packet.clone());
             Ok(())
         }
@@ -956,7 +959,7 @@ mod tests {
     async fn a_confirmation_from_another_connection_pairs_nothing() {
         let dir = std::env::temp_dir().join(format!("pd-nearby-n4-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        let cert = dir.join(pocketdesk_core::local::paths::CERT_FILE);
+        let cert = dir.join(friday_mobile_core::local::paths::CERT_FILE);
         std::fs::create_dir_all(cert.parent().unwrap()).unwrap();
         std::fs::write(&cert, b"not a real certificate").unwrap();
         let device = "00000000-0000-4000-8000-0000000000f4";

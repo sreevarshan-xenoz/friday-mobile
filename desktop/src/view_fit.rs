@@ -20,8 +20,8 @@
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::local::computers::FitSize;
-use pocketdesk_core::local::view::{ViewFit, ViewStatus};
+use friday_mobile_core::local::computers::FitSize;
+use friday_mobile_core::local::view::{ViewFit, ViewStatus};
 
 /// How long the picture area must keep a size before the other computer's
 /// screen follows it: a drag of the window's edge makes many sizes.

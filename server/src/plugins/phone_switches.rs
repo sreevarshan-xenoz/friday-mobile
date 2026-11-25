@@ -9,10 +9,10 @@
 use std::collections::BTreeMap;
 use std::sync::{LazyLock, Mutex};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::phone_switches::{self, PhoneSwitches, SWITCHES};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::phone_switches::{self, PhoneSwitches, SWITCHES};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 
 /// The most phones whose reports are kept.
 const MAX_PHONES: usize = 64;
@@ -60,7 +60,7 @@ impl Plugin for PhoneSwitchesPlugin {
                 &dir,
                 &device,
                 switches,
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             )
         })
         .await
@@ -103,7 +103,8 @@ fn keep(
     // Phones no longer paired go first, so the cap never evicts a paired
     // phone for one (L7 review).
     // An unreadable store forgets no one.
-    if let Ok(store) = pocketdesk_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
+    if let Ok(store) =
+        friday_mobile_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
     {
         let paired: std::collections::HashSet<String> =
             store.trusted_devices().into_iter().collect();
@@ -133,7 +134,7 @@ fn keep(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::phone_switches::Switch;
+    use friday_mobile_core::local::phone_switches::Switch;
 
     #[test]
     fn a_paired_phones_report_is_kept_and_an_unpaired_ones_dropped() {
@@ -144,9 +145,10 @@ mod tests {
         ));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(dir.join(TRUST_FILE), |store| {
-            store.trust_device("phone-a")
-        })
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
+            dir.join(TRUST_FILE),
+            |store| store.trust_device("phone-a"),
+        )
         .unwrap();
         // A report kept in an earlier run for a phone since unpaired.
         let mut old = BTreeMap::new();

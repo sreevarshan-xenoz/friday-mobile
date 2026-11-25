@@ -63,7 +63,7 @@ const MAX_CERT_B64: usize = 16 * 1024;
 /// Where the packages install the PAM helper; the PAM lines name it.
 pub const HELPER_PATH: &str = "/usr/lib/pocketdesk/pocketdesk-pam-ask";
 /// Where root pins each user's phones' keys (`<user>.json`).
-pub const PIN_DIR: &str = "/etc/pocketdesk/pam";
+pub const PIN_DIR: &str = "/etc/friday-mobile/pam";
 
 /// The PAM services Settings offers lines for, and what each approves.
 /// Not `gdm-password`: GNOME's greeter logs in with it too.

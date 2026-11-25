@@ -17,16 +17,16 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::local::computers::{
+use friday_mobile_core::local::computers::{
     self, ComputerAsk, ComputerFacts, PairingOutcome, PeerComputer,
 };
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::paths::COMPUTERS_DIR;
-use pocketdesk_core::local::view::ScreenPlace;
-use pocketdesk_core::protocol::connection::ConnectionManager;
-use pocketdesk_core::protocol::kdeconnect::{DeviceIdentity, NetworkPacket, TransferIo};
-use pocketdesk_core::streaming::transport::CertManager;
-use pocketdesk_core::streaming::transport::peer_label_for_address;
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::paths::COMPUTERS_DIR;
+use friday_mobile_core::local::view::ScreenPlace;
+use friday_mobile_core::protocol::connection::ConnectionManager;
+use friday_mobile_core::protocol::kdeconnect::{DeviceIdentity, NetworkPacket, TransferIo};
+use friday_mobile_core::streaming::transport::CertManager;
+use friday_mobile_core::streaming::transport::peer_label_for_address;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader};
 use tokio::sync::mpsc;
 
@@ -98,7 +98,7 @@ pub async fn run(cert_manager: Arc<CertManager>, wan: Option<iroh::Endpoint>) {
     // picker (titles) are not kept past it.
     crate::borrow_window::expire_lists(&dir, true);
     loop {
-        for request in computers::take_all(&dir, pocketdesk_core::local::pin::now_unix()) {
+        for request in computers::take_all(&dir, friday_mobile_core::local::pin::now_unix()) {
             match request.ask {
                 ComputerAsk::Pair { link, mine } => {
                     let asked = Asked {
@@ -182,11 +182,11 @@ pub async fn run(cert_manager: Arc<CertManager>, wan: Option<iroh::Endpoint>) {
                 }
                 // Remote revoke: its devices, or one of them removed.
                 ComputerAsk::DevicesThere { device_id } => {
-                    let ask = pocketdesk_core::protocol::remote_devices::Ask::List;
+                    let ask = friday_mobile_core::protocol::remote_devices::Ask::List;
                     crate::remote_devices::ask(&dir, &device_id, ask).await;
                 }
                 ComputerAsk::RemoveThere { device_id, remove } => {
-                    let ask = pocketdesk_core::protocol::remote_devices::Ask::Remove {
+                    let ask = friday_mobile_core::protocol::remote_devices::Ask::Remove {
                         device_id: remove,
                     };
                     crate::remote_devices::ask(&dir, &device_id, ask).await;
@@ -850,7 +850,7 @@ async fn await_link(dir: PathBuf, device_id: String) {
 /// ([`computers::ComputersFile::lapse_pending`]): that computer stays paired
 /// one way here, its trust as narrow as it was, and Other computers says so.
 fn lapse_pending(dir: &Path) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     if !computers::read(dir).pending.is_empty() {
         let mut lapsed = Vec::new();
         let saved = computers::update(dir, |file| lapsed = file.lapse_pending(now));
@@ -876,15 +876,15 @@ fn lapse_pending(dir: &Path) {
 fn is_the_link(
     dir: &Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     opened_before: bool,
 ) -> bool {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     if opened_before {
         return false;
     }
     match key {
-        Some(pocketdesk_core::streaming::PeerKey::Iroh(id)) => {
+        Some(friday_mobile_core::streaming::PeerKey::Iroh(id)) => {
             device_keys::check(dir, device_id, Slot::Iroh, Some(id)) == Verdict::Matches
         }
         _ => false,
@@ -964,7 +964,7 @@ fn untrusted_mine_at(dir: &Path, trust: &Path) -> Vec<String> {
     if !file.computers.iter().any(|c| c.mine) && file.lapsed.is_empty() {
         return Vec::new();
     }
-    let Ok(store) = pocketdesk_core::protocol::kdeconnect::TrustStore::read(trust) else {
+    let Ok(store) = friday_mobile_core::protocol::kdeconnect::TrustStore::read(trust) else {
         return Vec::new();
     };
     untrusted_mine(&file, |id| store.is_trusted(id) && store.is_computer(id))
@@ -1046,7 +1046,7 @@ async fn pair(
         file.last_pairing = Some(PairingOutcome {
             name,
             outcome,
-            unix: pocketdesk_core::local::pin::now_unix(),
+            unix: friday_mobile_core::local::pin::now_unix(),
             request: request.to_string(),
             device_id,
         })
@@ -1076,7 +1076,7 @@ async fn pair_with(
     if link.device_id == me.device_id {
         return Err("that is this computer's own pairing link".to_string());
     }
-    if !pocketdesk_core::protocol::kdeconnect::valid_device_id(&link.device_id) {
+    if !friday_mobile_core::protocol::kdeconnect::valid_device_id(&link.device_id) {
         return Err("the link's computer id is not a valid one".to_string());
     }
     // One id, one device: a computer by a paired phone's id would take that
@@ -1179,7 +1179,7 @@ async fn pair_with(
         // Paired again one way: what it was trusted with here goes.
         untrust_back(dir, &link.device_id);
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let computer = PeerComputer {
         device_id: link.device_id.clone(),
         name,
@@ -1321,18 +1321,18 @@ pub(crate) async fn own_facts(dir: &Path) -> ComputerFacts {
     let config = crate::events::current_config();
     // External commands (the Tailscale address), off the runtime.
     let addresses = tokio::task::spawn_blocking(|| {
-        let mut addresses = pocketdesk_core::local::network::local_ips();
-        addresses.extend(pocketdesk_core::local::network::tailscale_ip());
+        let mut addresses = friday_mobile_core::local::network::local_ips();
+        addresses.extend(friday_mobile_core::local::network::tailscale_ip());
         addresses
     })
     .await
     .unwrap_or_default();
     ComputerFacts {
         name: crate::kde::host_identity().device_name,
-        addresses: pocketdesk_core::local::pair_link::order_addresses(addresses),
-        control_port: pocketdesk_core::local::listening::control_port(dir, config.control_port),
+        addresses: friday_mobile_core::local::pair_link::order_addresses(addresses),
+        control_port: friday_mobile_core::local::listening::control_port(dir, config.control_port),
         stream_port: config.streaming_port,
-        endpoint: pocketdesk_core::local::identity::read_endpoint(dir),
+        endpoint: friday_mobile_core::local::identity::read_endpoint(dir),
     }
 }
 
@@ -1359,16 +1359,16 @@ fn trust_back_in(
     fingerprint: &str,
     iroh: Option<&str>,
 ) -> Result<(), String> {
-    use pocketdesk_core::local::device_keys::{self, Slot};
+    use friday_mobile_core::local::device_keys::{self, Slot};
     device_keys::replace(dir, device_id, &fingerprint.to_ascii_lowercase())
         .map_err(|e| e.to_string())?;
     if let Some(key) = iroh {
         device_keys::register(dir, device_id, Slot::Iroh, key).map_err(|e| e.to_string())?;
     }
-    pocketdesk_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
+    friday_mobile_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
         store.trust_computer_as(
             device_id,
-            pocketdesk_core::protocol::permissions::DevicePermissions::computer_mine(),
+            friday_mobile_core::protocol::permissions::DevicePermissions::computer_mine(),
         )
     })
     .map_err(|e| e.to_string())
@@ -1384,13 +1384,13 @@ fn untrust_back(dir: &Path, device_id: &str) {
 }
 
 fn untrust_back_in(dir: &Path, trust: &Path, device_id: &str) {
-    let untrusted = pocketdesk_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
+    let untrusted = friday_mobile_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
         store.untrust_device(device_id)
     });
     if let Err(e) = untrusted {
         tracing::warn!("Could not stop trusting computer {device_id}: {e}");
     }
-    let _ = pocketdesk_core::local::device_keys::clear(dir, device_id);
+    let _ = friday_mobile_core::local::device_keys::clear(dir, device_id);
 }
 
 /// What the other computer answered a pairing with.
@@ -1517,7 +1517,7 @@ pub(crate) fn shown_name(name: &str) -> String {
     let shown: String = name
         .chars()
         .filter(|c| {
-            !c.is_control() && !pocketdesk_core::protocol::kdeconnect::is_invisible_format(*c)
+            !c.is_control() && !friday_mobile_core::protocol::kdeconnect::is_invisible_format(*c)
         })
         .take(64)
         .collect();
@@ -1691,7 +1691,7 @@ fn drop_pins(certs: &CertManager, computer: &PeerComputer, keep: &[String]) {
 /// by, or this computer would hand its link, its window's input and its
 /// files to another node. One paired one way is not held here, as before.
 pub(crate) fn endpoint_bound(dir: &Path, computer: &PeerComputer, target: &WanTarget) -> bool {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     !computer.mine
         || device_keys::check(
             dir,
@@ -1875,7 +1875,7 @@ async fn keep_link(dir: PathBuf, wan: iroh::Endpoint, device_id: String) {
                     "Another computer refused the link: paired there no more?"
                 );
                 set_link(&dir, &device_id, "refused");
-                let now = pocketdesk_core::local::pin::now_unix();
+                let now = friday_mobile_core::local::pin::now_unix();
                 let (wait, next) = refused_wait(computer.paired_unix, now, backoff);
                 backoff = next;
                 wait
@@ -2061,7 +2061,7 @@ pub(crate) async fn send_file(
     let key = format!("computer:{device_id}:{source}");
     let tracker = crate::transfers::track(crate::transfers::Shown {
         key: key.clone(),
-        direction: pocketdesk_core::local::transfers::Direction::ToPhone,
+        direction: friday_mobile_core::local::transfers::Direction::ToPhone,
         device_id: device_id.to_string(),
         name: name.clone(),
         folder: folder.map(|f| f.folder.to_string()),
@@ -2319,10 +2319,10 @@ async fn fetch_image_on_link<F, Fut>(
 ) -> Result<(), String>
 where
     F: FnOnce(Vec<u8>) -> Fut,
-    Fut: std::future::Future<Output = pocketdesk_core::error::Result<()>>,
+    Fut: std::future::Future<Output = friday_mobile_core::error::Result<()>>,
 {
     let mut waiter = Waiter::new();
-    let ask = NetworkPacket::new(pocketdesk_core::protocol::clipboard::CLIPBOARD_IMAGE_FETCH)
+    let ask = NetworkPacket::new(friday_mobile_core::protocol::clipboard::CLIPBOARD_IMAGE_FETCH)
         .with_body(serde_json::json!({"id": id, "key": waiter.key}));
     if outgoing.send(ask).await.is_err() {
         return Err("the link closed".to_string());
@@ -2332,7 +2332,7 @@ where
         crate::plugins::share::Route::arrived(stream),
         &waiter.key,
         size,
-        pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
+        friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
         keep,
     )
     .await
@@ -2356,7 +2356,7 @@ async fn run_link(
     target: &WanTarget,
     me: &DeviceIdentity,
 ) -> LinkEnd {
-    let stream = match pocketdesk_core::streaming::IrohControlStream::dial_from(
+    let stream = match friday_mobile_core::streaming::IrohControlStream::dial_from(
         wan,
         &target.endpoint_id,
         &target.relay_urls,
@@ -2372,7 +2372,7 @@ async fn run_link(
     let acceptor = stream.link_acceptor();
     let stream = match tokio::time::timeout(
         LINK_DIAL,
-        pocketdesk_core::protocol::connection::internet_control_handshake_named(
+        friday_mobile_core::protocol::connection::internet_control_handshake_named(
             stream,
             &computer.name,
             me,
@@ -2483,14 +2483,14 @@ async fn take(dir: &Path, device_id: &str, packet: &NetworkPacket) {
     // Remote revoke: its ask of this one's devices, held to the same owner
     // gate as on a connection (a computer this one paired into alone is no
     // owner device here), or its answer to this one's ask.
-    if packet.packet_type == pocketdesk_core::protocol::remote_devices::REMOTE_DEVICES {
+    if packet.packet_type == friday_mobile_core::protocol::remote_devices::REMOTE_DEVICES {
         let (to, body) = (device_id.to_string(), packet.body.clone());
         tokio::spawn(async move {
             if let Some(answer) = crate::remote_devices::answer(&to, &body).await
                 && let Some(outgoing) = live(&to)
             {
                 let packet = NetworkPacket::new(
-                    pocketdesk_core::protocol::remote_devices::REMOTE_DEVICES_ANSWER,
+                    friday_mobile_core::protocol::remote_devices::REMOTE_DEVICES_ANSWER,
                 )
                 .with_body(answer);
                 let _ = outgoing.send(packet).await;
@@ -2498,21 +2498,21 @@ async fn take(dir: &Path, device_id: &str, packet: &NetworkPacket) {
         });
         return;
     }
-    if packet.packet_type == pocketdesk_core::protocol::remote_devices::REMOTE_DEVICES_ANSWER {
+    if packet.packet_type == friday_mobile_core::protocol::remote_devices::REMOTE_DEVICES_ANSWER {
         crate::remote_devices::heard(device_id, &packet.body).await;
         return;
     }
     // Ecosystem phase 4: its introduction of a phone, held to the same gate
     // as on a connection (a computer this one paired into alone is not
     // paired both ways here), or its answer to this one's.
-    if packet.packet_type == pocketdesk_core::protocol::introductions::INTRODUCE_PHONE {
+    if packet.packet_type == friday_mobile_core::protocol::introductions::INTRODUCE_PHONE {
         let (to, body) = (device_id.to_string(), packet.body.clone());
         tokio::spawn(async move {
             if let Some(answer) = crate::introductions::answer_computer(&to, &body).await
                 && let Some(outgoing) = live(&to)
             {
                 let packet = NetworkPacket::new(
-                    pocketdesk_core::protocol::introductions::INTRODUCE_PHONE_ANSWER,
+                    friday_mobile_core::protocol::introductions::INTRODUCE_PHONE_ANSWER,
                 )
                 .with_body(answer);
                 let _ = outgoing.send(packet).await;
@@ -2520,7 +2520,7 @@ async fn take(dir: &Path, device_id: &str, packet: &NetworkPacket) {
         });
         return;
     }
-    if packet.packet_type == pocketdesk_core::protocol::introductions::INTRODUCE_PHONE_ANSWER {
+    if packet.packet_type == friday_mobile_core::protocol::introductions::INTRODUCE_PHONE_ANSWER {
         crate::introductions::heard(device_id, &packet.body);
         return;
     }
@@ -2697,7 +2697,7 @@ fn refused_on_link(body: &serde_json::Value, permitted: bool) -> Option<serde_js
 
 /// Record that the screen of `device_id` was asked for now (PC6).
 fn viewed(dir: &Path, device_id: &str) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let saved = computers::update(dir, |file| {
         if let Some(c) = file.computers.iter_mut().find(|c| c.device_id == device_id) {
             c.viewed_unix = now;
@@ -2723,7 +2723,7 @@ fn keys_by_position(dir: &Path, device_id: &str, on: bool) {
 
 /// Record how the link to `device_id` is doing, when it changed.
 fn set_link(dir: &Path, device_id: &str, link: &str) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let saved = computers::update(dir, |file| {
         if let Some(c) = file.computers.iter_mut().find(|c| c.device_id == device_id)
             && c.link != link
@@ -2767,7 +2767,7 @@ pub(crate) const BOTH_WAYS: &str = "kdeconnect.pocketdesk.both_ways";
 /// for it is given if that connection is its link.
 pub(crate) fn both_ways_heard(
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     connection_id: &str,
 ) {
     let (Ok(dir), Ok(trust)) = (crate::state::state_dir(), crate::state::trust_store_path()) else {
@@ -2781,7 +2781,7 @@ fn both_ways_heard_in(
     dir: &Path,
     trust: &Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     opened_before: bool,
 ) {
     if is_the_link(dir, device_id, key, opened_before) {
@@ -2814,7 +2814,7 @@ fn grant_on_link_in(dir: &Path, trust: &Path, device_id: &str) {
     // is (third review m-C): a wait that ran out lapses here and is never
     // given; one still waiting, and still listed both ways (m-A), is given,
     // and leaves `pending` only once its trust is written.
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let mut outcome: Option<Result<bool, String>> = None;
     let saved = computers::update(dir, |file| {
         if file.lapse_pending(now).iter().any(|id| id == device_id) {
@@ -2832,18 +2832,19 @@ fn grant_on_link_in(dir: &Path, trust: &Path, device_id: &str) {
         if !waits {
             return;
         }
-        let granted = pocketdesk_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
-            // Unpaired on Devices meanwhile: nothing is given back.
-            if !(store.is_trusted(device_id) && store.is_computer(device_id)) {
-                return Ok(false);
-            }
-            store.trust_computer_as(
-                device_id,
-                pocketdesk_core::protocol::permissions::DevicePermissions::computer_mine(),
-            )?;
-            Ok(true)
-        })
-        .map_err(|e| e.to_string());
+        let granted =
+            friday_mobile_core::protocol::kdeconnect::TrustStore::update(trust, |store| {
+                // Unpaired on Devices meanwhile: nothing is given back.
+                if !(store.is_trusted(device_id) && store.is_computer(device_id)) {
+                    return Ok(false);
+                }
+                store.trust_computer_as(
+                    device_id,
+                    friday_mobile_core::protocol::permissions::DevicePermissions::computer_mine(),
+                )?;
+                Ok(true)
+            })
+            .map_err(|e| e.to_string());
         if granted.is_ok() {
             file.pending.retain(|id| id != device_id);
         }
@@ -2862,7 +2863,7 @@ fn grant_on_link_in(dir: &Path, trust: &Path, device_id: &str) {
 /// The internet road's refusal (`HANDSHAKE_REFUSED`), as a handshake error
 /// carries it.
 fn is_refusal(error: &str) -> bool {
-    error.contains(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+    error.contains(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
 }
 
 /// Hex SHA-256, either case.
@@ -3088,7 +3089,7 @@ mod tests {
             })
         })
         .unwrap();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         assert!(!paired_here(&dir, "pc-c", now), "not listed");
         assert!(computers::take_all(&dir, now).is_empty());
         assert!(paired_here(&dir, "pc-b", now));
@@ -3188,7 +3189,7 @@ mod tests {
         .unwrap();
         viewed(&dir, "pc-x");
         assert_eq!(computers::read(&dir).computers[0].viewed_unix, 0);
-        let before = pocketdesk_core::local::pin::now_unix();
+        let before = friday_mobile_core::local::pin::now_unix();
         viewed(&dir, "pc-b");
         assert!(computers::read(&dir).computers[0].viewed_unix >= before);
         let _ = std::fs::remove_dir_all(&dir);
@@ -3359,8 +3360,8 @@ mod tests {
     /// computer, or not waiting, is given nothing.
     #[test]
     fn a_grant_both_ways_waits_for_the_link() {
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
         let dir = temp("grant-on-link");
         let trust = dir.join("trusted_devices.json");
         TrustStore::update(&trust, |store| {
@@ -3372,12 +3373,12 @@ mod tests {
             file.computers.push(facts().into_peer(
                 "waits",
                 "",
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             ));
             file.computers.push(facts().into_peer(
                 "gone",
                 "",
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             ));
             file.pending = vec!["waits".to_string(), "gone".to_string()];
         })
@@ -3409,7 +3410,7 @@ mod tests {
     /// as before.
     #[test]
     fn a_computer_paired_both_ways_is_dialed_only_at_its_own_key() {
-        use pocketdesk_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::local::device_keys::{self, Slot};
         let dir = temp("endpoint-bound");
         let (own, other) = (
             iroh::SecretKey::generate().public().to_string(),
@@ -3503,8 +3504,8 @@ mod tests {
     /// Unpair of one paired both ways takes its trust too.
     #[tokio::test]
     async fn devices_unpair_and_other_computers_unpair_take_both_halves() {
-        use pocketdesk_core::local::device_keys::{self, Slot};
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
         let dir = temp("devices-unpair");
         let trust = dir.join("trusted_devices.json");
         let certs = CertManager::load_or_create(&dir).unwrap();
@@ -3557,7 +3558,7 @@ mod tests {
     /// `mine` here, so Unpair under Other computers still takes its trust.
     #[test]
     fn forget_untrusts_a_lapsed_computer() {
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
         let dir = temp("forget-lapsed");
         let trust = dir.join("trusted_devices.json");
         let certs = CertManager::load_or_create(&dir).unwrap();
@@ -3587,8 +3588,8 @@ mod tests {
     /// connection (a certificate), another key, or none, is not.
     #[test]
     fn only_the_link_proves_the_other_recorded_the_pairing() {
-        use pocketdesk_core::local::device_keys::{self, Slot};
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::streaming::PeerKey;
         let dir = temp("is-the-link");
         let (own, other) = (
             iroh::SecretKey::generate().public().to_string(),
@@ -3637,10 +3638,10 @@ mod tests {
     /// it paired.
     #[test]
     fn the_grant_is_given_when_the_other_says_so_on_its_link() {
-        use pocketdesk_core::local::device_keys::{self, Slot};
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::streaming::PeerKey;
         let dir = temp("both-ways-heard");
         let trust = dir.join("trusted_devices.json");
         let own = iroh::SecretKey::generate().public().to_string();
@@ -3651,7 +3652,7 @@ mod tests {
             file.computers.push(facts().into_peer(
                 "lap",
                 "",
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             ));
             file.pending = vec!["lap".to_string()];
         })
@@ -3675,8 +3676,8 @@ mod tests {
     /// listed as paired both ways.
     #[test]
     fn a_computer_paired_again_one_way_is_given_nothing() {
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
         let dir = temp("one-way-again");
         let trust = dir.join("trusted_devices.json");
         TrustStore::update(&trust, |store| {
@@ -3713,12 +3714,12 @@ mod tests {
     /// lapse: the lapse and the grant are judged in one step.
     #[test]
     fn a_grant_whose_wait_ran_out_is_never_given() {
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
         let dir = temp("lapse-or-grant");
         let trust = dir.join("trusted_devices.json");
         TrustStore::update(&trust, |store| store.trust_computer("lap")).unwrap();
-        let long_ago = pocketdesk_core::local::pin::now_unix() - computers::PENDING_FOR - 1;
+        let long_ago = friday_mobile_core::local::pin::now_unix() - computers::PENDING_FOR - 1;
         computers::update(&dir, |file| {
             file.computers.push(facts().into_peer("lap", "", long_ago));
             file.pending = vec!["lap".to_string()];
@@ -3775,9 +3776,9 @@ mod tests {
     /// was pinned and paired by bound; unpaired, all of it goes.
     #[test]
     fn the_computer_that_pasted_trusts_the_other_in_turn() {
-        use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-        use pocketdesk_core::protocol::kdeconnect::TrustStore;
-        use pocketdesk_core::protocol::permissions::DevicePermissions;
+        use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+        use friday_mobile_core::protocol::kdeconnect::TrustStore;
+        use friday_mobile_core::protocol::permissions::DevicePermissions;
         let dir = temp("trust-back");
         let trust = dir.join("trusted_devices.json");
         let iroh = "e".repeat(64);
@@ -4025,7 +4026,7 @@ mod tests {
     struct ToHandOver;
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::protocol::kdeconnect::OpenLinkStream for ToHandOver {
+    impl friday_mobile_core::protocol::kdeconnect::OpenLinkStream for ToHandOver {
         async fn open(&self) -> std::io::Result<Box<dyn TransferIo>> {
             let (theirs, ours) = tokio::io::duplex(64 * 1024);
             tokio::spawn(hand_over(Box::new(ours)));
@@ -4053,7 +4054,7 @@ mod tests {
             let offer = packets.recv().await.unwrap();
             assert_eq!(
                 offer.packet_type,
-                pocketdesk_core::protocol::clipboard::CLIPBOARD_IMAGE
+                friday_mobile_core::protocol::clipboard::CLIPBOARD_IMAGE
             );
             assert_eq!(offer.body["follows"], true);
             assert!(offer.body.get("port").is_none());
@@ -4064,7 +4065,7 @@ mod tests {
                 other_computers_route(),
                 &key,
                 size,
-                pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
+                friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
                 |bytes| async move {
                     let _ = kept.send(bytes);
                     Ok(())
@@ -4112,7 +4113,7 @@ mod tests {
                 other_computers_route(),
                 &key,
                 1000,
-                pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
+                friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE,
                 |_| async { panic!("nothing should arrive") },
             )
             .await
@@ -4140,7 +4141,7 @@ mod tests {
             let ask = packets.recv().await.unwrap();
             assert_eq!(
                 ask.packet_type,
-                pocketdesk_core::protocol::clipboard::CLIPBOARD_IMAGE_FETCH
+                friday_mobile_core::protocol::clipboard::CLIPBOARD_IMAGE_FETCH
             );
             assert_eq!(ask.body["id"], "ab12");
             assert!(ask.body.get("port").is_none());
@@ -4201,7 +4202,7 @@ mod tests {
     fn the_internet_roads_refusal_is_told_from_a_failure() {
         let refused = format!(
             "handshake failed with Desk: {}",
-            pocketdesk_core::protocol::HANDSHAKE_REFUSED
+            friday_mobile_core::protocol::HANDSHAKE_REFUSED
         );
         assert!(is_refusal(&refused));
         assert!(!is_refusal("handshake failed with Desk: timed out"));

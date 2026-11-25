@@ -10,9 +10,9 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 use std::time::Duration;
 
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::home_assistant::{self as ha, Broker, Status};
-use pocketdesk_core::local::phone_status::{self, PhoneBattery};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::home_assistant::{self as ha, Broker, Status};
+use friday_mobile_core::local::phone_status::{self, PhoneBattery};
 use rumqttc::{AsyncClient, Event, LastWill, MqttOptions, Packet, QoS};
 use serde_json::{Value, json};
 
@@ -331,7 +331,7 @@ pub fn messages(computer: &Computer, snapshot: &Snapshot) -> BTreeMap<String, St
         json!({
             "name": "Activity",
             "state_topic": computer.events(),
-            "event_types": pocketdesk_core::local::events::KINDS,
+            "event_types": friday_mobile_core::local::events::KINDS,
             "icon": "mdi:timeline-text",
         }),
     );
@@ -451,7 +451,7 @@ pub fn changes(
 
 /// The activity event for `event`: its kind and its phone's short id, never
 /// its content.
-pub fn activity(event: &pocketdesk_core::local::events::Event) -> String {
+pub fn activity(event: &friday_mobile_core::local::events::Event) -> String {
     json!({
         "event_type": event.event,
         "phone": event
@@ -515,9 +515,9 @@ pub fn pressed_command(
 /// Send a pressed phone command (M9) as `pocketdesk phone-command` does,
 /// held to the phone's Command permission; why not, when it is not sent.
 fn press_command(state_dir: &Path, command: &CommandButton) -> Result<(), String> {
-    use pocketdesk_core::protocol::permissions::Capability;
-    let store = pocketdesk_core::protocol::kdeconnect::TrustStore::read(
-        state_dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+    use friday_mobile_core::protocol::permissions::Capability;
+    let store = friday_mobile_core::protocol::kdeconnect::TrustStore::read(
+        state_dir.join(friday_mobile_core::local::paths::TRUST_FILE),
     )
     .map_err(|e| format!("the paired phones could not be read: {e:#}"))?;
     // Unpaired since the last tick (M9 review).
@@ -535,12 +535,12 @@ fn press_command(state_dir: &Path, command: &CommandButton) -> Result<(), String
             "more than {PRESSES_PER_MINUTE} presses a minute for the phone"
         ));
     }
-    pocketdesk_core::local::commands::request(
+    friday_mobile_core::local::commands::request(
         state_dir,
         &command.device_id,
         &command.name,
         &command.text,
-        pocketdesk_core::local::pin::now_unix(),
+        friday_mobile_core::local::pin::now_unix(),
     )
     .map(|_| ())
     .map_err(|e| e.to_string())
@@ -574,15 +574,15 @@ fn within_pace(device: &str, now: std::time::Instant) -> bool {
 }
 
 /// The commands that become buttons: valid, for a paired phone, at most
-/// [`pocketdesk_core::local::commands::MAX_PHONE_COMMANDS`].
+/// [`friday_mobile_core::local::commands::MAX_PHONE_COMMANDS`].
 pub fn command_buttons(
-    specs: &[pocketdesk_core::local::commands::PhoneCommandSpec],
+    specs: &[friday_mobile_core::local::commands::PhoneCommandSpec],
     paired: &[String],
 ) -> Vec<CommandButton> {
     specs
         .iter()
         .filter(|c| c.problem().is_none() && paired.contains(&c.phone))
-        .take(pocketdesk_core::local::commands::MAX_PHONE_COMMANDS)
+        .take(friday_mobile_core::local::commands::MAX_PHONE_COMMANDS)
         .map(|c| CommandButton {
             label: c.label.trim().to_string(),
             device_id: c.phone.clone(),
@@ -597,16 +597,16 @@ pub fn command_buttons(
 /// keeps `previous`'s phones and batteries: one failed read must not
 /// remove every phone's entities from Home Assistant.
 fn read_snapshot(state_dir: &Path, config: &Config, previous: &Snapshot) -> Snapshot {
-    use pocketdesk_core::local::paths::{LIVE_FILE, TRUST_FILE};
+    use friday_mobile_core::local::paths::{LIVE_FILE, TRUST_FILE};
     let mirror = std::fs::read_to_string(state_dir.join(LIVE_FILE))
         .ok()
-        .and_then(|raw| pocketdesk_core::local::sessions::parse_mirror(&raw))
+        .and_then(|raw| friday_mobile_core::local::sessions::parse_mirror(&raw))
         // One left by an earlier run is not this one's sessions.
-        .filter(|m| m.is_fresh(pocketdesk_core::local::pin::now_unix()));
+        .filter(|m| m.is_fresh(friday_mobile_core::local::pin::now_unix()));
     // Paired for good: a guest's time-boxed grant is not a phone of this
     // computer's.
     let paired =
-        pocketdesk_core::protocol::kdeconnect::TrustStore::read(state_dir.join(TRUST_FILE))
+        friday_mobile_core::protocol::kdeconnect::TrustStore::read(state_dir.join(TRUST_FILE))
             .map(|store| store.paired_devices())
             .unwrap_or_else(|_| {
                 previous
@@ -687,7 +687,7 @@ fn write_status(
     let status = Status {
         connected,
         error,
-        updated_unix: pocketdesk_core::local::pin::now_unix(),
+        updated_unix: friday_mobile_core::local::pin::now_unix(),
     };
     if let Err(e) = ha::write_status(state_dir, &status) {
         tracing::debug!("Could not write the Home Assistant status: {e}");
@@ -722,7 +722,7 @@ pub async fn run() {
 
 /// Bridge with `wanted` until config.toml says otherwise.
 async fn connected(state_dir: &Path, wanted: &Settings, last: &mut Option<Status>) {
-    let Some(device_id) = pocketdesk_core::local::identity::device_id(state_dir) else {
+    let Some(device_id) = friday_mobile_core::local::identity::device_id(state_dir) else {
         write_status(
             state_dir,
             last,
@@ -781,7 +781,7 @@ async fn connected(state_dir: &Path, wanted: &Settings, last: &mut Option<Status
     });
     let _poller = AbortOnDrop(poller);
     let mut sent: BTreeMap<String, String> = BTreeMap::new();
-    let mut tail = pocketdesk_core::local::events::Tail::at_end(state_dir);
+    let mut tail = friday_mobile_core::local::events::Tail::at_end(state_dir);
     let mut tick = tokio::time::interval(TICK);
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let mut up = false;
@@ -1167,13 +1167,14 @@ mod tests {
 
     #[test]
     fn a_failed_read_keeps_the_phones_and_guests_are_not_phones() {
-        use pocketdesk_core::local::paths::{PHONE_STATUS_FILE, TRUST_FILE};
+        use friday_mobile_core::local::paths::{PHONE_STATUS_FILE, TRUST_FILE};
         let dir = std::env::temp_dir().join(format!("pd-ha-snapshot-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let mut store =
-            pocketdesk_core::protocol::kdeconnect::TrustStore::load_or_create(dir.join(TRUST_FILE))
-                .unwrap();
+        let mut store = friday_mobile_core::protocol::kdeconnect::TrustStore::load_or_create(
+            dir.join(TRUST_FILE),
+        )
+        .unwrap();
         store.trust_device("5f1c9b3d-6e70").unwrap();
         store
             .trust_device_with_ttl("a71e00aa-0002", Duration::from_secs(900))
@@ -1205,13 +1206,13 @@ mod tests {
 
     #[test]
     fn an_activity_event_carries_no_content() {
-        let event = pocketdesk_core::local::events::Event::new(
+        let event = friday_mobile_core::local::events::Event::new(
             "notification",
             Some("5f1c9b3d-6e70"),
             1,
             json!({ "app": "Chat" }),
             json!({ "title": "secret", "text": "secret" }),
-            pocketdesk_core::local::events::EventsDetail::Full,
+            friday_mobile_core::local::events::EventsDetail::Full,
         );
         let payload = activity(&event);
         assert!(
@@ -1221,13 +1222,13 @@ mod tests {
         let value: Value = serde_json::from_str(&payload).unwrap();
         assert_eq!(value["event_type"], "notification");
         assert_eq!(value["phone"], "5f1c9b3d");
-        let own = pocketdesk_core::local::events::Event::new(
+        let own = friday_mobile_core::local::events::Event::new(
             "task_started",
             Some(ha::HOME_ASSISTANT_DEVICE),
             1,
             json!({ "task": "Back up" }),
             json!({}),
-            pocketdesk_core::local::events::EventsDetail::Metadata,
+            friday_mobile_core::local::events::EventsDetail::Metadata,
         );
         let value: Value = serde_json::from_str(&activity(&own)).unwrap();
         assert!(value["phone"].is_null(), "Home Assistant is not a phone");
@@ -1321,7 +1322,7 @@ mod tests {
     /// M9: only a paired phone's valid commands become buttons.
     #[test]
     fn only_a_paired_phone_s_valid_commands_are_offered() {
-        use pocketdesk_core::local::commands::PhoneCommandSpec;
+        use friday_mobile_core::local::commands::PhoneCommandSpec;
         let paired = vec!["phone-a".to_string()];
         let spec = |label: &str, phone: &str, name: &str| PhoneCommandSpec {
             label: label.into(),
@@ -1345,7 +1346,7 @@ mod tests {
             .collect();
         assert_eq!(
             command_buttons(&many, &paired).len(),
-            pocketdesk_core::local::commands::MAX_PHONE_COMMANDS
+            friday_mobile_core::local::commands::MAX_PHONE_COMMANDS
         );
     }
 

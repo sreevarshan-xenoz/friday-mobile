@@ -1,11 +1,11 @@
-.TH POCKETDESK 1 "2026-09-24" "Pocketdesk 0.2.0"
+.TH FRIDAY-MOBILE 1 "2026-09-24" "FRIDAY Mobile 0.2.0"
 .SH NAME
-pocketdesk \- Remote desktop over Tailscale with KDE Connect integration
+friday-mobile \- Remote desktop over Tailscale with KDE Connect integration
 .SH SYNOPSIS
-.B pocketdesk
+.B friday-mobile
 [\fIOPTIONS\fR] [\fICOMMAND\fR]
 .SH DESCRIPTION
-Pocketdesk (formerly Linux Link) is a pure-Rust remote desktop solution for Linux and Windows.
+FRIDAY Mobile (formerly Linux Link) is a pure-Rust remote desktop solution for Linux and Windows.
 It combines KDE Connect device integration with low-latency
 screen streaming over Tailscale.
 .SH COMMANDS
@@ -15,7 +15,7 @@ Start the server daemon
 .TP
 .B stop
 Stop a running daemon started with
-.B "pocketdesk start"
+.B "friday-mobile start"
 .TP
 .B status [\-\-json]
 Print the Tailscale status (or that it is not running), how the Bluetooth
@@ -212,7 +212,7 @@ flag: the server reads its configuration from the path below, and per\-command
 flags are listed with each command above.
 .SH FILES
 .TP
-.I ~/.config/pocketdesk/config.toml
+.I ~/.config/friday-mobile/config.toml
 Configuration file.
 .B dht_publish
 says what the desktop publishes on the Mainline DHT under its WAN id, so a
@@ -224,17 +224,17 @@ phone away from home finds it again:
 .BR off .
 Private, LAN and tailnet addresses are never published
 .TP
-.I ~/.local/state/pocketdesk/streaming_sessions.log
+.I ~/.local/state/friday-mobile/streaming_sessions.log
 Session outcome log, tab\-separated \fIkey=value\fR lines, rotated at 1 MiB
 .TP
-.I ~/.local/state/pocketdesk/streaming_sessions.jsonl
+.I ~/.local/state/friday-mobile/streaming_sessions.jsonl
 The same reports as one JSON object per session \- the record a benchmark
 baseline is compared against \- rotated at 4 MiB
 .TP
-.I ~/.local/state/pocketdesk/certs/
+.I ~/.local/state/friday-mobile/certs/
 Streaming TLS/QUIC identity (private key); never copy this into a repository
 .TP
-.I ~/.local/state/pocketdesk/relay\-acme/
+.I ~/.local/state/friday-mobile/relay\-acme/
 The relay's Let's Encrypt account and certificates (HTTPS mode)
 .SH ENVIRONMENT
 .TP
@@ -246,4 +246,4 @@ Log level (trace, debug, info, warn, error)
 .SH BUGS
 Report bugs at https://github.com/sreevarshan-xenoz/Pocketdesk/issues
 .SH AUTHOR
-Pocketdesk Development Team
+FRIDAY Mobile Development Team

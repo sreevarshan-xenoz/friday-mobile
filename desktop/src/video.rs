@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use eframe::egui;
-use pocketdesk_core::streaming::ffmpeg_flags::fps_mode_flag;
+use friday_mobile_core::streaming::ffmpeg_flags::fps_mode_flag;
 
 /// An access unit delimiter: ffmpeg's parser emits a frame once the next
 /// one begins, and this begins one at once.
@@ -70,7 +70,7 @@ pub fn user_folder(name: &str) -> PathBuf {
     known
         .or_else(|| dirs::home_dir().map(|home| home.join(name)))
         .unwrap_or_else(std::env::temp_dir)
-        .join("Pocketdesk")
+        .join("FRIDAY Mobile")
 }
 
 /// `dir`/`stem`.`ext`, or the next free "`stem` (2)".

@@ -9,7 +9,7 @@
 use std::collections::HashSet;
 use std::sync::{LazyLock, Mutex};
 
-pub(crate) use pocketdesk_core::protocol::connection::NOT_PAIRED;
+pub(crate) use friday_mobile_core::protocol::connection::NOT_PAIRED;
 
 static SAID: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Mutex::default);
 
@@ -138,7 +138,7 @@ mod tests {
     /// before any connection, when that computer said so.
     #[tokio::test]
     async fn every_send_path_keeps_it_on_the_phone() {
-        use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+        use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
         let address = "192.0.2.94";
         said(address);
         let packet = NetworkPacket::new("kdeconnect.notification");

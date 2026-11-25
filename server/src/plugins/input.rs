@@ -1,5 +1,5 @@
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, warn};
@@ -23,7 +23,7 @@ impl InputPlugin {
         let mut opt = self.injector.lock().await;
         if opt.is_none() {
             *opt = Some(InputInjector::new().map_err(|e| {
-                pocketdesk_core::error::PocketdeskError::Other {
+                friday_mobile_core::error::PocketdeskError::Other {
                     detail: format!("Failed to create input injector: {e}"),
                 }
             })?);
@@ -115,11 +115,11 @@ impl InputPlugin {
     async fn move_mouse(&self, dx: i32, dy: i32) -> Result<()> {
         let injector = self.get_injector().await?;
         let mut inj = injector.lock().await;
-        let inj = inj
-            .as_mut()
-            .ok_or_else(|| pocketdesk_core::error::PocketdeskError::Other {
-                detail: "InputInjector not initialized".to_string(),
-            })?;
+        let inj =
+            inj.as_mut()
+                .ok_or_else(|| friday_mobile_core::error::PocketdeskError::Other {
+                    detail: "InputInjector not initialized".to_string(),
+                })?;
         inj.move_mouse_relative(dx, dy).map_err(Into::into)
     }
 
@@ -127,11 +127,11 @@ impl InputPlugin {
     async fn mouse_button(&self, button: i32, pressed: bool) -> Result<()> {
         let injector = self.get_injector().await?;
         let mut inj = injector.lock().await;
-        let inj = inj
-            .as_mut()
-            .ok_or_else(|| pocketdesk_core::error::PocketdeskError::Other {
-                detail: "InputInjector not initialized".to_string(),
-            })?;
+        let inj =
+            inj.as_mut()
+                .ok_or_else(|| friday_mobile_core::error::PocketdeskError::Other {
+                    detail: "InputInjector not initialized".to_string(),
+                })?;
         let mouse_key = button_id_to_mouse(button);
         inj.mouse_button(mouse_key, pressed).map_err(Into::into)
     }
@@ -140,11 +140,11 @@ impl InputPlugin {
     async fn type_text(&self, text: &str) -> Result<()> {
         let injector = self.get_injector().await?;
         let mut inj = injector.lock().await;
-        let inj = inj
-            .as_mut()
-            .ok_or_else(|| pocketdesk_core::error::PocketdeskError::Other {
-                detail: "InputInjector not initialized".to_string(),
-            })?;
+        let inj =
+            inj.as_mut()
+                .ok_or_else(|| friday_mobile_core::error::PocketdeskError::Other {
+                    detail: "InputInjector not initialized".to_string(),
+                })?;
         inj.text(text).map_err(Into::into)
     }
 
@@ -152,18 +152,19 @@ impl InputPlugin {
     async fn press_key(&self, key: &str) -> Result<()> {
         let injector = self.get_injector().await?;
         let mut inj = injector.lock().await;
-        let inj = inj
-            .as_mut()
-            .ok_or_else(|| pocketdesk_core::error::PocketdeskError::Other {
-                detail: "InputInjector not initialized".to_string(),
-            })?;
+        let inj =
+            inj.as_mut()
+                .ok_or_else(|| friday_mobile_core::error::PocketdeskError::Other {
+                    detail: "InputInjector not initialized".to_string(),
+                })?;
         let enigo_key = key_name_to_enigo_key(key);
-        inj.key(enigo_key, true)
-            .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+        inj.key(enigo_key, true).map_err(|e| {
+            friday_mobile_core::error::PocketdeskError::Other {
                 detail: e.to_string(),
-            })?;
+            }
+        })?;
         inj.key(enigo_key, false)
-            .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+            .map_err(|e| friday_mobile_core::error::PocketdeskError::Other {
                 detail: e.to_string(),
             })
     }

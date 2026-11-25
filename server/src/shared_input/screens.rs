@@ -31,10 +31,11 @@ pub async fn current() -> Vec<Screen> {
                 return screens;
             }
         }
-        let layout = tokio::task::spawn_blocking(pocketdesk_core::streaming::capture::layout_rect)
-            .await
-            .ok()
-            .flatten();
+        let layout =
+            tokio::task::spawn_blocking(friday_mobile_core::streaming::capture::layout_rect)
+                .await
+                .ok()
+                .flatten();
         layout
             .map(|(x, y, width, height)| Screen {
                 x,

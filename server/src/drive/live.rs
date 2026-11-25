@@ -7,12 +7,12 @@ use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::local::drive::{self as store, DriveInfo};
-use pocketdesk_core::local::paths::DRIVE_CACHE_DIR;
-use pocketdesk_core::local::paths::DRIVE_UPLOADS_DIR;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TrustStore};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::phone_files::{
+use friday_mobile_core::local::drive::{self as store, DriveInfo};
+use friday_mobile_core::local::paths::DRIVE_CACHE_DIR;
+use friday_mobile_core::local::paths::DRIVE_UPLOADS_DIR;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TrustStore};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::phone_files::{
     FETCH, LIST, Listing, MKDIR, PUT, mkdir_body, put_body, request_body,
 };
 use tokio::sync::oneshot;
@@ -28,7 +28,7 @@ pub const FETCH_WAIT: Duration = Duration::from_secs(10 * 60);
 /// How a phone's refusal of a copied file reads (N6): not room for it, in
 /// the words the phone says it with, or another reason.
 fn refusal(why: String) -> Put {
-    if why.contains(pocketdesk_core::protocol::phone_files::NO_ROOM) {
+    if why.contains(friday_mobile_core::protocol::phone_files::NO_ROOM) {
         Put::NoRoom(why)
     } else {
         Put::Refused(why)
@@ -71,7 +71,7 @@ pub(crate) fn waiting_dir(device: &str, id: &str) -> Option<PathBuf> {
         return None;
     }
     let dir = crate::state::state_dir().ok()?.join(DRIVE_CACHE_DIR);
-    pocketdesk_core::secure_fs::create_private_dir(&dir).ok()?;
+    friday_mobile_core::secure_fs::create_private_dir(&dir).ok()?;
     Some(dir)
 }
 
@@ -225,20 +225,20 @@ impl Phones for LivePhones {
         if let Ok(dir) = crate::state::state_dir() {
             let mut shown = folder.to_vec();
             shown.push(name.to_string());
-            let sent = pocketdesk_core::local::sent::SentFile {
+            let sent = friday_mobile_core::local::sent::SentFile {
                 id: id.clone(),
                 name: name.to_string(),
                 path: format!("the phone's drive: {}", shown.join("/")),
                 size,
                 device_id: device.to_string(),
-                sent_unix: pocketdesk_core::local::pin::now_unix(),
-                state: pocketdesk_core::local::sent::SentState::Offered,
+                sent_unix: friday_mobile_core::local::pin::now_unix(),
+                state: friday_mobile_core::local::sent::SentState::Offered,
                 note: None,
             };
             // Off the runtime: on Windows a replace can wait up to about
             // half a second for another program's handle on the file.
             let _ = tokio::task::spawn_blocking(move || {
-                pocketdesk_core::local::sent::record(&dir, sent)
+                friday_mobile_core::local::sent::record(&dir, sent)
             })
             .await;
         }
@@ -352,7 +352,7 @@ pub async fn run() {
         // A config that does not read now (written meanwhile) keeps what
         // was: a new address would break a drive the owner mapped (D8
         // review).
-        let (on, write) = match pocketdesk_core::local::config::Config::load() {
+        let (on, write) = match friday_mobile_core::local::config::Config::load() {
             Ok(config) => (config.phone_drive, config.phone_drive_write),
             Err(_) => (
                 serving.is_some(),

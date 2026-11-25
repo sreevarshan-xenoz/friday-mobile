@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use pocketdesk_core::protocol::permissions::DevicePermissions;
-use pocketdesk_core::streaming::SessionClaim;
-use pocketdesk_core::streaming::transport::{CertManager, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::protocol::permissions::DevicePermissions;
+use friday_mobile_core::streaming::SessionClaim;
+use friday_mobile_core::streaming::transport::{CertManager, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     CaptureBackend, SessionInput, StreamingConfig, StreamingServer, cast::CastEvent,
 };
 use tokio::sync::{broadcast, mpsc};

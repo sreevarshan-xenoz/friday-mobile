@@ -12,11 +12,11 @@
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::clipboard::{
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::clipboard::{
     CLIPBOARD_IMAGE, CLIPBOARD_IMAGE_FETCH, MAX_CLIPBOARD_IMAGE,
 };
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde_json::json;
 
 use crate::plugins::share;
@@ -121,7 +121,7 @@ impl Plugin for ClipboardPlugin {
             "kdeconnect.clipboard.connect",
             CLIPBOARD_IMAGE,
             CLIPBOARD_IMAGE_FETCH,
-            pocketdesk_core::protocol::clipboard::CLIPBOARD_VIEW,
+            friday_mobile_core::protocol::clipboard::CLIPBOARD_VIEW,
         ]
     }
 
@@ -206,7 +206,7 @@ impl Plugin for ClipboardPlugin {
             // Its window lost the focus (PC3): this clipboard goes back to
             // the computer that controls this one through it, never to a
             // phone, nor by the always-on sharing's word alone.
-            pocketdesk_core::protocol::clipboard::CLIPBOARD_VIEW
+            friday_mobile_core::protocol::clipboard::CLIPBOARD_VIEW
                 if crate::plugins::pair::is_computer_device(sender.device_id())
                     && crate::clipboard_push::takes_window_ask(sender.device_id()) =>
             {
@@ -226,7 +226,7 @@ impl Plugin for ClipboardPlugin {
 fn follows_the_mouse(packet: &NetworkPacket, device_id: &str) -> bool {
     match packet.packet_type.as_str() {
         // The window showing this screen asks for the clipboard back (PC3).
-        pocketdesk_core::protocol::clipboard::CLIPBOARD_VIEW => {
+        friday_mobile_core::protocol::clipboard::CLIPBOARD_VIEW => {
             crate::clipboard_push::takes_window_ask(device_id)
         }
         "kdeconnect.clipboard" | CLIPBOARD_IMAGE => {
@@ -445,7 +445,7 @@ async fn send_image(packet: &NetworkPacket, sender: &dyn DeviceSender) {
     });
 }
 
-fn other(e: impl std::fmt::Display) -> pocketdesk_core::error::PocketdeskError {
+fn other(e: impl std::fmt::Display) -> friday_mobile_core::error::PocketdeskError {
     share::io_error("clipboard", e)
 }
 
@@ -598,7 +598,7 @@ fn clipboard_owner() -> Option<String> {
 /// The settings a filter was built for, and the filter.
 type BuiltFilter = (
     (Vec<String>, Vec<String>),
-    Arc<pocketdesk_core::local::clip_filter::ClipFilter>,
+    Arc<friday_mobile_core::local::clip_filter::ClipFilter>,
 );
 
 static FILTER: std::sync::Mutex<Option<BuiltFilter>> = std::sync::Mutex::new(None);
@@ -621,13 +621,13 @@ pub(crate) fn held_here(text: Option<&str>, owner: Option<&str>) -> bool {
                 // (O4 review: it was dropped without a word).
                 for pattern in &key.1 {
                     if let Some(problem) =
-                        pocketdesk_core::local::clip_filter::pattern_problem(pattern.trim())
+                        friday_mobile_core::local::clip_filter::pattern_problem(pattern.trim())
                         && !pattern.trim().is_empty()
                     {
                         tracing::warn!("Settings' \"Never send copies that look like\": {problem}");
                     }
                 }
-                let filter = Arc::new(pocketdesk_core::local::clip_filter::ClipFilter::new(
+                let filter = Arc::new(friday_mobile_core::local::clip_filter::ClipFilter::new(
                     &key.0, &key.1,
                 ));
                 *cached = Some((key, filter.clone()));
@@ -699,7 +699,7 @@ fn set_stand_ins_text(
     }
     forget_image();
     Some(match text {
-        Some(path) => pocketdesk_core::secure_fs::write_private(path, content.as_bytes())
+        Some(path) => friday_mobile_core::secure_fs::write_private(path, content.as_bytes())
             .map_err(|e| share::io_error("clipboard", e)),
         None => Ok(()),
     })
@@ -842,11 +842,11 @@ fn set_stand_ins_image(
     }
     Some((|| {
         if let Some(path) = image_path {
-            pocketdesk_core::secure_fs::write_private(path, &image.png)
+            friday_mobile_core::secure_fs::write_private(path, &image.png)
                 .map_err(|e| share::io_error("clipboard image", e))?;
         }
         if let Some(path) = text {
-            pocketdesk_core::secure_fs::write_private(path, b"")
+            friday_mobile_core::secure_fs::write_private(path, b"")
                 .map_err(|e| share::io_error("clipboard", e))?;
         }
         if image_path.is_some() {
@@ -865,7 +865,7 @@ async fn set_system_clipboard(content: &str) -> Result<()> {
 }
 
 #[cfg(not(windows))]
-use pocketdesk_core::local::clip_tool::Tool as ClipTool;
+use friday_mobile_core::local::clip_tool::Tool as ClipTool;
 
 /// Run `wl-copy` or `xclip` (as `mime` when given) on `bytes`.
 #[cfg(not(windows))]
@@ -883,7 +883,7 @@ async fn clip_copy(mime: Option<&str>, bytes: &[u8]) -> Result<()> {
         .stderr(std::process::Stdio::null())
         .kill_on_drop(true)
         .spawn()
-        .map_err(|e| pocketdesk_core::error::PocketdeskError::Io {
+        .map_err(|e| friday_mobile_core::error::PocketdeskError::Io {
             operation: "spawn the clipboard's copy program",
             detail: format!("{program}: {e}"),
         })?;
@@ -897,7 +897,7 @@ async fn clip_copy(mime: Option<&str>, bytes: &[u8]) -> Result<()> {
     // remembered as on the clipboard when xclip found no display).
     let status = child.wait().await?;
     if !status.success() {
-        return Err(pocketdesk_core::error::PocketdeskError::Io {
+        return Err(friday_mobile_core::error::PocketdeskError::Io {
             operation: "set the clipboard",
             detail: format!("{program} exited with {status}"),
         });
@@ -912,14 +912,14 @@ const PASTE_TIME: std::time::Duration = std::time::Duration::from_secs(3);
 
 /// `wl-paste` or `xclip` as [`ClipTool`] says, its output on success.
 #[cfg(not(windows))]
-async fn paste((program, args): pocketdesk_core::local::clip_tool::Command) -> Result<Vec<u8>> {
+async fn paste((program, args): friday_mobile_core::local::clip_tool::Command) -> Result<Vec<u8>> {
     let read = tokio::process::Command::new(program)
         .args(&args)
         .stdin(std::process::Stdio::null())
         .kill_on_drop(true)
         .output();
     let output = tokio::time::timeout(PASTE_TIME, read).await.map_err(|_| {
-        pocketdesk_core::error::PocketdeskError::Io {
+        friday_mobile_core::error::PocketdeskError::Io {
             operation: "read the clipboard",
             detail: format!("{program} did not answer within {PASTE_TIME:?}"),
         }
@@ -927,7 +927,7 @@ async fn paste((program, args): pocketdesk_core::local::clip_tool::Command) -> R
     if output.status.success() {
         Ok(output.stdout)
     } else {
-        Err(pocketdesk_core::error::PocketdeskError::Io {
+        Err(friday_mobile_core::error::PocketdeskError::Io {
             operation: "read the clipboard",
             detail: format!("{program}: {}", String::from_utf8_lossy(&output.stderr)),
         })

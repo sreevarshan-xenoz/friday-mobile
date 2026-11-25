@@ -5,5 +5,5 @@
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
-    pocketdesk_server::fuzzing::kdeconnect(data);
+    friday_mobile_server::fuzzing::kdeconnect(data);
 });

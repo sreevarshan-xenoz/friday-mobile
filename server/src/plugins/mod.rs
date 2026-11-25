@@ -34,7 +34,7 @@ pub mod typing;
 pub mod wake_relay;
 pub mod windows;
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, PluginRegistry};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, PluginRegistry};
 
 /// Answer a request the phone's permissions refused, for the requests a
 /// phone waits on a reply for (a folder download, an audio request), so it

@@ -3,7 +3,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use pocketdesk_core::local::pair_link::{MAX_LINK_BYTES, PairLink};
+use friday_mobile_core::local::pair_link::{MAX_LINK_BYTES, PairLink};
 
 fuzz_target!(|data: &[u8]| {
     let Ok(text) = std::str::from_utf8(data) else {

@@ -26,10 +26,10 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::capture_screencopy::start_screencopy_capture;
-use pocketdesk_core::streaming::dmabuf;
-use pocketdesk_core::streaming::encoder::VideoEncoder;
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::capture_screencopy::start_screencopy_capture;
+use friday_mobile_core::streaming::dmabuf;
+use friday_mobile_core::streaming::encoder::VideoEncoder;
+use friday_mobile_core::streaming::{
     EncoderPreset, H264Profile, HardwareEncoder, StreamingConfig, VideoCodec, VideoFrame,
     latest_frame,
 };
@@ -68,7 +68,7 @@ fn config() -> StreamingConfig {
 struct Capture {
     rx: latest_frame::FrameReceiver<VideoFrame>,
     cancel: CancellationToken,
-    _session: pocketdesk_core::streaming::capture::CaptureSession,
+    _session: friday_mobile_core::streaming::capture::CaptureSession,
     _window_tx: watch::Sender<u64>,
 }
 

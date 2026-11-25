@@ -8,7 +8,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::phone_location::{ASK, ask_precision};
+use friday_mobile_core::protocol::phone_location::{ASK, ask_precision};
 
 /// Asks waiting for the app, at most; the oldest go first. The computer asks
 /// at most once in ten minutes, so more than a few are not an ask.

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::Mutex;
 
@@ -26,8 +26,8 @@ const LINK_ROLE: &str = "kdeconnect.pocketdesk.link_role";
 /// answer from that computer went (E1), and whether it is in use (N7).
 const SENT: [&str; 3] = [
     "kdeconnect.notification",
-    pocketdesk_core::protocol::notification_action::NOTIFICATION_ANSWERED,
-    pocketdesk_core::protocol::in_use::ASK,
+    friday_mobile_core::protocol::notification_action::NOTIFICATION_ANSWERED,
+    friday_mobile_core::protocol::in_use::ASK,
 ];
 
 type Writer = Arc<Mutex<ControlWriter>>;
@@ -63,7 +63,7 @@ pub(crate) async fn connect(address: String, port: u16) -> Result<(), String> {
         .await
         .map_err(|e| format!("Connection failed: {e}"))?;
     crate::peer_names::note(&address, claims);
-    let stream: pocketdesk_core::protocol::connection::ControlDuplex = Box::new(stream);
+    let stream: friday_mobile_core::protocol::connection::ControlDuplex = Box::new(stream);
     let (reader, writer) = tokio::io::split(stream);
     let writer: Writer = Arc::new(Mutex::new(writer));
     // Say what the link is for, so the computer neither pushes to it nor
@@ -104,7 +104,7 @@ pub(crate) async fn connect(address: String, port: u16) -> Result<(), String> {
             // Whether that computer is in use (N7), kept with it.
             if trimmed.contains("in_use_answer")
                 && let Ok(packet) = NetworkPacket::from_wire(trimmed)
-                && packet.packet_type == pocketdesk_core::protocol::in_use::ANSWER
+                && packet.packet_type == friday_mobile_core::protocol::in_use::ANSWER
             {
                 crate::in_use::receive(&packet.body, &address, port);
             }

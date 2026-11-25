@@ -8,10 +8,10 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::typing::{self, TypeBatch};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::typing::{TYPE, body};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::typing::{self, TypeBatch};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::typing::{TYPE, body};
 
 /// The packet for `batch`, if this computer may type on that phone.
 pub fn packet_for(batch: &TypeBatch, control_on: bool, allowed: bool) -> Option<NetworkPacket> {
@@ -25,7 +25,7 @@ pub async fn run() {
     };
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::TYPING_DIR,
+            friday_mobile_core::local::paths::TYPING_DIR,
             Duration::from_millis(500),
         )
         .await;
@@ -45,7 +45,7 @@ pub async fn run() {
         for batch in batches {
             let allowed = crate::plugins::pair::allows(
                 &batch.device_id,
-                pocketdesk_core::protocol::permissions::Capability::Cast,
+                friday_mobile_core::protocol::permissions::Capability::Cast,
             );
             let Some(packet) = packet_for(&batch, control_on, allowed) else {
                 if !std::mem::replace(&mut said, true) {
@@ -96,7 +96,7 @@ impl Plugin for TypingPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::typing::TypeEvent;
+    use friday_mobile_core::protocol::typing::TypeEvent;
 
     #[test]
     fn a_batch_goes_only_with_control_on_and_the_phone_allowing_it() {

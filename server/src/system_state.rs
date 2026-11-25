@@ -6,8 +6,8 @@
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde_json::{Value, json};
 
 pub const SYSTEM: &str = "kdeconnect.pocketdesk.system";
@@ -258,7 +258,7 @@ fn disks() -> Vec<Disk> {
 fn disks() -> Vec<Disk> {
     // Local filesystems only, and within 3 s: a dead network mount hangs a
     // plain `df`, and with it the phone's control loop (F2 review).
-    pocketdesk_core::local::network::output_within("df", &["-klP"], Duration::from_secs(3))
+    friday_mobile_core::local::network::output_within("df", &["-klP"], Duration::from_secs(3))
         .map(|out| parse_df(&String::from_utf8_lossy(&out)))
         .unwrap_or_default()
 }

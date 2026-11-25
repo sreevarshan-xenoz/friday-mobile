@@ -12,11 +12,11 @@ pub fn waiting(state_dir: &Path, approvals: &[String], now_unix: u64) -> Vec<Str
         .map(|id| format!("approval:{id}"))
         .collect();
     keys.extend(
-        pocketdesk_core::local::tasks::read_requests(state_dir, now_unix)
+        friday_mobile_core::local::tasks::read_requests(state_dir, now_unix)
             .into_iter()
             .map(|r| format!("task:{}", r.id)),
     );
-    if let Some(cast) = pocketdesk_core::local::cast::read(state_dir) {
+    if let Some(cast) = friday_mobile_core::local::cast::read(state_dir) {
         keys.push(format!("cast:{}", cast.session_id));
     }
     keys
@@ -65,9 +65,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         assert_eq!(waiting(&dir, &[], 100), Vec::<String>::new());
-        pocketdesk_core::local::cast::write(
+        friday_mobile_core::local::cast::write(
             &dir,
-            &pocketdesk_core::local::cast::CastFile {
+            &friday_mobile_core::local::cast::CastFile {
                 session_id: 7,
                 device_id: "phone-a".into(),
                 port: 1,

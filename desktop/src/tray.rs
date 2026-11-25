@@ -31,7 +31,7 @@ impl Tray {
             .map_err(|e| e.to_string())?;
         let icon = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
-            .with_tooltip("Pocketdesk")
+            .with_tooltip("FRIDAY Mobile")
             .with_icon(icon)
             .build()
             .map_err(|e| e.to_string())?;
@@ -53,7 +53,7 @@ impl Tray {
                 self.actions = actions;
                 self.shown = entries;
             }
-            Err(e) => eprintln!("Pocketdesk: the tray's menu was not rebuilt: {e}"),
+            Err(e) => eprintln!("FRIDAY Mobile: the tray's menu was not rebuilt: {e}"),
         }
     }
 
@@ -174,11 +174,11 @@ mod tests {
             TrayAction::Type("p".into()),
             TrayAction::PhoneAction(
                 "p".into(),
-                pocketdesk_core::protocol::phone_action::PhoneAction::Screenshot,
+                friday_mobile_core::protocol::phone_action::PhoneAction::Screenshot,
             ),
             TrayAction::PhoneAction(
                 "p".into(),
-                pocketdesk_core::protocol::phone_action::PhoneAction::Lock,
+                friday_mobile_core::protocol::phone_action::PhoneAction::Lock,
             ),
             TrayAction::Pause(Some(60)),
             TrayAction::Pause(Some(480)),

@@ -1,6 +1,6 @@
 //! A direct link (no shared network), the server's side: this computer's own
 //! Wi-Fi network, made for one phone for a while
-//! (`pocketdesk_core::local::direct_link` is the part both programs share).
+//! (`friday_mobile_core::local::direct_link` is the part both programs share).
 //!
 //! The desktop app leaves a request in `<state>/direct_link_out/`; this
 //! makes the access point (through NetworkManager over D-Bus on Linux, and
@@ -29,10 +29,10 @@ use std::net::Ipv4Addr;
 use std::sync::LazyLock;
 use std::time::Duration;
 
-use pocketdesk_core::local::direct_link::{
+use friday_mobile_core::local::direct_link::{
     self as dl, Action, Band, IdleTimer, Mode, Plan, Request, State, Status, WifiJoin,
 };
-use pocketdesk_core::local::paths::DIRECT_LINK_DIR;
+use friday_mobile_core::local::paths::DIRECT_LINK_DIR;
 use tokio::sync::Mutex;
 
 /// The connection's name in NetworkManager, which is how a left-over one is
@@ -81,7 +81,7 @@ pub async fn run() {
     let mut retried = std::time::Instant::now();
     loop {
         crate::inbox::wait_at_most(DIRECT_LINK_DIR, TICK, Duration::from_secs(2)).await;
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         for request in dl::take_all(&dir, now) {
             match request.action {
                 Action::Start => start(&dir, &request).await,
@@ -120,7 +120,7 @@ async fn publish_plan(dir: &std::path::Path) {
         Err(_) => Err(dl::Unavailable::Unsupported),
     };
     let report = dl::PlanReport {
-        updated_unix: pocketdesk_core::local::pin::now_unix(),
+        updated_unix: friday_mobile_core::local::pin::now_unix(),
         plan,
     };
     if let Err(e) = dl::write_plan(dir, &report) {
@@ -147,7 +147,7 @@ pub async fn stop_at_exit() {
 }
 
 async fn start(dir: &std::path::Path, request: &Request) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     if ACTIVE.lock().await.is_some() {
         tracing::info!("Direct link: already on");
         return;
@@ -242,7 +242,7 @@ async fn stop(dir: &std::path::Path, why: &str) -> bool {
 /// Keep the access point that is on: note whether a phone uses it, turn it
 /// off when none has for the limit, and say so in the status.
 async fn tick(dir: &std::path::Path) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let mut guard = ACTIVE.lock().await;
     let Some(active) = guard.as_mut() else {
         return;
@@ -294,17 +294,17 @@ fn in_use(dir: &std::path::Path, address: &str) -> bool {
         return false;
     };
     let config = crate::events::current_config();
-    let port = pocketdesk_core::local::listening::control_port(dir, config.control_port);
+    let port = friday_mobile_core::local::listening::control_port(dir, config.control_port);
     if established_peers(port)
         .into_iter()
         .any(|peer| same_network(ours, peer))
     {
         return true;
     }
-    let now = pocketdesk_core::local::pin::now_unix();
-    std::fs::read_to_string(dir.join(pocketdesk_core::local::paths::LIVE_FILE))
+    let now = friday_mobile_core::local::pin::now_unix();
+    std::fs::read_to_string(dir.join(friday_mobile_core::local::paths::LIVE_FILE))
         .ok()
-        .and_then(|raw| pocketdesk_core::local::sessions::parse_mirror(&raw))
+        .and_then(|raw| friday_mobile_core::local::sessions::parse_mirror(&raw))
         .filter(|m| m.is_fresh(now))
         .is_some_and(|m| {
             m.sessions.iter().any(|s| {
@@ -324,7 +324,7 @@ fn established_peers(port: u16) -> Vec<Ipv4Addr> {
     }
     #[cfg(windows)]
     {
-        pocketdesk_core::local::direct_link_windows::established_peers(port)
+        friday_mobile_core::local::direct_link_windows::established_peers(port)
     }
     #[cfg(not(any(target_os = "linux", windows)))]
     {
@@ -432,7 +432,7 @@ mod backend {
     //! NetworkManager over D-Bus, and `iw` for the second interface.
 
     use super::*;
-    use pocketdesk_core::local::direct_link::{Owned, Restore};
+    use friday_mobile_core::local::direct_link::{Owned, Restore};
     use std::collections::HashMap;
     use std::path::Path;
     use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
@@ -808,7 +808,7 @@ mod backend {
 
 #[cfg(windows)]
 mod backend {
-    //! The Mobile Hotspot (`pocketdesk_core::local::direct_link_windows`),
+    //! The Mobile Hotspot (`friday_mobile_core::local::direct_link_windows`),
     //! on worker threads: its calls block.
     //!
     //! Windows keeps one hotspot setting for the whole system, so what the
@@ -817,8 +817,8 @@ mod backend {
     //! when the link ends, and by the next start if this server was killed.
 
     use super::*;
-    use pocketdesk_core::local::direct_link::{HotspotRestore, Owned};
-    use pocketdesk_core::local::direct_link_windows as win;
+    use friday_mobile_core::local::direct_link::{HotspotRestore, Owned};
+    use friday_mobile_core::local::direct_link_windows as win;
     use std::path::{Path, PathBuf};
 
     /// What to put back.

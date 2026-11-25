@@ -16,9 +16,9 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::peek::{LONGEST_SIDE, MAX_PEEK, PEEK, fit};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::peek::{LONGEST_SIDE, MAX_PEEK, PEEK, fit};
 
 use crate::plugins::share;
 

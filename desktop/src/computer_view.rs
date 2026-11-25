@@ -33,13 +33,13 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::local::computers::{self, ComputerAsk, FitSize};
-use pocketdesk_core::local::config::{COMPUTER_VIEW_QUALITIES, Config};
-use pocketdesk_core::local::view::{
+use friday_mobile_core::local::computers::{self, ComputerAsk, FitSize};
+use friday_mobile_core::local::config::{COMPUTER_VIEW_QUALITIES, Config};
+use friday_mobile_core::local::view::{
     self as wire, Message, Phase, ViewFile, ViewFit, ViewPrivacy, ViewStatus,
 };
-use pocketdesk_core::protocol::cursor::{CursorMessage, CursorState};
-use pocketdesk_core::streaming::InputPacket;
+use friday_mobile_core::protocol::cursor::{CursorMessage, CursorState};
+use friday_mobile_core::streaming::InputPacket;
 
 use crate::video::{
     Accel, Admit, Codec, DecodeWanted, Decoder, KeyGate, Picture, Planes, Recorder, free_name,
@@ -777,7 +777,7 @@ fn switch_keys(shared: &Mutex<State>, state_dir: &Path, device_id: &str, on: boo
     let saved = computers::request(state_dir, ask, now_unix())
         .map_err(|e| e.to_string())
         .and_then(|_| {
-            if pocketdesk_core::local::server::is_running(state_dir) {
+            if friday_mobile_core::local::server::is_running(state_dir) {
                 Ok(())
             } else {
                 Err("Pocketdesk's server is not running here".to_string())
@@ -988,7 +988,7 @@ pub fn window_lines(views: u32, last_switch: Option<Duration>) -> Vec<String> {
     if views > 0 {
         lines.push(format!(
             "Views on this server: {views} of {}",
-            pocketdesk_core::local::view::MAX_VIEWS
+            friday_mobile_core::local::view::MAX_VIEWS
         ));
     }
     if let Some(took) = last_switch {
@@ -1107,7 +1107,7 @@ pub fn window_title(name: &str, screen: u32, mic_on: bool) -> String {
 pub fn clean_title(title: &str) -> String {
     title
         .chars()
-        .filter(|c| !pocketdesk_core::local::shared_input::is_hidden(*c))
+        .filter(|c| !friday_mobile_core::local::shared_input::is_hidden(*c))
         .take(120)
         .collect::<String>()
         .trim()
@@ -2894,7 +2894,7 @@ fn drop_words(shared: &Mutex<State>, state_dir: &Path, ctx: &egui::Context) -> O
     if let Some(batch) = state.drop.clone() {
         if state.drop_look.is_none_or(|at| at.elapsed() >= DROP_LOOK) {
             state.drop_look = Some(now);
-            let sent = pocketdesk_core::local::sent::read(state_dir);
+            let sent = friday_mobile_core::local::sent::read(state_dir);
             if let Some(landed) = view_follow::landed(&batch, &sent, now) {
                 state.drop = None;
                 state.drop_note = Some((view_follow::landed_words(&batch, &landed), now));
@@ -3996,7 +3996,7 @@ fn follow_grab(
 #[cfg(windows)]
 fn look_around(state: &mut State, state_dir: &Path, now: Instant) {
     state.grab.across_read = Some(now);
-    state.grab.across = !pocketdesk_core::local::shared_input::read_status(state_dir)
+    state.grab.across = !friday_mobile_core::local::shared_input::read_status(state_dir)
         .keyboard_on
         .trim()
         .is_empty();
@@ -4719,7 +4719,7 @@ fn publisher(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::view::ViewStats;
+    use friday_mobile_core::local::view::ViewStats;
 
     #[test]
     fn the_window_says_how_the_view_stands() {
@@ -5443,7 +5443,7 @@ mod tests {
         let mut state = State::default();
         state
             .cursor
-            .apply(pocketdesk_core::protocol::cursor::CursorMessage::Mode { separate: true });
+            .apply(friday_mobile_core::protocol::cursor::CursorMessage::Mode { separate: true });
         ask_with(&dir, &mut state, wanted(), Some(false)).unwrap();
         assert!(!state.cursor.separate);
         let _ = std::fs::remove_dir_all(&dir);
@@ -5457,7 +5457,7 @@ mod tests {
     /// mode also repairs an ask that was lost.
     #[test]
     fn a_redial_resets_the_window_and_the_places_are_asked_for_again() {
-        use pocketdesk_core::protocol::cursor::CursorShape;
+        use friday_mobile_core::protocol::cursor::CursorShape;
         let mut state = State::default();
         let shape = CursorShape::new(2, 2, 0, 0, vec![5; 16]).unwrap();
         assert!(take_cursor_message(
@@ -5902,9 +5902,9 @@ mod tests {
         follow_grab(&mut state, &dir, &ctx, true, true);
         assert_eq!(asks(), before + 1, "not asked again each pass");
         // Shared input has the keyboard across: the server's hook has it.
-        pocketdesk_core::local::shared_input::write_status(
+        friday_mobile_core::local::shared_input::write_status(
             &dir,
-            &pocketdesk_core::local::shared_input::StatusFile {
+            &friday_mobile_core::local::shared_input::StatusFile {
                 keyboard_on: "laptop".into(),
                 ..Default::default()
             },
@@ -6884,7 +6884,7 @@ mod tests {
         }
         let _remove = Remove(dir.clone());
         let listener = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
-        let token = [4u8; pocketdesk_core::local::cast::TOKEN_LEN];
+        let token = [4u8; friday_mobile_core::local::cast::TOKEN_LEN];
         wire::write(
             &dir,
             &ViewFile {
@@ -6892,7 +6892,7 @@ mod tests {
                 device_id: "desk".into(),
                 name: "Desk".into(),
                 port: listener.local_addr().unwrap().port(),
-                token: pocketdesk_core::local::cast::token_hex(&token),
+                token: friday_mobile_core::local::cast::token_hex(&token),
             },
         )
         .unwrap();
@@ -6951,7 +6951,7 @@ mod tests {
                 device_id: "desk".into(),
                 name: "Desk".into(),
                 port: listener.local_addr().unwrap().port(),
-                token: pocketdesk_core::local::cast::token_hex(&token),
+                token: friday_mobile_core::local::cast::token_hex(&token),
             },
         )
         .unwrap();
@@ -6997,7 +6997,7 @@ mod tests {
                 device_id: "desk".into(),
                 name: "Desk".into(),
                 port,
-                token: pocketdesk_core::local::cast::token_hex(&[5u8; 32]),
+                token: friday_mobile_core::local::cast::token_hex(&[5u8; 32]),
             },
         )
         .unwrap();
@@ -7055,7 +7055,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let listener = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
-        let token = [3u8; pocketdesk_core::local::cast::TOKEN_LEN];
+        let token = [3u8; friday_mobile_core::local::cast::TOKEN_LEN];
         wire::write(
             &dir,
             &ViewFile {
@@ -7063,7 +7063,7 @@ mod tests {
                 device_id: "desk".into(),
                 name: "Desk".into(),
                 port: listener.local_addr().unwrap().port(),
-                token: pocketdesk_core::local::cast::token_hex(&token),
+                token: friday_mobile_core::local::cast::token_hex(&token),
             },
         )
         .unwrap();
@@ -8178,7 +8178,7 @@ mod tests {
             device_id: "desk".into(),
             name: "Desk".into(),
             port: listener.local_addr().unwrap().port(),
-            token: pocketdesk_core::local::cast::token_hex(&token),
+            token: friday_mobile_core::local::cast::token_hex(&token),
         };
         // The first window's file names another view: never joined here.
         wire::write(&dir, &file(50, [6u8; 32])).unwrap();
@@ -8599,7 +8599,7 @@ mod tests {
                 device_id: "desk".into(),
                 name: "Desk".into(),
                 port: listener.local_addr().unwrap().port(),
-                token: pocketdesk_core::local::cast::token_hex(&token),
+                token: friday_mobile_core::local::cast::token_hex(&token),
             },
         )
         .unwrap();

@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::permissions::DevicePermissions;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::permissions::DevicePermissions;
 use serde_json::json;
 
 use crate::state;
-use pocketdesk_core::local::approval::Verdict;
-use pocketdesk_core::local::pin as local_pin;
+use friday_mobile_core::local::approval::Verdict;
+use friday_mobile_core::local::pin as local_pin;
 
 // PIN pairing (KDE Connect parity, R3 Tier-2 #11b).
 //
@@ -114,7 +114,7 @@ fn profile_for(
     let file = cli.or(live.filter(|_| matches_pending))?;
     let name = file.profile.as_deref()?;
     let dir = state::state_dir().ok()?;
-    pocketdesk_core::local::permission_profiles::get(&dir, name).map(|p| p.permissions)
+    friday_mobile_core::local::permission_profiles::get(&dir, name).map(|p| p.permissions)
 }
 
 /// The permissions a pairing sets (M2b), or `None` to leave them: someone
@@ -148,7 +148,7 @@ fn preset_permissions(
         .cloned()
         .unwrap_or_else(DevicePermissions::someone_else);
     preset.set(
-        pocketdesk_core::protocol::permissions::Capability::SharedInput,
+        friday_mobile_core::protocol::permissions::Capability::SharedInput,
         false,
     );
     Some(match current {
@@ -175,7 +175,7 @@ pub fn note_claimed_name(device_id: &str, claimed: &str) {
     let Ok(path) = state::trust_store_path() else {
         return;
     };
-    let Some(name) = pocketdesk_core::protocol::kdeconnect::clean_device_name(claimed) else {
+    let Some(name) = friday_mobile_core::protocol::kdeconnect::clean_device_name(claimed) else {
         return;
     };
     let unchanged = TrustStore::read(&path)
@@ -199,7 +199,7 @@ pub fn note_claimed_version(device_id: &str, claimed: Option<&str>) {
     let Ok(path) = state::trust_store_path() else {
         return;
     };
-    let version = claimed.and_then(pocketdesk_core::version::clean_version);
+    let version = claimed.and_then(friday_mobile_core::version::clean_version);
     let unchanged = TrustStore::read(&path)
         .map(|store| !store.is_trusted(device_id) || store.version(device_id) == version.as_deref())
         .unwrap_or(true);
@@ -231,7 +231,7 @@ pub fn permits(conn_key: &str, packet_type: &str) -> bool {
 /// that cannot be read, is no.
 pub fn allows(
     device_id: &str,
-    capability: pocketdesk_core::protocol::permissions::Capability,
+    capability: friday_mobile_core::protocol::permissions::Capability,
 ) -> bool {
     let Ok(path) = state::trust_store_path() else {
         return false;
@@ -259,7 +259,7 @@ fn kept_link_clipboard_in(store: Option<&TrustStore>, device_id: &str) -> bool {
         !store.is_trusted(device_id)
             || store
                 .permissions(device_id)
-                .allows(pocketdesk_core::protocol::permissions::Capability::Clipboard)
+                .allows(friday_mobile_core::protocol::permissions::Capability::Clipboard)
     })
 }
 
@@ -283,7 +283,7 @@ fn link_permits_in(store: Option<&TrustStore>, device_id: &str, packet_type: &st
 /// [`permits`] against a given store; without one, nothing that needs a
 /// permission is allowed.
 fn permits_in(store: Option<&TrustStore>, device_id: &str, packet_type: &str) -> bool {
-    let Some(capability) = pocketdesk_core::protocol::permissions::capability_for(packet_type)
+    let Some(capability) = friday_mobile_core::protocol::permissions::capability_for(packet_type)
     else {
         return true;
     };
@@ -318,7 +318,7 @@ pub fn session_permissions(
 /// phone names is registered, only once all of that has allowed the
 /// session: an impostor the owner denies must not leave its key bound.
 pub async fn session_gate(
-    claim: pocketdesk_core::streaming::SessionClaim,
+    claim: friday_mobile_core::streaming::SessionClaim,
     pairing_required: bool,
 ) -> Option<DevicePermissions> {
     let dir = state::state_dir().ok()?;
@@ -389,7 +389,7 @@ async fn permissions_gate(
 
 /// Device keys for a v2 session: refused when its connection did not prove
 /// the key bound to the device it claims. Reads only: v2 never binds.
-pub(crate) fn device_keys_refused(claim: &pocketdesk_core::streaming::SessionClaim) -> bool {
+pub(crate) fn device_keys_refused(claim: &friday_mobile_core::streaming::SessionClaim) -> bool {
     let Ok(dir) = state::state_dir() else {
         return true;
     };
@@ -414,7 +414,7 @@ pub(crate) fn device_keys_refused(claim: &pocketdesk_core::streaming::SessionCla
 #[derive(Debug, Default)]
 struct KeyDecision {
     /// Refused, and why.
-    refused: Option<pocketdesk_core::local::device_keys::Refusal>,
+    refused: Option<friday_mobile_core::local::device_keys::Refusal>,
     /// The key the connection proved, as stored (for the log).
     presented: Option<String>,
     /// A LAN key to bind if the session is allowed (first use).
@@ -426,11 +426,11 @@ struct KeyDecision {
 /// Read-only: decide the session's claim against the device key store.
 fn decide_keys_in(
     dir: &std::path::Path,
-    claim: &pocketdesk_core::streaming::SessionClaim,
+    claim: &friday_mobile_core::streaming::SessionClaim,
     paired: bool,
 ) -> KeyDecision {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-    use pocketdesk_core::streaming::PeerKey;
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::streaming::PeerKey;
     // An unpaired device is the pairing gate's to judge; it has no keys.
     let Some(id) = claim.device_id.as_deref().filter(|_| paired) else {
         return KeyDecision::default();
@@ -460,7 +460,7 @@ fn decide_keys_in(
 
 /// A deviceId a connection may go by: short printable text. It keys the
 /// connection's state and appears in logs and notifications.
-pub(crate) use pocketdesk_core::protocol::kdeconnect::valid_device_id;
+pub(crate) use friday_mobile_core::protocol::kdeconnect::valid_device_id;
 
 /// Where a control connection stands (phase B), re-read for every packet so
 /// a pairing, an unpairing or a key change applies at once.
@@ -472,7 +472,7 @@ pub(crate) enum Standing {
     Unpaired,
     /// The device is paired, but the connection did not prove its key: it
     /// may only pair again, with the owner's PIN.
-    WrongKey(pocketdesk_core::local::device_keys::Refusal),
+    WrongKey(friday_mobile_core::local::device_keys::Refusal),
 }
 
 impl Standing {
@@ -497,10 +497,10 @@ impl Standing {
 /// the internet road's rule, never to the LAN's TLS key.
 pub(crate) fn may_act(
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     pairing_required: bool,
 ) -> bool {
-    if let Some(key @ pocketdesk_core::streaming::PeerKey::Iroh(_)) = key {
+    if let Some(key @ friday_mobile_core::streaming::PeerKey::Iroh(_)) = key {
         return internet_standing(device_id, Some(key)).is_ok();
     }
     standing(device_id, key).may_act(pairing_required)
@@ -516,7 +516,7 @@ pub(crate) fn may_act(
 /// not offered, and a computer on it could register its iroh key).
 pub(crate) fn bluetooth_may_act(
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> bool {
     match state::state_dir() {
         Ok(dir) => bluetooth_may_act_in(
@@ -533,12 +533,12 @@ pub(crate) fn bluetooth_may_act(
 fn bluetooth_may_act_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
     computer: bool,
 ) -> bool {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-    let Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) = key else {
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+    let Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) = key else {
         return false;
     };
     paired
@@ -559,7 +559,7 @@ fn bluetooth_may_act_in(
 /// first). Nothing binds by first use here, and no iroh key is registered
 /// from the session's claim: both happen at home.
 pub async fn bluetooth_session_gate(
-    claim: pocketdesk_core::streaming::SessionClaim,
+    claim: friday_mobile_core::streaming::SessionClaim,
 ) -> Option<DevicePermissions> {
     let device_id = claim.device_id.as_deref();
     let recording = device_id.is_some_and(crate::peer_computers::being_recorded);
@@ -604,7 +604,7 @@ pub async fn bluetooth_session_gate(
 fn bluetooth_session_allowed_in(
     dir: &std::path::Path,
     device_id: Option<&str>,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
     computer: bool,
     recording: bool,
@@ -618,18 +618,20 @@ fn bluetooth_session_allowed_in(
 /// The standing of a connection that goes by `device_id` and proved `key`.
 pub(crate) fn standing(
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> Standing {
     match state::state_dir() {
         Ok(dir) => standing_in(&dir, device_id, key, is_paired_device(device_id)),
-        Err(_) => Standing::WrongKey(pocketdesk_core::local::device_keys::Refusal::StoreUnreadable),
+        Err(_) => {
+            Standing::WrongKey(friday_mobile_core::local::device_keys::Refusal::StoreUnreadable)
+        }
     }
 }
 
 fn standing_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
 ) -> Standing {
     match decide_control_identity_in(dir, device_id, key, paired) {
@@ -647,14 +649,14 @@ fn standing_in(
 pub(crate) fn admit_control(
     device_id: &str,
     peer: std::net::SocketAddr,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> Standing {
     let standing = standing(device_id, key);
     if let Standing::WrongKey(refusal) = standing
         && let Ok(dir) = state::state_dir()
     {
         let presented = match key {
-            Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
+            Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
             _ => None,
         };
         report_refusal(&dir, device_id, peer, refusal, presented.as_deref());
@@ -670,15 +672,15 @@ pub(crate) fn admit_control(
 fn decide_control_identity_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
-) -> std::result::Result<(), pocketdesk_core::local::device_keys::Refusal> {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+) -> std::result::Result<(), friday_mobile_core::local::device_keys::Refusal> {
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     if !paired {
         return Ok(());
     }
     let presented = match key {
-        Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
+        Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
         _ => None,
     };
     match device_keys::check(dir, device_id, Slot::Tls, presented.as_deref()) {
@@ -694,26 +696,26 @@ fn decide_control_identity_in(
 /// pairing is required: anyone on the internet can dial it.
 pub(crate) fn internet_standing(
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
-) -> std::result::Result<(), pocketdesk_core::local::device_keys::Refusal> {
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
+) -> std::result::Result<(), friday_mobile_core::local::device_keys::Refusal> {
     match state::state_dir() {
         Ok(dir) => internet_standing_in(&dir, device_id, key, is_paired_device(device_id)),
-        Err(_) => Err(pocketdesk_core::local::device_keys::Refusal::StoreUnreadable),
+        Err(_) => Err(friday_mobile_core::local::device_keys::Refusal::StoreUnreadable),
     }
 }
 
 fn internet_standing_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
-) -> std::result::Result<(), pocketdesk_core::local::device_keys::Refusal> {
-    use pocketdesk_core::local::device_keys::{self, Refusal, Slot, Verdict};
+) -> std::result::Result<(), friday_mobile_core::local::device_keys::Refusal> {
+    use friday_mobile_core::local::device_keys::{self, Refusal, Slot, Verdict};
     if !paired {
         return Err(Refusal::NotRegistered);
     }
     let presented = match key {
-        Some(pocketdesk_core::streaming::PeerKey::Iroh(id)) => Some(id.as_str()),
+        Some(friday_mobile_core::streaming::PeerKey::Iroh(id)) => Some(id.as_str()),
         _ => None,
     };
     match device_keys::check(dir, device_id, Slot::Iroh, presented) {
@@ -732,7 +734,7 @@ fn internet_standing_in(
 /// pairing off, an unpaired device's own key is the one used.
 pub(crate) fn may_transfer(
     device_id: &str,
-    key: &pocketdesk_core::streaming::PeerKey,
+    key: &friday_mobile_core::streaming::PeerKey,
 ) -> std::result::Result<(), String> {
     let dir = state::state_dir().map_err(|e| e.to_string())?;
     may_transfer_in(&dir, device_id, key, is_paired_device(device_id))
@@ -741,15 +743,15 @@ pub(crate) fn may_transfer(
 fn may_transfer_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: &pocketdesk_core::streaming::PeerKey,
+    key: &friday_mobile_core::streaming::PeerKey,
     paired: bool,
 ) -> std::result::Result<(), String> {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     let hash = match key {
-        pocketdesk_core::streaming::PeerKey::Tls(hash) => hash,
+        friday_mobile_core::streaming::PeerKey::Tls(hash) => hash,
         // The internet road (2c): the phone's registered iroh key, which its
         // control connection there proved; it admits paired phones only.
-        pocketdesk_core::streaming::PeerKey::Iroh(_) => {
+        friday_mobile_core::streaming::PeerKey::Iroh(_) => {
             return internet_standing_in(dir, device_id, Some(key), paired)
                 .map_err(|refusal| refusal.reason().to_string());
         }
@@ -769,7 +771,7 @@ fn may_transfer_in(
 /// Apply what an allowed session may record. `false` when another session
 /// bound a different key to the device first.
 fn commit_keys_in(dir: &std::path::Path, device_id: &str, keys: &KeyDecision) -> bool {
-    use pocketdesk_core::local::device_keys::{self, Slot};
+    use friday_mobile_core::local::device_keys::{self, Slot};
     if let Some(key) = &keys.bind_tls {
         match device_keys::bind_first(dir, device_id, key) {
             Ok(true) => tracing::info!(device_id, "Bound the device's key on its first session"),
@@ -798,11 +800,11 @@ fn report_refusal(
     dir: &std::path::Path,
     id: &str,
     peer: std::net::SocketAddr,
-    refusal: pocketdesk_core::local::device_keys::Refusal,
+    refusal: friday_mobile_core::local::device_keys::Refusal,
     presented: Option<&str>,
 ) {
-    use pocketdesk_core::local::device_keys::Refusal;
-    let bound = pocketdesk_core::local::device_keys::read(dir)
+    use friday_mobile_core::local::device_keys::Refusal;
+    let bound = friday_mobile_core::local::device_keys::read(dir)
         .ok()
         .and_then(|keys| keys.get(id).cloned());
     tracing::warn!(
@@ -1020,19 +1022,19 @@ fn register_wan_key(device_id: &str, packet: &NetworkPacket, sender: &dyn Device
 fn register_wan_key_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     paired: bool,
     computer: bool,
     endpoint: &str,
 ) -> std::result::Result<(), String> {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     if !paired {
         return Err("not paired".to_string());
     }
     if !computer {
         return Err("only another computer names its key this way".to_string());
     }
-    let Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) = key else {
+    let Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) = key else {
         return Err("only on the home network".to_string());
     };
     match device_keys::check(dir, device_id, Slot::Tls, Some(&hex(hash))) {
@@ -1368,10 +1370,10 @@ async fn handle_pair(conn: &str, packet: &NetworkPacket, sender: &dyn DeviceSend
                             .as_ref()
                             .and_then(crate::peer_computers::WanTarget::parse),
                         state::state_dir(),
-                    ) && let Err(e) = pocketdesk_core::local::device_keys::register(
+                    ) && let Err(e) = friday_mobile_core::local::device_keys::register(
                         &dir,
                         &phone_id,
-                        pocketdesk_core::local::device_keys::Slot::Iroh,
+                        friday_mobile_core::local::device_keys::Slot::Iroh,
                         &target.endpoint_id,
                     ) {
                         tracing::warn!("Could not bind {phone_id}'s internet key: {e}");
@@ -1411,7 +1413,7 @@ async fn handle_pair(conn: &str, packet: &NetworkPacket, sender: &dyn DeviceSend
                             crate::peer_computers::paired_here(
                                 &dir,
                                 &phone_id,
-                                pocketdesk_core::local::pin::now_unix(),
+                                friday_mobile_core::local::pin::now_unix(),
                             );
                         }
                     }
@@ -1476,10 +1478,10 @@ fn nearby_as_phone(nearby: bool, asked_computer: bool) -> Option<&'static str> {
 pub(crate) fn nearby_id_taken_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> Option<String> {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-    let trusted = TrustStore::read(dir.join(pocketdesk_core::local::paths::TRUST_FILE))
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+    let trusted = TrustStore::read(dir.join(friday_mobile_core::local::paths::TRUST_FILE))
         .map(|store| store.is_trusted(device_id))
         // Unreadable: refused, as nothing can be said of the id.
         .unwrap_or(true);
@@ -1488,7 +1490,7 @@ pub(crate) fn nearby_id_taken_in(
             "{device_id} is already paired here (a nearby ask is for a new computer)"
         ));
     }
-    let listed = pocketdesk_core::local::computers::read(dir)
+    let listed = friday_mobile_core::local::computers::read(dir)
         .computers
         .iter()
         .any(|c| c.device_id == device_id);
@@ -1498,7 +1500,7 @@ pub(crate) fn nearby_id_taken_in(
         ));
     }
     let presented = match key {
-        Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
+        Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
         _ => None,
     };
     match device_keys::check(dir, device_id, Slot::Tls, presented.as_deref()) {
@@ -1514,7 +1516,7 @@ pub(crate) fn nearby_id_taken_in(
 fn pairing_keys_in(
     dir: &std::path::Path,
     phone_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     computer: bool,
 ) -> std::result::Result<(), String> {
     if let Some(why) = reused_id_in(dir, phone_id, key, computer) {
@@ -1531,15 +1533,15 @@ fn pairing_keys_in(
 fn reused_id_in(
     dir: &std::path::Path,
     device_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     computer: bool,
 ) -> Option<String> {
-    let file = pocketdesk_core::local::computers::read(dir);
+    let file = friday_mobile_core::local::computers::read(dir);
     if !file.computers.iter().any(|c| c.device_id == device_id) {
         return None;
     }
     let other = match key {
-        Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => {
+        Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => {
             file.listed_with_other_certificate(device_id, &hex(hash))
         }
         _ => true,
@@ -1564,13 +1566,13 @@ fn pairs_both_ways(
     asked: bool,
     cli: Option<&local_pin::FilePin>,
     someone_else: bool,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> bool {
     computer
         && asked
         && !someone_else
         && cli.is_some_and(|cli| cli.mine && cli.grant_secs.is_none() && !cli.someone_else)
-        && matches!(key, Some(pocketdesk_core::streaming::PeerKey::Tls(_)))
+        && matches!(key, Some(friday_mobile_core::streaming::PeerKey::Tls(_)))
 }
 
 /// The computer that paired both ways, as this one lists it in turn: what
@@ -1579,9 +1581,9 @@ fn pairs_both_ways(
 fn listed_back(
     device_id: &str,
     body: &serde_json::Value,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
-) -> Option<pocketdesk_core::local::computers::PeerComputer> {
-    let Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) = key else {
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
+) -> Option<friday_mobile_core::local::computers::PeerComputer> {
+    let Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) = key else {
         return None;
     };
     let facts = serde_json::from_value(body.get("facts")?.clone()).ok()?;
@@ -1600,11 +1602,11 @@ fn listed_back(
 fn owner_paired_in(
     dir: &std::path::Path,
     phone_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
 ) -> std::io::Result<()> {
-    use pocketdesk_core::local::device_keys;
+    use friday_mobile_core::local::device_keys;
     match key {
-        Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => {
+        Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => {
             let tls = hex(hash);
             // The same certificate paired again (perhaps over an address
             // the phone reaches only through the WAN): its keys stand, the
@@ -1629,20 +1631,20 @@ fn owner_paired_in(
 fn guest_may_pair_in(
     dir: &std::path::Path,
     phone_id: &str,
-    key: Option<&pocketdesk_core::streaming::PeerKey>,
+    key: Option<&friday_mobile_core::streaming::PeerKey>,
     already_paired: bool,
 ) -> bool {
-    use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+    use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
     if already_paired {
         let presented = match key {
-            Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
+            Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => Some(hex(hash)),
             _ => None,
         };
         return device_keys::check(dir, phone_id, Slot::Tls, presented.as_deref())
             == Verdict::Matches;
     }
     match key {
-        Some(pocketdesk_core::streaming::PeerKey::Tls(hash)) => {
+        Some(friday_mobile_core::streaming::PeerKey::Tls(hash)) => {
             device_keys::bind_first(dir, phone_id, &hex(hash)).unwrap_or(false)
         }
         // Nothing proved: allowed only while the id holds no key.
@@ -1697,10 +1699,10 @@ mod tests {
     /// (or one bound to this very key) is free.
     #[test]
     fn a_nearby_pairing_takes_no_id_in_use() {
-        use pocketdesk_core::local::computers::{self, ComputerFacts};
-        use pocketdesk_core::local::device_keys;
-        use pocketdesk_core::local::paths::TRUST_FILE;
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::local::computers::{self, ComputerFacts};
+        use friday_mobile_core::local::device_keys;
+        use friday_mobile_core::local::paths::TRUST_FILE;
+        use friday_mobile_core::streaming::PeerKey;
         let dir = std::env::temp_dir().join(format!("pd-nearby-i2b-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
@@ -1757,11 +1759,11 @@ mod tests {
         assert!(store.is_computer("nearby-desk"));
         assert_eq!(
             store.permissions("nearby-desk"),
-            pocketdesk_core::protocol::permissions::DevicePermissions::computer()
+            friday_mobile_core::protocol::permissions::DevicePermissions::computer()
         );
         assert_ne!(
             store.permissions("nearby-desk"),
-            pocketdesk_core::protocol::permissions::DevicePermissions::default()
+            friday_mobile_core::protocol::permissions::DevicePermissions::default()
         );
     }
 
@@ -1771,9 +1773,9 @@ mod tests {
     /// keeps its keys, its iroh key too, and nobody else takes them.
     #[test]
     fn a_listed_computers_id_with_another_key_touches_no_key() {
-        use pocketdesk_core::local::computers::{self, ComputerFacts};
-        use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::local::computers::{self, ComputerFacts};
+        use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+        use friday_mobile_core::streaming::PeerKey;
         let dir = std::env::temp_dir().join(format!("pd-pc1-reused-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
@@ -1835,7 +1837,7 @@ mod tests {
     /// one way.
     #[test]
     fn a_computer_pairs_both_ways_only_when_both_sides_said_so() {
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::streaming::PeerKey;
         let code = |mine, grant_secs, someone_else| local_pin::FilePin {
             profile: None,
             pin: "123456".to_string(),
@@ -1912,7 +1914,7 @@ mod tests {
     /// ask that says nothing that reads lists nothing.
     #[test]
     fn a_computer_paired_both_ways_is_listed_by_what_its_connection_proved() {
-        use pocketdesk_core::streaming::PeerKey;
+        use friday_mobile_core::streaming::PeerKey;
         let body = serde_json::json!({
             "pin": "123456",
             "computer": true,
@@ -1940,7 +1942,7 @@ mod tests {
 
     #[test]
     fn a_pairing_sets_narrow_permissions_for_someone_else_and_new_guests() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let narrow = Some(DevicePermissions::someone_else());
         let mine = DevicePermissions::default();
         // The owner's own phone: as it was.
@@ -2024,7 +2026,7 @@ mod tests {
             "the same digits minted again are new"
         );
     }
-    use pocketdesk_core::streaming::{PeerKey, SessionClaim};
+    use friday_mobile_core::streaming::{PeerKey, SessionClaim};
 
     fn key_dir(name: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!("ll-gatekeys-{name}-{}", std::process::id()));
@@ -2075,7 +2077,7 @@ mod tests {
     /// binds, and no other key passes.
     #[test]
     fn a_bluetooth_session_needs_a_paired_phone_with_its_bound_key() {
-        use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+        use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
         let dir = key_dir("bt-session");
         let phone = PeerKey::Tls([1; 32]);
         let may = |id: Option<&str>,
@@ -2146,7 +2148,7 @@ mod tests {
 
     #[test]
     fn the_internet_road_admits_only_a_paired_phone_with_its_registered_iroh_key() {
-        use pocketdesk_core::local::device_keys::{self, Refusal, Slot};
+        use friday_mobile_core::local::device_keys::{self, Refusal, Slot};
         let dir = key_dir("internet");
         let iroh = PeerKey::Iroh("a".repeat(64));
         // Paired, with only a LAN key: it has never named an iroh key.
@@ -2192,7 +2194,7 @@ mod tests {
         // session opened while it was not, with another key, acted once
         // the real phone paired again; the standing is what decides.
         let wrong =
-            Standing::WrongKey(pocketdesk_core::local::device_keys::Refusal::StoreUnreadable);
+            Standing::WrongKey(friday_mobile_core::local::device_keys::Refusal::StoreUnreadable);
         assert!(Standing::Paired.may_act(true));
         assert!(!Standing::Unpaired.may_act(true));
         assert!(Standing::Unpaired.may_act(false));
@@ -2256,7 +2258,7 @@ mod tests {
 
     #[test]
     fn a_computer_names_its_wan_key_only_at_home_with_its_bound_key() {
-        use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
+        use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
         let dir = key_dir("wan-key");
         let tls = PeerKey::Tls([4; 32]);
         let endpoint = "e".repeat(64);
@@ -2302,7 +2304,7 @@ mod tests {
 
     #[test]
     fn on_the_internet_road_files_move_with_the_registered_iroh_key() {
-        use pocketdesk_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::local::device_keys::{self, Slot};
         let dir = key_dir("transfer-internet");
         let iroh = PeerKey::Iroh("c".repeat(64));
         assert!(
@@ -2332,7 +2334,7 @@ mod tests {
             Ok(())
         );
         assert!(
-            pocketdesk_core::local::device_keys::read(&dir)
+            friday_mobile_core::local::device_keys::read(&dir)
                 .unwrap()
                 .get("phone")
                 .is_none_or(|k| k.tls.is_none() && k.iroh.is_none())
@@ -2351,7 +2353,7 @@ mod tests {
         ));
         owner_paired_in(&dir, "phone", Some(&phone)).unwrap();
         assert_eq!(
-            pocketdesk_core::local::device_keys::read(&dir).unwrap()["phone"]
+            friday_mobile_core::local::device_keys::read(&dir).unwrap()["phone"]
                 .iroh
                 .as_deref(),
             Some("phone-wan")
@@ -2359,7 +2361,7 @@ mod tests {
         // A new certificate is a new phone: its old WAN key goes.
         owner_paired_in(&dir, "phone", Some(&PeerKey::Tls([2; 32]))).unwrap();
         assert_eq!(
-            pocketdesk_core::local::device_keys::read(&dir).unwrap()["phone"].iroh,
+            friday_mobile_core::local::device_keys::read(&dir).unwrap()["phone"].iroh,
             None
         );
     }
@@ -2438,7 +2440,7 @@ mod tests {
             true
         ));
         assert!(
-            !pocketdesk_core::local::device_keys::read(&dir)
+            !friday_mobile_core::local::device_keys::read(&dir)
                 .unwrap()
                 .contains_key("phone"),
             "nothing bound"
@@ -2499,7 +2501,7 @@ forged log line"
         );
         assert!(keys.refused.is_none() && keys.bind_tls.is_some());
         assert!(
-            pocketdesk_core::local::device_keys::read(&dir)
+            friday_mobile_core::local::device_keys::read(&dir)
                 .unwrap()
                 .is_empty()
         );
@@ -2564,7 +2566,7 @@ forged log line"
 
     #[test]
     fn a_link_request_needs_a_computer_trusted_here() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let privacy = crate::plugins::privacy::PRIVACY;
         let mut store = temp_store("link-permits");
         assert!(
@@ -2588,7 +2590,7 @@ forged log line"
 
     #[test]
     fn a_kept_link_takes_the_clipboard_by_the_permission_here() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let mut store = temp_store("kept-link");
         store.trust_device("computer-1").unwrap();
         assert!(
@@ -2614,7 +2616,7 @@ forged log line"
 
     #[test]
     fn a_denied_capability_blocks_its_packets_and_only_those() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let mut store = temp_store("deny");
         store.trust_device("phone-1").unwrap();
         let mut permissions = store.permissions("phone-1");
@@ -2660,7 +2662,7 @@ forged log line"
 
     #[test]
     fn a_stream_gets_its_devices_permissions_and_an_unpaired_one_none() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let mut store = temp_store("session");
         store.trust_device("phone-s").unwrap();
         let mut permissions = store.permissions("phone-s");
@@ -2716,7 +2718,7 @@ forged log line"
     /// or be listed here as always allowed, so nothing slips past the gate.
     #[test]
     fn every_incoming_packet_type_is_mapped_or_deliberately_always_allowed() {
-        use pocketdesk_core::protocol::permissions::capability_for;
+        use friday_mobile_core::protocol::permissions::capability_for;
         const ALWAYS_ALLOWED: &[&str] = &[
             "kdeconnect.identity",
             "kdeconnect.pair",
@@ -2852,7 +2854,7 @@ forged log line"
     /// P9: a profile's permissions for a new phone; never widening one paired.
     #[test]
     fn a_profile_sets_its_permissions_and_never_widens() {
-        use pocketdesk_core::protocol::permissions::Capability;
+        use friday_mobile_core::protocol::permissions::Capability;
         let mut kids = DevicePermissions::someone_else();
         kids.set(Capability::Audio, true);
         assert_eq!(
@@ -2899,8 +2901,8 @@ mod owner_mark_tests {
         fn connection_id(&self) -> &str {
             "owner-mark-test"
         }
-        fn peer_key(&self) -> Option<pocketdesk_core::streaming::PeerKey> {
-            Some(pocketdesk_core::streaming::PeerKey::Tls(self.key))
+        fn peer_key(&self) -> Option<friday_mobile_core::streaming::PeerKey> {
+            Some(friday_mobile_core::streaming::PeerKey::Tls(self.key))
         }
         async fn send_packet(&self, packet: &NetworkPacket) -> Result<()> {
             self.sent.lock().unwrap().push(packet.clone());
@@ -2992,7 +2994,7 @@ mod owner_mark_tests {
         })
         .unwrap();
         for n in 1..=5 {
-            let _ = pocketdesk_core::local::device_keys::clear(&dir, &id(n));
+            let _ = friday_mobile_core::local::device_keys::clear(&dir, &id(n));
         }
     }
 
@@ -3018,9 +3020,9 @@ mod owner_mark_tests {
             s.trust_computer(introducer)
         })
         .unwrap();
-        pocketdesk_core::local::computers::update(&dir, |file| {
+        friday_mobile_core::local::computers::update(&dir, |file| {
             file.computers
-                .push(pocketdesk_core::local::computers::PeerComputer {
+                .push(friday_mobile_core::local::computers::PeerComputer {
                     device_id: introducer.to_string(),
                     name: "Introducer".to_string(),
                     addresses: vec!["192.0.2.40".to_string()],
@@ -3042,9 +3044,9 @@ mod owner_mark_tests {
         let introduce = |phone: &str, key: u8| {
             crate::introductions::mint(
                 introducer,
-                pocketdesk_core::protocol::introductions::Introduction {
+                friday_mobile_core::protocol::introductions::Introduction {
                     request: format!("req-{phone}"),
-                    phone: pocketdesk_core::protocol::introductions::IntroducedPhone {
+                    phone: friday_mobile_core::protocol::introductions::IntroducedPhone {
                         device_id: phone.to_string(),
                         name: "Pixel".to_string(),
                         tls: hex_of(key),
@@ -3113,14 +3115,14 @@ mod owner_mark_tests {
             Ok(())
         })
         .unwrap();
-        pocketdesk_core::local::computers::update(&dir, |file| {
+        friday_mobile_core::local::computers::update(&dir, |file| {
             file.computers.retain(|c| c.device_id != introducer);
             file.introduced.retain(|i| i.computer != introducer);
             file.owed_confirmations.retain(|i| i.computer != introducer);
         })
         .unwrap();
         for n in 1..=4 {
-            let _ = pocketdesk_core::local::device_keys::clear(&dir, &id(n));
+            let _ = friday_mobile_core::local::device_keys::clear(&dir, &id(n));
         }
     }
 

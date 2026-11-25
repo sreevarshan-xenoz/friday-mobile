@@ -37,7 +37,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
 
 /// The longest clipboard text pushed. A phone asking in a session still
 /// gets longer text; a push goes to every phone, so it stays small.
@@ -111,7 +111,7 @@ fn computer_name(device_id: &str) -> String {
     crate::state::state_dir()
         .ok()
         .and_then(|dir| {
-            pocketdesk_core::local::computers::read(&dir)
+            friday_mobile_core::local::computers::read(&dir)
                 .computers
                 .into_iter()
                 .find(|c| c.device_id == device_id)
@@ -342,7 +342,7 @@ pub(crate) fn may_set_clipboard(device_id: &str) -> bool {
         || crate::state::state_dir()
             .ok()
             .and_then(|dir| {
-                pocketdesk_core::local::kdeconnect_devices::permissions(&dir, device_id)
+                friday_mobile_core::local::kdeconnect_devices::permissions(&dir, device_id)
             })
             .is_some_and(|p| p.clipboard)
 }
@@ -753,7 +753,7 @@ pub(crate) fn image_offer_packet(size: u64, key: &str, follows: Option<Follow>) 
     if let Some(follow) = follows {
         body = mark(body, follow);
     }
-    NetworkPacket::new(pocketdesk_core::protocol::clipboard::CLIPBOARD_IMAGE).with_body(body)
+    NetworkPacket::new(friday_mobile_core::protocol::clipboard::CLIPBOARD_IMAGE).with_body(body)
 }
 
 /// The packet a push that follows the mouse or the window sends:
@@ -1292,7 +1292,7 @@ async fn push_image_now(device_id: &str, id: &str, at: u64, follow: Follow) {
     };
     let size = image.png.len() as u64;
     // The other computer takes none larger (N4's limit): none is sent.
-    if size > pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE {
+    if size > friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE {
         tracing::debug!("The clipboard image did not follow to {device_id}: {size} bytes");
         return;
     }
@@ -1353,7 +1353,7 @@ pub(crate) fn told_image(body: &serde_json::Value) -> Option<(String, u64)> {
     let id = image.get("id")?.as_str()?;
     let size = image.get("size")?.as_u64()?;
     let valid = id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit());
-    (valid && size > 0 && size <= pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE)
+    (valid && size > 0 && size <= friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE)
         .then(|| (id.to_ascii_lowercase(), size))
 }
 
@@ -1464,7 +1464,7 @@ pub(crate) fn takes_window_ask(device_id: &str) -> bool {
 fn clipboard_allowed(device_id: &str) -> bool {
     crate::plugins::pair::allows(
         device_id,
-        pocketdesk_core::protocol::permissions::Capability::Clipboard,
+        friday_mobile_core::protocol::permissions::Capability::Clipboard,
     )
 }
 
@@ -1477,13 +1477,13 @@ fn is_paired_computer(device_id: &str) -> bool {
 /// Whether the computer `device_id` controls this one through its window
 /// now: a live session of its shows this screen and takes its input.
 fn controls_here(device_id: &str) -> bool {
-    session_controls(&pocketdesk_core::streaming::sessions::list(), device_id)
+    session_controls(&friday_mobile_core::streaming::sessions::list(), device_id)
 }
 
 /// Whether one of `live` is `device_id`'s, showing the screen and taking
 /// its input.
 fn session_controls(
-    live: &[pocketdesk_core::streaming::sessions::LiveSession],
+    live: &[friday_mobile_core::streaming::sessions::LiveSession],
     device_id: &str,
 ) -> bool {
     live.iter()
@@ -1493,7 +1493,7 @@ fn session_controls(
 /// The packet that asks another computer for its clipboard back (PC3): the
 /// window showing its screen lost the focus. It answers with a push that
 /// follows the window, as [`push_for_window`] sends one.
-pub(crate) const ASK_BACK: &str = pocketdesk_core::protocol::clipboard::CLIPBOARD_VIEW;
+pub(crate) const ASK_BACK: &str = friday_mobile_core::protocol::clipboard::CLIPBOARD_VIEW;
 
 /// How long an answer to [`ask_back`] is awaited.
 const ANSWER_WAIT: Duration = Duration::from_secs(15);
@@ -1669,14 +1669,14 @@ impl ChangeWatch {
     }
 
     fn start_any() -> std::io::Result<Self> {
-        match pocketdesk_core::local::clip_tool::Tool::current() {
-            pocketdesk_core::local::clip_tool::Tool::Wayland => {
+        match friday_mobile_core::local::clip_tool::Tool::current() {
+            friday_mobile_core::local::clip_tool::Tool::Wayland => {
                 Self::start_with("wl-paste", &["--watch", "echo"])
             }
             #[cfg(target_os = "linux")]
-            pocketdesk_core::local::clip_tool::Tool::X11 => Self::start_x11(),
+            friday_mobile_core::local::clip_tool::Tool::X11 => Self::start_x11(),
             #[cfg(not(target_os = "linux"))]
-            pocketdesk_core::local::clip_tool::Tool::X11 => {
+            friday_mobile_core::local::clip_tool::Tool::X11 => {
                 Err(std::io::Error::other("no clipboard watcher here"))
             }
         }
@@ -1910,7 +1910,7 @@ async fn image_now(
     no_text: bool,
     clients: &[Arc<dyn DeviceSender>],
     linked: &[crate::peer_computers::LinkedComputer],
-) -> pocketdesk_core::error::Result<Option<(String, u64)>> {
+) -> friday_mobile_core::error::Result<Option<(String, u64)>> {
     if !no_text {
         return Ok(None);
     }
@@ -2116,7 +2116,7 @@ mod image_note_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::kdeconnect::TcpDeviceSender;
+    use friday_mobile_core::protocol::kdeconnect::TcpDeviceSender;
 
     #[cfg(not(windows))]
     #[tokio::test]
@@ -2487,7 +2487,7 @@ mod tests {
         let offer = image_offer_packet(4096, key, Some(Follow::Mouse));
         assert_eq!(
             offer.packet_type,
-            pocketdesk_core::protocol::clipboard::CLIPBOARD_IMAGE
+            friday_mobile_core::protocol::clipboard::CLIPBOARD_IMAGE
         );
         assert_eq!(offer.body["size"], 4096);
         assert_eq!(offer.body["key"], key);
@@ -2513,7 +2513,7 @@ mod tests {
         assert_eq!(told_image(&told("ab12", 9)), None, "too short");
         assert_eq!(told_image(&told(&"zz".repeat(32), 9)), None, "not hex");
         assert_eq!(told_image(&told(&id, 0)), None, "empty");
-        let max = pocketdesk_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE;
+        let max = friday_mobile_core::protocol::clipboard::MAX_CLIPBOARD_IMAGE;
         assert_eq!(told_image(&told(&id, max + 1)), None, "too large");
         assert_eq!(told_image(&packet("text").body), None, "text");
     }
@@ -2985,7 +2985,7 @@ mod tests {
     /// session of its shows the screen and takes its input.
     #[test]
     fn a_computer_controls_this_one_with_a_screen_session_that_takes_input() {
-        use pocketdesk_core::streaming::sessions::{LiveSession, Streamed};
+        use friday_mobile_core::streaming::sessions::{LiveSession, Streamed};
         let session = |device: &str, video: bool, input: bool| LiveSession {
             id: 1,
             streamed: Streamed {

@@ -4,10 +4,10 @@
 //! desktop app's Messages page. Held to the phone's Texts permission, as
 //! the ask is.
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::phone_action::{PHONE_CONTACTS, parse_contacts};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::phone_action::{PHONE_CONTACTS, parse_contacts};
 
 #[derive(Debug, Default)]
 pub struct PhoneContactsPlugin;
@@ -18,10 +18,10 @@ pub fn prune() {
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
-    let lists = pocketdesk_core::local::phone_contacts::read(&dir);
+    let lists = friday_mobile_core::local::phone_contacts::read(&dir);
     for id in lists.keys() {
         if !crate::plugins::pair::allows(id, Capability::Texts)
-            && let Err(e) = pocketdesk_core::local::phone_contacts::forget(&dir, id)
+            && let Err(e) = friday_mobile_core::local::phone_contacts::forget(&dir, id)
         {
             tracing::warn!("A phone's contacts could not be forgotten: {e}");
         }
@@ -61,11 +61,11 @@ impl Plugin for PhoneContactsPlugin {
         static WRITING: std::sync::Mutex<()> = std::sync::Mutex::new(());
         let kept = tokio::task::spawn_blocking(move || {
             let _one = WRITING.lock().unwrap_or_else(|e| e.into_inner());
-            pocketdesk_core::local::phone_contacts::keep(
+            friday_mobile_core::local::phone_contacts::keep(
                 &dir,
                 &device,
                 contacts,
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
                 &|id| crate::plugins::pair::is_paired_device(id),
             )
         })

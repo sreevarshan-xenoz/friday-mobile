@@ -8,19 +8,19 @@ use crate::notification_monitor::start_notification_monitor;
 use crate::state;
 use crate::v2_multiplexer::handle_v2_session;
 use anyhow::{Context, Result, bail};
-use pocketdesk_core::local::pin as local_pin;
-use pocketdesk_core::protocol::ALPN_V1_STREAM;
-use pocketdesk_core::protocol::connection::ConnectionManager;
-use pocketdesk_core::protocol::kdeconnect::{
+use friday_mobile_core::local::pin as local_pin;
+use friday_mobile_core::protocol::ALPN_V1_STREAM;
+use friday_mobile_core::protocol::connection::ConnectionManager;
+use friday_mobile_core::protocol::kdeconnect::{
     DeviceIdentity, DeviceSender, NetworkPacket, PluginRegistry, TcpDeviceSender, TrustStore,
 };
-use pocketdesk_core::protocol::v2::{ALPN_V2, IdentityPacketV2, V2_MAX_VERSION, V2_MIN_VERSION};
-use pocketdesk_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
-use pocketdesk_core::streaming::QuinnConnection;
-use pocketdesk_core::streaming::input_packet::InputPacket;
-use pocketdesk_core::streaming::latency_probe;
-use pocketdesk_core::streaming::transport::CertManager;
-use pocketdesk_core::tailscale::{DiscoveryEvent, DiscoveryService, TailscaleClient};
+use friday_mobile_core::protocol::v2::{ALPN_V2, IdentityPacketV2, V2_MAX_VERSION, V2_MIN_VERSION};
+use friday_mobile_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
+use friday_mobile_core::streaming::QuinnConnection;
+use friday_mobile_core::streaming::input_packet::InputPacket;
+use friday_mobile_core::streaming::latency_probe;
+use friday_mobile_core::streaming::transport::CertManager;
+use friday_mobile_core::tailscale::{DiscoveryEvent, DiscoveryService, TailscaleClient};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -34,7 +34,7 @@ pub async fn run(config: Config) -> Result<()> {
     let state_dir = state::state_dir()?;
     std::fs::create_dir_all(&state_dir)
         .with_context(|| format!("failed to create {}", state_dir.display()))?;
-    match pocketdesk_core::local::paths::protect_state_dir(&state_dir) {
+    match friday_mobile_core::local::paths::protect_state_dir(&state_dir) {
         Ok(true) => tracing::info!("Made {} owner-only (0700)", state_dir.display()),
         Ok(false) => {}
         // A folder the user chose and does not own, or a filesystem without
@@ -47,16 +47,16 @@ pub async fn run(config: Config) -> Result<()> {
     // T1 review: a second server once stopped at the control port's bind;
     // now that the bind moves past a held port, it is stopped here, before
     // it takes the pid file, `listening.json` or the announcement.
-    if let Some(pid) = pocketdesk_core::local::server::server_pid(&state_dir)
+    if let Some(pid) = friday_mobile_core::local::server::server_pid(&state_dir)
         .filter(|&pid| pid != std::process::id())
-        .filter(|_| pocketdesk_core::local::server::is_running(&state_dir))
+        .filter(|_| friday_mobile_core::local::server::is_running(&state_dir))
     {
         anyhow::bail!("a Pocketdesk server already runs for this state folder (pid {pid})");
     }
     // Named before any portal call on the shared connection, which the
     // portal ties to the first name it hears (KDE spike, 2026-10-31).
     #[cfg(target_os = "linux")]
-    pocketdesk_core::portal_grant::register_app().await;
+    friday_mobile_core::portal_grant::register_app().await;
     let pid_file = state::pid_file_path()?;
     state::write_pid_file(&pid_file)?;
     let _pid_guard = PidFileGuard { path: pid_file };
@@ -82,7 +82,7 @@ pub async fn run(config: Config) -> Result<()> {
     // For the LAN announcement only, which leaves the tailnet's addresses out.
     let Some(local_ips) = unless_stopped(
         &mut shutdown,
-        pocketdesk_core::tailscale::lan::get_local_ips(),
+        friday_mobile_core::tailscale::lan::get_local_ips(),
     )
     .await
     else {
@@ -104,7 +104,7 @@ pub async fn run(config: Config) -> Result<()> {
 
     // This computer's mDNS announcement (roadmap F6), made once the control
     // listener is up.
-    let lan_discovery = pocketdesk_core::tailscale::lan::LanDiscoveryService::new()?;
+    let lan_discovery = friday_mobile_core::tailscale::lan::LanDiscoveryService::new()?;
     let (host_name, host_id) = kde_service
         .identity
         .as_ref()
@@ -147,10 +147,10 @@ pub async fn run(config: Config) -> Result<()> {
         }
     }
     // BG: a pattern, not the screen, in every session.
-    if pocketdesk_core::streaming::test_pattern::wanted() {
+    if friday_mobile_core::streaming::test_pattern::wanted() {
         tracing::warn!(
             "{} is set: sessions show a test pattern, not the screen (a test seam)",
-            pocketdesk_core::streaming::test_pattern::VAR
+            friday_mobile_core::streaming::test_pattern::VAR
         );
     }
     if let Some(list) = std::env::var_os("POCKETDESK_FAIL_ENCODERS") {
@@ -250,12 +250,12 @@ pub async fn run(config: Config) -> Result<()> {
         );
     }
     if let Ok(dir) = crate::state::state_dir() {
-        let listening = pocketdesk_core::local::listening::Listening {
+        let listening = friday_mobile_core::local::listening::Listening {
             pid: std::process::id(),
             control_port,
             configured_port: config.control_port,
         };
-        if let Err(e) = pocketdesk_core::local::listening::write(&dir, &listening) {
+        if let Err(e) = friday_mobile_core::local::listening::write(&dir, &listening) {
             tracing::warn!("Could not record the control port: {e}");
         }
     }
@@ -270,7 +270,7 @@ pub async fn run(config: Config) -> Result<()> {
     // Names turned off: forget the ones already kept, not only new ones.
     if !config.sms_names
         && let Ok(dir) = crate::state::state_dir()
-        && let Err(e) = pocketdesk_core::local::sms::forget_names(&dir, config.sms_keep as usize)
+        && let Err(e) = friday_mobile_core::local::sms::forget_names(&dir, config.sms_keep as usize)
     {
         tracing::warn!("Could not forget the contact names kept with texts: {e}");
     }
@@ -492,14 +492,14 @@ pub async fn run(config: Config) -> Result<()> {
 
     // Input injection channel shared between v1 and v2
     let (input_tx, mut input_rx) =
-        tokio::sync::broadcast::channel::<pocketdesk_core::streaming::SessionInput>(16);
+        tokio::sync::broadcast::channel::<friday_mobile_core::streaming::SessionInput>(16);
     let streaming_config = config.video_quality.to_streaming_config();
     // Read as each session opens its encoder.
-    pocketdesk_core::streaming::keyframes::set_smooth(config.smooth_keyframes);
+    friday_mobile_core::streaming::keyframes::set_smooth(config.smooth_keyframes);
     // Read as each capture starts (Linux's wlroots capture; no effect where
     // the capture has no DMA-BUFs).
     #[cfg(target_os = "linux")]
-    pocketdesk_core::streaming::dmabuf::set_copy(config.capture_copy);
+    friday_mobile_core::streaming::dmabuf::set_copy(config.capture_copy);
     // T10k: phones' casts are handed to the desktop app through one relay.
     let cast_tx = match crate::state::state_dir() {
         Ok(dir) => Some(crate::cast_relay::spawn(dir)),
@@ -779,7 +779,7 @@ pub async fn run(config: Config) -> Result<()> {
                             continue;
                         };
                         tracing::info!("Incoming v1 TCP connection from {}", peer_addr);
-                        if let Err(e) = pocketdesk_core::protocol::connection::keep_alive(&stream) {
+                        if let Err(e) = friday_mobile_core::protocol::connection::keep_alive(&stream) {
                             tracing::debug!("No keepalive on {peer_addr}: {e}");
                         }
                         let identity_packet = kde_service.identity_packet().clone();
@@ -951,16 +951,16 @@ pub async fn run(config: Config) -> Result<()> {
             }
             lan_event = lan_rx.recv() => {
                 match lan_event {
-                    Ok(pocketdesk_core::tailscale::lan::LanEvent::PeerDiscovered(peer)) => {
+                    Ok(friday_mobile_core::tailscale::lan::LanEvent::PeerDiscovered(peer)) => {
                         handle_discovery_event(DiscoveryEvent::PeerDiscovered(peer));
                     }
-                    Ok(pocketdesk_core::tailscale::lan::LanEvent::PeerOffline(name)) => {
+                    Ok(friday_mobile_core::tailscale::lan::LanEvent::PeerOffline(name)) => {
                         handle_discovery_event(DiscoveryEvent::PeerOffline(name));
                     }
-                    Ok(pocketdesk_core::tailscale::lan::LanEvent::DiscoveryError { method, reason }) => {
+                    Ok(friday_mobile_core::tailscale::lan::LanEvent::DiscoveryError { method, reason }) => {
                         handle_discovery_event(DiscoveryEvent::DiscoveryError { method, reason });
                     }
-                    Ok(pocketdesk_core::tailscale::lan::LanEvent::ServiceReady) => {
+                    Ok(friday_mobile_core::tailscale::lan::LanEvent::ServiceReady) => {
                         handle_discovery_event(DiscoveryEvent::ServiceReady);
                     }
                     _ => {}
@@ -996,7 +996,7 @@ pub async fn run(config: Config) -> Result<()> {
 /// [`STOPPING`] on its own road first, since iroh's `Endpoint::close`
 /// carries no reason; then both endpoints close, waited for together.
 async fn close_screen_sessions(quic: &quinn::Endpoint, wan: Option<&iroh::Endpoint>) {
-    pocketdesk_core::streaming::sessions::end_all(STOPPING);
+    friday_mobile_core::streaming::sessions::end_all(STOPPING);
     quic.close(0u32.into(), STOPPING);
     let wan_closed = async {
         if let Some(endpoint) = wan {
@@ -1017,7 +1017,7 @@ struct CloseOnReturn(quinn::Endpoint);
 
 impl Drop for CloseOnReturn {
     fn drop(&mut self) {
-        pocketdesk_core::streaming::sessions::end_all(STOPPING);
+        friday_mobile_core::streaming::sessions::end_all(STOPPING);
         self.0.close(0u32.into(), STOPPING);
     }
 }
@@ -1055,7 +1055,7 @@ async fn unless_stopped<T>(
 /// Tell phones on the network this computer is going away. Taken off the
 /// runtime: an announcement under way holds the lock (P1 review).
 async fn withdraw_announcement(
-    announcement: &Arc<std::sync::Mutex<Option<pocketdesk_core::tailscale::lan::Announcement>>>,
+    announcement: &Arc<std::sync::Mutex<Option<friday_mobile_core::tailscale::lan::Announcement>>>,
 ) {
     let held = announcement.clone();
     let _ = tokio::task::spawn_blocking(move || {
@@ -1312,7 +1312,7 @@ impl Claims {
         };
         Self {
             name: field("deviceName"),
-            version: field(pocketdesk_core::version::IDENTITY_FIELD),
+            version: field(friday_mobile_core::version::IDENTITY_FIELD),
         }
     }
 }
@@ -1326,7 +1326,7 @@ async fn bind_control(
     configured: u16,
 ) -> std::io::Result<(tokio::net::TcpListener, u16)> {
     let mut last = None;
-    for port in pocketdesk_core::local::listening::ports_to_try(configured) {
+    for port in friday_mobile_core::local::listening::ports_to_try(configured) {
         match tokio::net::TcpListener::bind((host, port)).await {
             Ok(listener) => return Ok((listener, port)),
             Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => last = Some(e),
@@ -1453,7 +1453,7 @@ async fn refuse_plain(mut stream: TcpStream) {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let mut sink = [0u8; 1024];
     let _ = timeout(Duration::from_secs(1), stream.read(&mut sink)).await;
-    let refusal = format!("{}\n", pocketdesk_core::protocol::HANDSHAKE_TLS_REQUIRED);
+    let refusal = format!("{}\n", friday_mobile_core::protocol::HANDSHAKE_TLS_REQUIRED);
     if stream.write_all(refusal.as_bytes()).await.is_err() {
         return;
     }
@@ -1496,7 +1496,7 @@ async fn handle_connection_with_kde(
         session = %session_id,
         peer = ?peer_addr,
         transport = "tcp",
-        proto = %pocketdesk_core::protocol::PROTOCOL_VERSION
+        proto = %friday_mobile_core::protocol::PROTOCOL_VERSION
     );
 
     async move {
@@ -1518,7 +1518,7 @@ async fn handle_connection_with_kde(
             crate::kdeconnect_compat::serve(stream).await;
             return Ok(());
         }
-        if first[0] != pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD {
+        if first[0] != friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD {
             tracing::warn!("Refused a control connection without TLS (an outdated app?)");
             refuse_plain(stream).await;
             return Ok(());
@@ -1531,7 +1531,7 @@ async fn handle_connection_with_kde(
             .get_ref()
             .1
             .peer_certificates()
-            .and_then(pocketdesk_core::streaming::PeerKey::from_tls_certs);
+            .and_then(friday_mobile_core::streaming::PeerKey::from_tls_certs);
         serve_control(
             stream,
             Road::Local {
@@ -1577,10 +1577,10 @@ enum Road {
 struct IrohLink(iroh::endpoint::Connection);
 
 #[async_trait::async_trait]
-impl pocketdesk_core::protocol::kdeconnect::OpenLinkStream for IrohLink {
+impl friday_mobile_core::protocol::kdeconnect::OpenLinkStream for IrohLink {
     async fn open(
         &self,
-    ) -> std::io::Result<Box<dyn pocketdesk_core::protocol::kdeconnect::TransferIo>> {
+    ) -> std::io::Result<Box<dyn friday_mobile_core::protocol::kdeconnect::TransferIo>> {
         let (send, recv) = self.0.open_bi().await.map_err(std::io::Error::other)?;
         // The control stream keeps the default priority, 0.
         let _ = send.set_priority(-1);
@@ -1592,7 +1592,7 @@ impl pocketdesk_core::protocol::kdeconnect::OpenLinkStream for IrohLink {
 /// bidirectional stream on an iroh connection with [`ALPN_CONTROL`] and
 /// runs the same handshake and packets on it as on the TCP channel.
 ///
-/// [`ALPN_CONTROL`]: pocketdesk_core::protocol::ALPN_CONTROL
+/// [`ALPN_CONTROL`]: friday_mobile_core::protocol::ALPN_CONTROL
 pub(crate) async fn handle_internet_control(
     conn: iroh::endpoint::Connection,
     identity_packet: Option<NetworkPacket>,
@@ -1607,18 +1607,18 @@ pub(crate) async fn handle_internet_control(
         id = %uuid::Uuid::new_v4(),
         peer = tracing::field::Empty,
         transport = "iroh",
-        proto = %pocketdesk_core::protocol::PROTOCOL_VERSION
+        proto = %friday_mobile_core::protocol::PROTOCOL_VERSION
     );
     async move {
         tracing::info!("Handling a control connection over the internet");
-        let peer_key = Some(pocketdesk_core::streaming::PeerKey::Iroh(
+        let peer_key = Some(friday_mobile_core::streaming::PeerKey::Iroh(
             conn.remote_id().to_string(),
         ));
         let (send, recv) = timeout(Duration::from_secs(8), conn.accept_bi())
             .await
             .context("control stream timeout")?
             .context("no control stream")?;
-        let link: Arc<dyn pocketdesk_core::protocol::kdeconnect::OpenLinkStream> =
+        let link: Arc<dyn friday_mobile_core::protocol::kdeconnect::OpenLinkStream> =
             Arc::new(IrohLink(conn.clone()));
         let served = serve_control(
             tokio::io::join(recv, send),
@@ -1656,7 +1656,7 @@ pub(crate) async fn handle_internet_control(
 pub(crate) async fn handle_bluetooth_control<S>(
     mut stream: S,
     tls: tokio_rustls::TlsAcceptor,
-    link: Arc<dyn pocketdesk_core::protocol::kdeconnect::OpenLinkStream>,
+    link: Arc<dyn friday_mobile_core::protocol::kdeconnect::OpenLinkStream>,
     identity_packet: Option<NetworkPacket>,
     registry: &Arc<PluginRegistry>,
     hypr_ipc: Option<&HyprlandIpc>,
@@ -1673,7 +1673,7 @@ where
         id = %uuid::Uuid::new_v4(),
         peer = tracing::field::Empty,
         transport = "bluetooth",
-        proto = %pocketdesk_core::protocol::PROTOCOL_VERSION
+        proto = %friday_mobile_core::protocol::PROTOCOL_VERSION
     );
     async move {
         tracing::info!("Handling a control connection over Bluetooth");
@@ -1686,9 +1686,9 @@ where
             tracing::info!("Connection closed by peer before handshake");
             return Ok(());
         }
-        if first[0] != pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD {
+        if first[0] != friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD {
             tracing::warn!("Refused a Bluetooth control connection without TLS");
-            let refusal = format!("{}\n", pocketdesk_core::protocol::HANDSHAKE_TLS_REQUIRED);
+            let refusal = format!("{}\n", friday_mobile_core::protocol::HANDSHAKE_TLS_REQUIRED);
             let _ = stream.write_all(refusal.as_bytes()).await;
             let _ = stream.flush().await;
             let _ = stream.shutdown().await;
@@ -1703,7 +1703,7 @@ where
             .get_ref()
             .1
             .peer_certificates()
-            .and_then(pocketdesk_core::streaming::PeerKey::from_tls_certs);
+            .and_then(friday_mobile_core::streaming::PeerKey::from_tls_certs);
         serve_control(
             stream,
             Road::Bluetooth,
@@ -1736,13 +1736,13 @@ pub(crate) async fn handle_bluetooth_session<S>(
 where
     S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
 {
-    use pocketdesk_core::streaming::byte_stream::{ByteStreamConnection, Role};
+    use friday_mobile_core::streaming::byte_stream::{ByteStreamConnection, Role};
     use tracing::Instrument;
     let conn_span = tracing::info_span!(
         "conn",
         id = %uuid::Uuid::new_v4(),
         transport = "bluetooth",
-        proto = %pocketdesk_core::protocol::PROTOCOL_VERSION
+        proto = %friday_mobile_core::protocol::PROTOCOL_VERSION
     );
     async move {
         tracing::info!("Handling a stream session over Bluetooth");
@@ -1754,7 +1754,7 @@ where
             .get_ref()
             .1
             .peer_certificates()
-            .and_then(pocketdesk_core::streaming::PeerKey::from_tls_certs);
+            .and_then(friday_mobile_core::streaming::PeerKey::from_tls_certs);
         // A Bluetooth link has no address.
         let connection = ByteStreamConnection::new(
             stream,
@@ -1780,9 +1780,9 @@ where
 async fn serve_control<S>(
     stream: S,
     road: Road,
-    link: Option<Arc<dyn pocketdesk_core::protocol::kdeconnect::OpenLinkStream>>,
+    link: Option<Arc<dyn friday_mobile_core::protocol::kdeconnect::OpenLinkStream>>,
     conn: Option<iroh::endpoint::Connection>,
-    peer_key: Option<pocketdesk_core::streaming::PeerKey>,
+    peer_key: Option<friday_mobile_core::streaming::PeerKey>,
     identity_packet: Option<NetworkPacket>,
     registry: &Arc<PluginRegistry>,
     hypr_ipc: Option<&HyprlandIpc>,
@@ -1912,7 +1912,7 @@ where
                 // that is not the paired phone with its iroh key ends here.
                 // Being recorded here as paired both ways (PC1): not yet.
                 let standing = if crate::peer_computers::being_recorded(&device_id) {
-                    Err(pocketdesk_core::local::device_keys::Refusal::NotRegistered)
+                    Err(friday_mobile_core::local::device_keys::Refusal::NotRegistered)
                 } else {
                     crate::plugins::pair::internet_standing(&device_id, peer_key.as_ref())
                 };
@@ -2238,7 +2238,7 @@ where
 {
     use tokio::io::AsyncWriteExt;
     let mut w = writer.lock().await;
-    let refused = format!("{}\n", pocketdesk_core::protocol::HANDSHAKE_REFUSED);
+    let refused = format!("{}\n", friday_mobile_core::protocol::HANDSHAKE_REFUSED);
     let _ = w.write_all(refused.as_bytes()).await;
     let _ = w.flush().await;
     let _ = w.shutdown().await;
@@ -2248,7 +2248,7 @@ where
 /// (BB1): it kept no word of it before, and a phone went on sending what
 /// was dropped.
 async fn tell_not_paired(sender: &dyn DeviceSender) {
-    let packet = NetworkPacket::new(pocketdesk_core::protocol::connection::NOT_PAIRED)
+    let packet = NetworkPacket::new(friday_mobile_core::protocol::connection::NOT_PAIRED)
         .with_body(serde_json::json!({}));
     let _ = sender.send_packet(&packet).await;
 }
@@ -2280,14 +2280,14 @@ pub async fn print_capabilities(json: bool, markdown: bool) -> Result<()> {
     if json && markdown {
         bail!("--json and --markdown are mutually exclusive");
     }
-    let capabilities = pocketdesk_core::capabilities::Capabilities::collect();
+    let capabilities = friday_mobile_core::capabilities::Capabilities::collect();
     if markdown {
         // The generated doc describes the build, not this machine's ffmpeg.
         print!("{}", capabilities.render_markdown());
         return Ok(());
     }
     let capabilities = capabilities.with_sidecar_software_h264(
-        pocketdesk_core::streaming::encoder::describe_sidecar_software_h264(),
+        friday_mobile_core::streaming::encoder::describe_sidecar_software_h264(),
     );
     if json {
         println!("{}", capabilities.render_json());
@@ -2433,7 +2433,7 @@ pub async fn unpair(device_id: Option<String>, json: bool) -> Result<()> {
             store.untrust_device(id)?;
             // Its keys go too, so a phone that pairs again can bind new ones.
             if let Ok(dir) = state::state_dir() {
-                let _ = pocketdesk_core::local::device_keys::clear(&dir, id);
+                let _ = friday_mobile_core::local::device_keys::clear(&dir, id);
             }
         }
         removed = targets;
@@ -2605,7 +2605,7 @@ pub(crate) fn gate(packet: &NetworkPacket, permitted: impl FnOnce() -> bool) -> 
 
 #[cfg(test)]
 mod stop_tests {
-    use pocketdesk_core::streaming::transport::{CertManager, StreamTransportConfig};
+    use friday_mobile_core::streaming::transport::{CertManager, StreamTransportConfig};
 
     /// PC9a: a stopping server closes a live screen session's connection
     /// with "server stopping", which the window dials again after.
@@ -2711,7 +2711,7 @@ mod control_tls_tests {
         let port = held.local_addr().unwrap().port();
         let (_listener, bound) = bind_control("127.0.0.1", port).await.unwrap();
         assert_ne!(bound, port, "held: moved on");
-        let last = port.saturating_add(pocketdesk_core::local::listening::TRIES - 1);
+        let last = port.saturating_add(friday_mobile_core::local::listening::TRIES - 1);
         assert!(bound > port && bound <= last, "{bound} past {port}");
         drop(held);
         let (_again, bound) = bind_control("127.0.0.1", port).await.unwrap();
@@ -2726,7 +2726,7 @@ mod control_tls_tests {
         let tls = tokio_rustls::TlsAcceptor::from(desktop.control_server_config().unwrap());
         tokio::spawn(async move {
             let registry =
-                Arc::new(pocketdesk_core::protocol::kdeconnect::PluginRegistry::default());
+                Arc::new(friday_mobile_core::protocol::kdeconnect::PluginRegistry::default());
             while let Ok((stream, _)) = listener.accept().await {
                 let tls = tls.clone();
                 let registry = registry.clone();
@@ -2768,7 +2768,7 @@ mod control_tls_tests {
             .unwrap();
         assert_eq!(
             first[0],
-            pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD,
+            friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD,
             "this computer opens TLS as the client (KDE's roles), no plain refusal"
         );
     }
@@ -2777,7 +2777,7 @@ mod control_tls_tests {
     pub(super) struct Counting(pub(super) Arc<std::sync::atomic::AtomicUsize>);
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::protocol::kdeconnect::Plugin for Counting {
+    impl friday_mobile_core::protocol::kdeconnect::Plugin for Counting {
         fn name(&self) -> &'static str {
             "counting"
         }
@@ -2790,8 +2790,8 @@ mod control_tls_tests {
         async fn handle_packet(
             &self,
             _packet: &NetworkPacket,
-            _sender: &dyn pocketdesk_core::protocol::kdeconnect::DeviceSender,
-        ) -> pocketdesk_core::error::Result<()> {
+            _sender: &dyn friday_mobile_core::protocol::kdeconnect::DeviceSender,
+        ) -> friday_mobile_core::error::Result<()> {
             self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             Ok(())
         }
@@ -2809,7 +2809,7 @@ mod control_tls_tests {
         let desktop = CertManager::new().unwrap();
         let tls = tokio_rustls::TlsAcceptor::from(desktop.control_server_config().unwrap());
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut registry = pocketdesk_core::protocol::kdeconnect::PluginRegistry::default();
+        let mut registry = friday_mobile_core::protocol::kdeconnect::PluginRegistry::default();
         registry.register(Counting(count.clone()));
         let registry = Arc::new(registry);
         tokio::spawn(async move {
@@ -2836,7 +2836,7 @@ mod control_tls_tests {
     /// Connect as a new phone and send one ping; the dispatch count after.
     async fn ping(addr: std::net::SocketAddr, count: &std::sync::atomic::AtomicUsize) -> usize {
         let phone = CertManager::new().unwrap();
-        let identity = pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(
+        let identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
             format!("gate-test-{}", uuid::Uuid::new_v4()),
             "Gate Test Phone",
         );
@@ -2888,7 +2888,7 @@ mod control_tls_tests {
             .unwrap();
         assert_eq!(
             reply.trim(),
-            pocketdesk_core::protocol::HANDSHAKE_TLS_REQUIRED
+            friday_mobile_core::protocol::HANDSHAKE_TLS_REQUIRED
         );
         let mut rest = String::new();
         let closed = timeout(Duration::from_secs(5), reader.read_line(&mut rest))
@@ -2902,7 +2902,7 @@ mod control_tls_tests {
     async fn a_client_inside_tls_completes_the_handshake() {
         let addr = control_port().await;
         let phone = CertManager::new().unwrap();
-        let identity = pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(
+        let identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
             "control-tls-test-phone",
             "Test Phone",
         );
@@ -3022,7 +3022,7 @@ mod injector_retry_tests {
 #[cfg(test)]
 mod internet_control_tests {
     use super::*;
-    use pocketdesk_core::protocol::ALPN_CONTROL;
+    use friday_mobile_core::protocol::ALPN_CONTROL;
     use tokio::io::AsyncWriteExt;
 
     async fn endpoint(key: iroh::SecretKey) -> iroh::Endpoint {
@@ -3044,8 +3044,8 @@ mod internet_control_tests {
     /// scheduling, not the link's (a CI runner's ping took most of the file).
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn a_transfer_rides_the_link_while_the_control_stream_keeps_answering() {
-        use pocketdesk_core::protocol::kdeconnect::OpenLinkStream;
-        use pocketdesk_core::protocol::transfer::{self, Pace};
+        use friday_mobile_core::protocol::kdeconnect::OpenLinkStream;
+        use friday_mobile_core::protocol::transfer::{self, Pace};
         use tokio::io::AsyncReadExt;
         let _ = rustls::crypto::ring::default_provider().install_default();
         let desktop = endpoint(iroh::SecretKey::generate()).await;
@@ -3141,7 +3141,7 @@ mod internet_control_tests {
     struct CountingPairs(Arc<std::sync::atomic::AtomicUsize>);
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::protocol::kdeconnect::Plugin for CountingPairs {
+    impl friday_mobile_core::protocol::kdeconnect::Plugin for CountingPairs {
         fn name(&self) -> &'static str {
             "counting-pairs"
         }
@@ -3154,8 +3154,8 @@ mod internet_control_tests {
         async fn handle_packet(
             &self,
             _packet: &NetworkPacket,
-            _sender: &dyn pocketdesk_core::protocol::kdeconnect::DeviceSender,
-        ) -> pocketdesk_core::error::Result<()> {
+            _sender: &dyn friday_mobile_core::protocol::kdeconnect::DeviceSender,
+        ) -> friday_mobile_core::error::Result<()> {
             self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             Ok(())
         }
@@ -3189,7 +3189,7 @@ mod internet_control_tests {
                     .await
                     .unwrap();
                 let desktop_identity = Some(
-                    pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(
+                    friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
                         "road-desktop",
                         "Road Desktop",
                     )
@@ -3200,9 +3200,11 @@ mod internet_control_tests {
         };
         let conn = phone.connect(desktop.addr(), ALPN_CONTROL).await.unwrap();
         let (send, recv) = conn.open_bi().await.unwrap();
-        let identity =
-            pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(device_id, "Internet Phone");
-        let shook = pocketdesk_core::protocol::connection::internet_control_handshake(
+        let identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
+            device_id,
+            "Internet Phone",
+        );
+        let shook = friday_mobile_core::protocol::connection::internet_control_handshake(
             tokio::io::join(recv, send),
             "desktop",
             &identity,
@@ -3239,7 +3241,7 @@ mod internet_control_tests {
         })
         .unwrap();
         if let Some(key) = key {
-            use pocketdesk_core::local::device_keys::{self, Slot};
+            use friday_mobile_core::local::device_keys::{self, Slot};
             device_keys::register(&dir, device_id, Slot::Tls, &"1".repeat(64)).unwrap();
             device_keys::register(&dir, device_id, Slot::Iroh, &key.public().to_string()).unwrap();
         }
@@ -3269,7 +3271,7 @@ mod internet_control_tests {
         paired_with_iroh_key(&id, Some(&key));
         let on_road = |key: &iroh::SecretKey| {
             TcpDeviceSender::from_arc(Arc::new(Mutex::new(tokio::io::sink())), id.clone())
-                .with_peer_key(Some(pocketdesk_core::streaming::PeerKey::Iroh(
+                .with_peer_key(Some(friday_mobile_core::streaming::PeerKey::Iroh(
                     key.public().to_string(),
                 )))
         };
@@ -3282,7 +3284,7 @@ mod internet_control_tests {
     #[tokio::test]
     async fn another_key_or_no_registered_key_is_refused_before_the_desktop_names_itself() {
         let _state = crate::state::use_test_dirs();
-        let refused = |outcome: &std::result::Result<usize, String>| matches!(outcome, Err(e) if e.contains(pocketdesk_core::protocol::HANDSHAKE_REFUSED));
+        let refused = |outcome: &std::result::Result<usize, String>| matches!(outcome, Err(e) if e.contains(friday_mobile_core::protocol::HANDSHAKE_REFUSED));
         let id = format!("internet-{}", uuid::Uuid::new_v4().simple());
         paired_with_iroh_key(&id, Some(&iroh::SecretKey::generate()));
         let outcome = send_over_iroh(&id, iroh::SecretKey::generate(), "kdeconnect.ping").await;
@@ -3306,14 +3308,14 @@ mod internet_control_tests {
 #[cfg(test)]
 mod bluetooth_control_tests {
     use super::*;
-    use pocketdesk_core::protocol::kdeconnect::{DeviceSender, OpenLinkStream, TransferIo};
+    use friday_mobile_core::protocol::kdeconnect::{DeviceSender, OpenLinkStream, TransferIo};
     use tokio::io::AsyncWriteExt;
 
     /// Records every packet type the handler dispatches to it.
     struct Seen(Arc<std::sync::Mutex<Vec<String>>>);
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::protocol::kdeconnect::Plugin for Seen {
+    impl friday_mobile_core::protocol::kdeconnect::Plugin for Seen {
         fn name(&self) -> &'static str {
             "seen"
         }
@@ -3332,7 +3334,7 @@ mod bluetooth_control_tests {
             &self,
             packet: &NetworkPacket,
             _sender: &dyn DeviceSender,
-        ) -> pocketdesk_core::error::Result<()> {
+        ) -> friday_mobile_core::error::Result<()> {
             self.0.lock().unwrap().push(packet.packet_type.clone());
             Ok(())
         }
@@ -3368,7 +3370,7 @@ mod bluetooth_control_tests {
 
     /// `device_id` paired here, with `key` bound as its TLS key.
     fn paired_with_tls_key(device_id: &str, key: [u8; 32]) {
-        use pocketdesk_core::local::device_keys::{self, Slot};
+        use friday_mobile_core::local::device_keys::{self, Slot};
         crate::state::assert_test_turn();
         let dir = state::state_dir().unwrap();
         std::fs::create_dir_all(&dir).unwrap();
@@ -3418,7 +3420,7 @@ mod bluetooth_control_tests {
             let link: Arc<dyn OpenLinkStream> = link.clone();
             tokio::spawn(async move {
                 let desktop_identity = Some(
-                    pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(
+                    friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
                         "bt-desktop",
                         "Bluetooth Desktop",
                     )
@@ -3463,7 +3465,7 @@ mod bluetooth_control_tests {
             before_identity.push(line);
         }
         let identity =
-            pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(device_id, "Radio Phone")
+            friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(device_id, "Radio Phone")
                 .as_identity_packet();
         write.write_all(&identity.to_wire().unwrap()).await.unwrap();
         write.flush().await.unwrap();
@@ -3520,7 +3522,7 @@ mod bluetooth_control_tests {
         let dialed = dial(&id, &key_b, "kdeconnect.ping", true).await;
         assert_eq!(
             dialed.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
         assert!(
             dialed.seen.is_empty(),
@@ -3533,7 +3535,7 @@ mod bluetooth_control_tests {
             let dialed = dial(&stranger, &key_b, "kdeconnect.ping", pairing_required).await;
             assert_eq!(
                 dialed.answer.as_deref(),
-                Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED),
+                Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED),
                 "a stranger, pairing_required = {pairing_required}"
             );
             assert!(dialed.seen.is_empty());
@@ -3557,7 +3559,7 @@ mod bluetooth_control_tests {
         let dialed = dial(&id, &phone, "kdeconnect.ping", true).await;
         assert_eq!(
             dialed.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
         assert!(
             dialed.seen.is_empty(),
@@ -3569,7 +3571,7 @@ mod bluetooth_control_tests {
         let again = dial(&id, &phone, "kdeconnect.ping", true).await;
         assert_eq!(
             again.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
     }
 
@@ -3590,7 +3592,7 @@ mod bluetooth_control_tests {
         let dialed = dial(&id, &computer, "kdeconnect.ping", true).await;
         assert_eq!(
             dialed.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
         assert!(
             dialed.seen.is_empty(),
@@ -3613,7 +3615,7 @@ mod bluetooth_control_tests {
         let dialed = dial(&id, &phone, "kdeconnect.ping", true).await;
         assert_eq!(
             dialed.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
         assert!(dialed.seen.is_empty());
         assert!(!dialed.link.was_admitted());
@@ -3653,7 +3655,7 @@ mod bluetooth_control_tests {
                 },
                 None,
                 None,
-                Some(pocketdesk_core::streaming::PeerKey::Tls(
+                Some(friday_mobile_core::streaming::PeerKey::Tls(
                     phone.cert_fingerprint(),
                 )),
                 None,
@@ -3671,7 +3673,7 @@ mod bluetooth_control_tests {
             .await
             .unwrap();
         let identity =
-            pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(&id, "Radio Phone")
+            friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(&id, "Radio Phone")
                 .as_identity_packet();
         write.write_all(&identity.to_wire().unwrap()).await.unwrap();
         let mut home = Vec::new();
@@ -3695,7 +3697,7 @@ mod bluetooth_control_tests {
         let id = format!("bluetooth-{}", uuid::Uuid::new_v4().simple());
         let phone = CertManager::new().unwrap();
         paired_with_tls_key(&id, phone.cert_fingerprint());
-        let key = pocketdesk_core::streaming::PeerKey::Tls(phone.cert_fingerprint());
+        let key = friday_mobile_core::streaming::PeerKey::Tls(phone.cert_fingerprint());
         for pairing in ["kdeconnect.pair", "kdeconnect.pocketdesk.pair"] {
             let dialed = dial(&id, &phone, pairing, true).await;
             assert_eq!(dialed.admitted_by_radio, Some(true), "admitted");
@@ -3745,7 +3747,7 @@ mod bluetooth_control_tests {
         assert!(dialed.before_identity.is_empty());
         assert_eq!(
             dialed.answer.as_deref(),
-            Some(pocketdesk_core::protocol::HANDSHAKE_REFUSED)
+            Some(friday_mobile_core::protocol::HANDSHAKE_REFUSED)
         );
     }
 
@@ -3773,7 +3775,7 @@ mod bluetooth_control_tests {
             .unwrap();
         assert_eq!(
             reply.trim(),
-            pocketdesk_core::protocol::HANDSHAKE_TLS_REQUIRED
+            friday_mobile_core::protocol::HANDSHAKE_TLS_REQUIRED
         );
         assert!(timeout(Duration::from_secs(5), served).await.is_ok());
     }
@@ -3782,7 +3784,7 @@ mod bluetooth_control_tests {
     /// by Bluetooth, as documented.
     #[test]
     fn bluetooth_info_packet_body() {
-        use pocketdesk_core::protocol::bluetooth::{BluetoothInfo, PACKET, SERVICE_UUID};
+        use friday_mobile_core::protocol::bluetooth::{BluetoothInfo, PACKET, SERVICE_UUID};
         let info = BluetoothInfo {
             address: "00:00:5E:00:53:01".to_string(),
             service: SERVICE_UUID.to_string(),
@@ -3815,7 +3817,7 @@ mod vector_tests {
         let tls = tokio_rustls::TlsAcceptor::from(desktop.control_server_config().unwrap());
         let registry = Arc::new(crate::plugins::register_all());
         let (incoming, outgoing) = crate::plugins::announced(&registry);
-        let mut identity = pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(
+        let mut identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
             "vector-test-computer",
             "Vector Test Computer",
         );
@@ -3879,7 +3881,8 @@ mod vector_tests {
             .expect("TLS");
         let mut reader = BufReader::new(Box::new(stream) as Stream);
         if handshake {
-            let me = pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(id, "Vector Phone");
+            let me =
+                friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(id, "Vector Phone");
             write_line(&mut reader, HANDSHAKE_HELLO).await;
             assert_eq!(
                 read_line(&mut reader, 5000).await.as_deref(),
@@ -3998,7 +4001,7 @@ mod vector_tests {
         // names after its own handshake. The folder is this test's while it
         // holds its turn, so one try each is the test: nothing else unpairs
         // the phone meanwhile.
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
             crate::state::trust_store_path().unwrap(),
             |store| store.trust_device("vector-paired-phone"),
         )
@@ -4032,7 +4035,7 @@ mod vector_tests {
         write_line(&mut stream, &request.to_string()).await;
         let reply = read_line(&mut stream, 1000).await;
         assert!(
-            pocketdesk_core::protocol::kdeconnect::TrustStore::read(
+            friday_mobile_core::protocol::kdeconnect::TrustStore::read(
                 crate::state::trust_store_path().unwrap()
             )
             .unwrap()
@@ -4040,9 +4043,9 @@ mod vector_tests {
             "the phone it names stayed paired"
         );
         // Told it is not paired (BB1), never answered.
-        let answered = reply
-            .as_deref()
-            .is_some_and(|line| !line.contains(pocketdesk_core::protocol::connection::NOT_PAIRED));
+        let answered = reply.as_deref().is_some_and(|line| {
+            !line.contains(friday_mobile_core::protocol::connection::NOT_PAIRED)
+        });
         assert!(
             !answered,
             "still the stranger it opened as: a paired phone's request would be answered"
@@ -4086,7 +4089,7 @@ const ADDRESSES_EVERY: Duration = Duration::from_secs(30);
 /// (absolute) set, the addresses are that file's lines.
 async fn follow_addresses(
     announcement: std::sync::Arc<
-        std::sync::Mutex<Option<pocketdesk_core::tailscale::lan::Announcement>>,
+        std::sync::Mutex<Option<friday_mobile_core::tailscale::lan::Announcement>>,
     >,
 ) {
     let seam = std::env::var_os("POCKETDESK_LOCAL_IPS_FILE").map(std::path::PathBuf::from);
@@ -4094,7 +4097,7 @@ async fn follow_addresses(
         tracing::warn!("POCKETDESK_LOCAL_IPS_FILE is not absolute: not used");
     }
     let seam = seam.filter(|p| p.is_absolute());
-    let mut settle = pocketdesk_core::tailscale::lan::Settle::default();
+    let mut settle = friday_mobile_core::tailscale::lan::Settle::default();
     if let Some(file) = &seam {
         tracing::warn!(
             "POCKETDESK_LOCAL_IPS_FILE is set: {} stands in (a test seam)",
@@ -4112,9 +4115,9 @@ async fn follow_addresses(
                         .collect()
                 })
                 .unwrap_or_default(),
-            None => pocketdesk_core::tailscale::lan::get_local_ips().await,
+            None => friday_mobile_core::tailscale::lan::get_local_ips().await,
         };
-        let reading = pocketdesk_core::tailscale::lan::announced_addresses(ips);
+        let reading = friday_mobile_core::tailscale::lan::announced_addresses(ips);
         let current = announcement
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -4219,7 +4222,7 @@ mod close_tests {
         let mut inner = lines.into_inner();
         let _ = tokio::time::timeout(Duration::from_secs(1), inner.read_to_string(&mut rest)).await;
         assert!(
-            rest.contains(pocketdesk_core::protocol::connection::NOT_PAIRED),
+            rest.contains(friday_mobile_core::protocol::connection::NOT_PAIRED),
             "not_paired said as it closes: {rest}"
         );
     }

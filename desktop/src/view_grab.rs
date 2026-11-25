@@ -29,7 +29,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::input::windows_scan::evdev_from_scan;
+use friday_mobile_core::input::windows_scan::evdev_from_scan;
 
 /// The window's thread silent this long, and the hook is taken out.
 pub const STALL: Duration = Duration::from_secs(1);

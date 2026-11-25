@@ -581,7 +581,7 @@ mod tests {
                 let packets = self.input.take(&events, area, Instant::now());
                 if let Ok(mut moves) = self.moves.lock() {
                     for packet in packets {
-                        if let pocketdesk_core::streaming::InputPacket::MouseMove { dx, dy } =
+                        if let friday_mobile_core::streaming::InputPacket::MouseMove { dx, dy } =
                             packet
                         {
                             moves.0 += 1;

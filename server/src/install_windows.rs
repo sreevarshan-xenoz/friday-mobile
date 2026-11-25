@@ -64,7 +64,7 @@ const PORTS: [(&str, u16, u16, &str); 3] = [
     (
         "TCP",
         1716,
-        1716 + pocketdesk_core::local::listening::TRIES - 1,
+        1716 + friday_mobile_core::local::listening::TRIES - 1,
         "control",
     ),
     ("UDP", 4716, 4716, "media"),
@@ -362,7 +362,7 @@ pub fn install(elevated: bool, firewall: bool) -> Result<()> {
     }
 
     // "Send to phone" in Explorer's Send To menu (T10e).
-    use pocketdesk_core::local::send_menu;
+    use friday_mobile_core::local::send_menu;
     match send_menu::data_dir().and_then(|data| send_menu::install_in(&data, &exe)) {
         Ok(()) => println!("Added \"{}\" to Explorer's Send To menu", send_menu::LABEL),
         Err(e) => println!("\"{}\" was not added to Send To ({e})", send_menu::LABEL),
@@ -413,7 +413,7 @@ pub fn uninstall() -> Result<()> {
         Ok(code) => println!("Firewall rules were not removed (helper exited {code})"),
         Err(e) => println!("Firewall rules were not removed ({e:#})"),
     }
-    use pocketdesk_core::local::send_menu;
+    use friday_mobile_core::local::send_menu;
     if send_menu::data_dir()
         .and_then(|data| send_menu::remove_in(&data))
         .is_ok()

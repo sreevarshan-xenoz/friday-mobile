@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::events::{self, Event, Tail};
+use friday_mobile_core::local::events::{self, Event, Tail};
 use serde_json::Value;
 
 /// The events kept on screen.
@@ -79,10 +79,10 @@ pub struct ActivityView {
     /// The first read after the history, which may repeat its last events.
     fresh: bool,
     /// `received.json`, as last read, for Show in folder.
-    received: Vec<pocketdesk_core::local::received::ReceivedFile>,
+    received: Vec<friday_mobile_core::local::received::ReceivedFile>,
     filter: Filter,
     /// The apps muted here (K2b), read with the events.
-    muted: Vec<pocketdesk_core::local::muted_apps::MutedApp>,
+    muted: Vec<friday_mobile_core::local::muted_apps::MutedApp>,
     /// What the Search box holds (J4).
     search: String,
 }
@@ -138,8 +138,8 @@ impl ActivityView {
         }
         let extra = self.events.len().saturating_sub(KEEP);
         self.events.drain(..extra);
-        self.received = pocketdesk_core::local::received::read(state_dir);
-        self.muted = pocketdesk_core::local::muted_apps::read(state_dir);
+        self.received = friday_mobile_core::local::received::read(state_dir);
+        self.muted = friday_mobile_core::local::muted_apps::read(state_dir);
     }
 
     /// Opened again: read the history afresh (a tail kept while another tab
@@ -234,7 +234,7 @@ impl ActivityView {
                             action = Some(Action::ShowFile(path));
                         }
                         if let Some(app) = notifying_app(event) {
-                            if pocketdesk_core::local::muted_apps::is_muted(muted, app) {
+                            if friday_mobile_core::local::muted_apps::is_muted(muted, app) {
                                 ui.label(RichText::new("muted here").weak());
                             } else if ui
                                 .small_button("Not from this app")
@@ -258,7 +258,7 @@ impl ActivityView {
 /// Home Assistant by name.
 fn phone(event: &Event, devices: &[crate::model::Device]) -> String {
     match &event.device_id {
-        Some(id) if id == pocketdesk_core::local::home_assistant::HOME_ASSISTANT_DEVICE => {
+        Some(id) if id == friday_mobile_core::local::home_assistant::HOME_ASSISTANT_DEVICE => {
             "Home Assistant".to_string()
         }
         Some(id) if devices.iter().any(|d| &d.id == id && d.name.is_some()) => {
@@ -494,7 +494,7 @@ pub fn describe(event: &Event) -> String {
 /// list: the row whose saved path has the event's key.
 fn file_path(
     event: &Event,
-    received: &[pocketdesk_core::local::received::ReceivedFile],
+    received: &[friday_mobile_core::local::received::ReceivedFile],
 ) -> Option<PathBuf> {
     if event.event != "file_received" {
         return None;
@@ -502,14 +502,14 @@ fn file_path(
     let key = text(event, "key")?;
     received
         .iter()
-        .find(|r| pocketdesk_core::local::received::path_key(&r.path) == key)
+        .find(|r| friday_mobile_core::local::received::path_key(&r.path) == key)
         .map(|r| PathBuf::from(&r.path))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::events::EventsDetail;
+    use friday_mobile_core::local::events::EventsDetail;
 
     /// M7 review: the phone's sound alone is not read as viewing.
     #[test]
@@ -670,7 +670,7 @@ mod tests {
         assert!(Filter::Phones.admits("phone_linked"));
         assert!(!Filter::Sessions.admits("away_locked"));
     }
-    use pocketdesk_core::local::received::ReceivedFile;
+    use friday_mobile_core::local::received::ReceivedFile;
     use serde_json::json;
 
     fn event(kind: &str, meta: Value) -> Event {
@@ -842,7 +842,7 @@ mod tests {
             received_unix: at,
             from: "0123456789ab".into(),
         };
-        let key = pocketdesk_core::local::received::path_key;
+        let key = friday_mobile_core::local::received::path_key;
         // Two files of one size at once, and a folder that went on arriving
         // long after it started: each found by its own key.
         let received = vec![

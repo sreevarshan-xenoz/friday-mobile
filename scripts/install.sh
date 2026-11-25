@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Pocketdesk Installer
-# Downloads and installs Pocketdesk (the pocketdesk server) from GitHub Releases.
+# Downloads and installs FRIDAY Mobile (the friday-mobile server) from GitHub Releases.
 #
 # Usage: ./install.sh [VERSION] [OPTIONS]
 #
@@ -43,7 +43,7 @@ set -euo pipefail
 
 REPO_OWNER="sreevarshan-xenoz"
 REPO_NAME="Pocketdesk"
-BINARY_NAME="pocketdesk"
+BINARY_NAME="friday-mobile"
 INSTALL_PREFIX="/usr"
 SERVICE_FILE=""
 CONFIG_DIR="$HOME/.config/${BINARY_NAME}"
@@ -464,7 +464,7 @@ cmd_uninstall() {
   # Remove binary
   if [ -f "${INSTALL_PREFIX}/bin/${BINARY_NAME}" ]; then
     info "Removing binary ${INSTALL_PREFIX}/bin/${BINARY_NAME}..."
-    [ "$DRY_RUN" = true ] || sudo rm -f "${INSTALL_PREFIX}/bin/${BINARY_NAME}" "${INSTALL_PREFIX}/bin/pocketdesk-app" "${INSTALL_PREFIX}/bin/pocketdesk-tray"
+    [ "$DRY_RUN" = true ] || sudo rm -f "${INSTALL_PREFIX}/bin/${BINARY_NAME}" "${INSTALL_PREFIX}/bin/friday-mobile-app" "${INSTALL_PREFIX}/bin/friday-mobile-tray"
   fi
 
   # Remove service file
@@ -1102,9 +1102,9 @@ cmd_install() {
   section "Downloading"
 
   # Build download URL
-  # The release workflow's names: pocketdesk-<tag>-linux-x86_64.tar.gz, with
+  # The release workflow's names: friday-mobile-<tag>-linux-x86_64.tar.gz, with
   # every file's checksum in one SHA256SUMS.
-  local release_dir="pocketdesk-${VERSION}-linux-x86_64"
+  local release_dir="friday-mobile-${VERSION}-linux-x86_64"
   local archive_name="${release_dir}.tar.gz"
   local url="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${VERSION}/${archive_name}"
 
@@ -1231,7 +1231,7 @@ cmd_install() {
   [ "$DRY_RUN" = true ] || sudo install -Dm755 "${extracted_dir}/${BINARY_NAME}" "${INSTALL_PREFIX}/bin/${BINARY_NAME}"
   # The desktop app and its tray, when the release carries them.
   local app
-  for app in pocketdesk-app pocketdesk-tray; do
+  for app in friday-mobile-app friday-mobile-tray; do
     if [ -f "${extracted_dir}/${app}" ]; then
       info "Installing ${app} to ${INSTALL_PREFIX}/bin/${app}..."
       [ "$DRY_RUN" = true ] || sudo install -Dm755 "${extracted_dir}/${app}" "${INSTALL_PREFIX}/bin/${app}"

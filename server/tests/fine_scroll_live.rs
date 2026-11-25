@@ -33,13 +33,13 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::view::{self as wire, Message, Phase};
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::streaming::InputPacket;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::view::{self as wire, Message, Phase};
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::streaming::InputPacket;
 
 /// The window's relay, once its view shows with control.
 fn join(a_state: &Path, b_id: &str) -> TcpStream {
@@ -226,9 +226,9 @@ fn a_touchpads_fine_scroll_lands_in_120ths() {
     for (config, state) in [(&a_config, &a_state), (&b_config, &b_state)] {
         let mut server = pocketdesk(config, state);
         server
-            .env(pocketdesk_core::streaming::test_pattern::VAR, "1")
+            .env(friday_mobile_core::streaming::test_pattern::VAR, "1")
             .env(
-                pocketdesk_server::computer_view::SOUND_SEAM,
+                friday_mobile_server::computer_view::SOUND_SEAM,
                 state.parent().unwrap().join("view-sound.wav"),
             )
             .env("WAYLAND_DISPLAY", &nested)

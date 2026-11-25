@@ -8,7 +8,7 @@ use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::laser_dot::{Overlay, Screen};
+use friday_mobile_core::streaming::laser_dot::{Overlay, Screen};
 
 use crate::laser::{Area, Dot, dot_px};
 
