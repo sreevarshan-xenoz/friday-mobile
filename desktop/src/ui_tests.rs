@@ -2189,7 +2189,7 @@ fn each_permission_group_switch_saves_its_permissions() {
         ),
         (
             "Automation",
-            vec![C::Command, C::Ask, C::Tasks, C::AwayLock],
+            vec![C::Command, C::Ask, C::FridayAsk, C::Tasks, C::AwayLock],
         ),
     ];
     let fixture = Fixture::new();
