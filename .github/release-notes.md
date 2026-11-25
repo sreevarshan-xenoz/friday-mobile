@@ -1,6 +1,6 @@
 FRIDAY Mobile is FRIDAY's phone app: your Linux or Windows computer on your Android phone (its screen, keyboard and mouse, files both ways, the clipboard, notifications and sound), and a place to answer FRIDAY's questions. It is built from [Pocketdesk](https://github.com/sreevarshan-xenoz/Pocketdesk) and goes its own way from here.
 
-**This is a beta**, and the first FRIDAY Mobile release. It carries everything Pocketdesk 0.9.0 does, under FRIDAY's name and look.
+**This is a beta.** It carries everything Pocketdesk 0.9.0 does, under FRIDAY's name and look.
 
 ## Install
 
@@ -14,7 +14,13 @@ FRIDAY Mobile is FRIDAY's phone app: your Linux or Windows computer on your Andr
 
 `SHA256SUMS` lists every file's checksum (`sha256sum -c SHA256SUMS`).
 
-## What's new since Pocketdesk 0.9.0
+## What's new in 0.11.0
+
+- **Ask FRIDAY from your phone:** share text or a link to "Ask FRIDAY", add a question if you like, and FRIDAY on your computer answers on the phone, with Copy. Turn it on for a phone on the computer's Devices page ("Ask FRIDAY", off until you do); it needs FRIDAY installed on the computer. Each ask is a new FRIDAY conversation, apart from the one at your desk. The shared text goes to FRIDAY as quoted context, so FRIDAY asks you before it does anything, and FRIDAY Mobile logs nothing you asked or got back.
+- **Really separate from Pocketdesk:** the Windows installer, the browser extension's helper, the file manager's "Send to phone" and the folder variables (`FRIDAY_MOBILE_STATE_DIR`, `FRIDAY_MOBILE_CONFIG_DIR`) are FRIDAY Mobile's own, so installing or removing one app no longer touches the other. If you set up the browser extension with 0.10.0, run `friday-mobile browser-host --install` again and reload the extension from this release.
+- **FRIDAY's icon on the computer too:** the desktop app's window and tray, the Windows installer and shortcuts, and the Linux menu entry show FRIDAY's aperture-F mark.
+
+## In 0.10.0, the first FRIDAY Mobile release
 
 - **FRIDAY's name and look:** the app is FRIDAY Mobile, with FRIDAY's aperture-F icon and its obsidian and red colours.
 - **Installs beside Pocketdesk:** the Android app is `dev.friday.mobile`, signed with FRIDAY Mobile's own key, and on the computer it has its own commands (`friday-mobile`, `friday-mobile-app`, `friday-mobile-tray`), folders, service and settings. It never reads, moves or deletes Pocketdesk's. Run one of the two servers at a time: they use the same ports.
