@@ -9,12 +9,12 @@ It talks only to the Pocketdesk program on this computer, through the browser's 
 
 ## Set up
 
-1. **Register Pocketdesk with your browsers.** Run `pocketdesk browser-host --install`, or switch on Settings, "Send from the browser", in the Pocketdesk desktop app. This covers Chrome, Chromium, Edge, Brave, Vivaldi and Firefox. On Linux, only browsers whose settings folder exists are registered.
+1. **Register FRIDAY Mobile with your browsers.** Run `friday-mobile browser-host --install`, or switch on Settings, "Send from the browser", in the Pocketdesk desktop app. This covers Chrome, Chromium, Edge, Brave, Vivaldi and Firefox. On Linux, only browsers whose settings folder exists are registered.
 2. **Load this folder as an extension:**
    - **Chromium browsers:** open `chrome://extensions`, turn on Developer mode, choose "Load unpacked" and pick this `browser/` folder. The extension's id is fixed by the `key` in `manifest.json` (`abojofjjnpcmejhdonndlegfaolfkcif`), which is the id the registration allows.
    - **Firefox 121 or later:** open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on…" and pick `manifest.json`. Its id is `pocketdesk@pocketdesk.dev`.
 
-`pocketdesk browser-host --remove` undoes step 1.
+`friday-mobile browser-host --remove` undoes step 1.
 
 ## Which phone
 
@@ -26,6 +26,6 @@ Pocketdesk downloads the image itself, never more than 32 MB. Each phone's Links
 ## Limits
 
 - **Snap and Flatpak browsers** read their hosts from other folders and may not start a program outside their sandbox, so the extension cannot reach Pocketdesk from them. Use a browser installed from your distribution's packages, or the vendor's own package.
-- **If Pocketdesk moves** (a new folder, or a package that installs it elsewhere), run `pocketdesk browser-host --install` again: the registration names the program's path.
+- **If FRIDAY Mobile moves** (a new folder, or a package that installs it elsewhere), run `friday-mobile browser-host --install` again: the registration names the program's path.
 - **Images are downloaded by Pocketdesk, not the browser**, without your cookies: one behind a login or a site's hotlink protection fails with what the site answered (403, say). Save it and send the file instead. Only PNG, JPEG, GIF, WebP, AVIF and BMP are sent, named for their type.
 - **On Windows** the host is registered for every browser it knows, installed or not, so one installed later finds it too.

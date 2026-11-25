@@ -3,7 +3,7 @@
   "name": "Pocketdesk: send to phone",
   "version": "0.4.0",
   "description": "Send the page, a link or an image to your phone through Pocketdesk on this computer, or continue reading there.",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuLOlIAWBSW/7o6fHB2mOvcnNUXOba2Mnqh3mlRbWUjRvDlyqJCM8samhZ9VPkq1MLIEvQRoM2A30e7r9XzQDiCnZ7SLJCpdsEKE2Fh7sCbEqdI73HKnCqYBGgMpweFfseEh+I4Ke7MD09Qi4zod80EwOVebvkL+1n7vSzv/t9pGQ36M8pUTrIqI+rq29HNeNwMdDLaxmM2zEFU5KIBeGG9dXWtakgscZ3+aIMHEhFoM7LX1/MuTzyFOUd/PU887RRIg1wX9SXDpMuTBsutztNDyv5np6KkV2zLXy8/DcoJYVmyORxjcz+NpwpD4K5NgGF+mbPojRLnSV5x3Lx2AtJwIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7YIUUn7eFXPlfmCRnL7ysQq/pVOuxWnvHkg7J+bKlPITHdFqR5uWVvb890RrqfgTYWbs0CpBG0AuoSg8E35ZPdWLV8BDpzRFWRYvRCN9myyOe8AQhgQxADdvABV7AadDujmJ7sNGFlBzWx1z2dJ0iZByIgbGyQVL2/TkU4jAFnkzY8GeNpiMkfc/sUIX0jcGQpy5F3ZVE6VHqS3giZXubIM9LqAyrDJT+wXHgcxr9CnTYIUOlIe3hGyovnvnRgPMP0iwpToUaFTJtzlFOZn74aZG7Yk1shdUi8aV3IU5/0Qq5C7UoK6DkByXef40cbLHZod9HOB+aErLuLTEQ7diwQIDAQAB",
   "icons": {
     "48": "icon-48.png",
     "128": "icon-128.png"
@@ -23,7 +23,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "pocketdesk@pocketdesk.dev",
+      "id": "friday-mobile@friday.dev",
       "strict_min_version": "121.0"
     }
   }

@@ -1,8 +1,8 @@
 // Pocketdesk: send to phone (ecosystem phase 1d). Right-click a page, a
 // link or an image; the request goes to Pocketdesk on this computer through
-// native messaging (`pocketdesk browser-host`), which sends it to the phone.
+// native messaging (`friday-mobile browser-host`), which sends it to the phone.
 
-const HOST = "dev.pocketdesk.host";
+const HOST = "dev.friday.mobile.host";
 
 const MENUS = [
   { id: "page", title: "Send page to phone", contexts: ["page"] },
@@ -106,7 +106,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     // "No such native application …". Anything else: the host ran and failed.
     if (/not found|no such native application/i.test(why)) {
       tell(
-        "Pocketdesk is not set up for this browser: run `pocketdesk browser-host --install` " +
+        "FRIDAY Mobile is not set up for this browser: run `friday-mobile browser-host --install` " +
           '(or Settings, "Send from the browser", in the Pocketdesk app).',
       );
     } else {
