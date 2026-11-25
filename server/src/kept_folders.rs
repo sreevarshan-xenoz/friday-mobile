@@ -465,7 +465,7 @@ fn notify_full(why: &str) {
     let body = format!("A phone's kept folders stopped: {why}.");
     std::thread::spawn(move || {
         crate::platform::notify(
-            "Pocketdesk: kept folders full",
+            "FRIDAY Mobile: kept folders full",
             &body,
             Duration::from_secs(8),
         );

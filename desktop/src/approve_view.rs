@@ -78,7 +78,7 @@ impl ApproveUi {
         ui.label(RichText::new("1. On the phone").strong());
         crate::settings_view::note(
             ui,
-            "Turn on \"Answer my questions\" for the phone on the Devices page here, then \"Approve my computer's requests\" in Pocketdesk's Settings on the phone.",
+            "Turn on \"Answer my questions\" for the phone on the Devices page here, then \"Approve my computer's requests\" in FRIDAY Mobile's Settings on the phone.",
         );
 
         ui.add_space(4.0);
@@ -140,7 +140,7 @@ key {}",
         ui.label(RichText::new("3. Add the line to PAM yourself").strong());
         crate::settings_view::note(
             ui,
-            "As root, add this line to each service you want (Pocketdesk never edits /etc/pam.d): after pam_faillock.so preauth where your distribution has it, and before pam_unix (on Arch and Fedora, sudo includes system-auth, so put \"auth required pam_faillock.so preauth\" and then this line above that include). It is \"sufficient\": when the phone does not approve, the password prompt comes as before; a Yes does not unlock your keyring. Keep a root shell open while you try it; docs/guide.md has the way back.",
+            "As root, add this line to each service you want (FRIDAY Mobile never edits /etc/pam.d): after pam_faillock.so preauth where your distribution has it, and before pam_unix (on Arch and Fedora, sudo includes system-auth, so put \"auth required pam_faillock.so preauth\" and then this line above that include). It is \"sufficient\": when the phone does not approve, the password prompt comes as before; a Yes does not unlock your keyring. Keep a root shell open while you try it; docs/guide.md has the way back.",
         );
         copy_line(ui, &pam_line());
         let services: Vec<String> = PAM_SERVICES

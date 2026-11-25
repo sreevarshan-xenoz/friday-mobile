@@ -711,7 +711,7 @@ impl PairView {
             if ui
                 .button(COPY_LINK)
                 .on_hover_text(
-                    "It holds the code: Pocketdesk sends it to no phone, but copy something else after",
+                    "It holds the code: FRIDAY Mobile sends it to no phone, but copy something else after",
                 )
                 .clicked()
             {

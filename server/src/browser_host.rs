@@ -100,12 +100,12 @@ pub fn handle(
         .unwrap_or("")
         .trim();
     if !running {
-        return err("Pocketdesk is not running on this computer.");
+        return err("FRIDAY Mobile is not running on this computer.");
     }
     let now = friday_mobile_core::local::pin::now_unix();
     let any_phone = crate::local_api::default_phone(state_dir, now, running);
     let Some(phone) = any_phone else {
-        return err("No phone is connected: open Pocketdesk on your phone.");
+        return err("No phone is connected: open FRIDAY Mobile on your phone.");
     };
     match request.get("send").and_then(Value::as_str) {
         Some("link") => {
@@ -143,7 +143,7 @@ pub fn handle(
                 err(out["error"].as_str().unwrap_or("Not sent."))
             }
         }
-        _ => err("Pocketdesk does not know that request."),
+        _ => err("FRIDAY Mobile does not know that request."),
     }
 }
 
@@ -354,7 +354,7 @@ fn fetch_blocking(url: &str) -> Result<Image, String> {
             .to_string();
         let Some(ext) = image_extension(&content_type) else {
             return Err(
-                "that is not a picture Pocketdesk sends (PNG, JPEG, GIF, WebP, AVIF or BMP)"
+                "that is not a picture FRIDAY Mobile sends (PNG, JPEG, GIF, WebP, AVIF or BMP)"
                     .to_string(),
             );
         };
@@ -389,7 +389,7 @@ pub fn run() -> i32 {
             // message as the answer.
             let _ = write_message(
                 &mut stdout,
-                &err(format!("Pocketdesk could not find its folder ({e:#})")),
+                &err(format!("FRIDAY Mobile could not find its folder ({e:#})")),
             );
             return 1;
         }
@@ -415,7 +415,7 @@ pub fn run() -> i32 {
 fn manifest(exe: &Path, firefox: bool) -> Value {
     let mut manifest = json!({
         "name": HOST_NAME,
-        "description": "Pocketdesk: send links and images to your phone",
+        "description": "FRIDAY Mobile: send links and images to your phone",
         "path": exe.display().to_string(),
         "type": "stdio",
     });
@@ -586,14 +586,14 @@ pub fn remove() -> anyhow::Result<()> {
 pub fn run_install(remove_it: bool) -> anyhow::Result<()> {
     if remove_it {
         remove()?;
-        println!("Removed Pocketdesk from the browsers");
+        println!("Removed FRIDAY Mobile from the browsers");
         return Ok(());
     }
     let done = install()?;
     if done.is_empty() {
         println!("No browser found to register with");
     } else {
-        println!("Pocketdesk can now be reached from {}", done.join(", "));
+        println!("FRIDAY Mobile can now be reached from {}", done.join(", "));
     }
     Ok(())
 }

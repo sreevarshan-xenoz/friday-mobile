@@ -472,7 +472,7 @@ fn chosen_folder(chosen: &str, protected: &[PathBuf]) -> Option<PathBuf> {
         });
         if theirs {
             warn_once(&format!(
-                "Received files go to Downloads: the folder chosen for them ({chosen}) is Pocketdesk's own"
+                "Received files go to Downloads: the folder chosen for them ({chosen}) is FRIDAY Mobile's own"
             ));
             return None;
         }
@@ -1537,7 +1537,7 @@ fn received_in(
                 serde_json::json!({ "name": name }),
             );
             Some((
-                "Pocketdesk: file received",
+                "FRIDAY Mobile: file received",
                 format!("{name} ({}) is in {}.", human_size(size), parent_name(path)),
             ))
         }
@@ -1563,7 +1563,7 @@ fn received_in(
             }
             match added {
                 Ok(true) => Some((
-                    "Pocketdesk: folder arriving",
+                    "FRIDAY Mobile: folder arriving",
                     format!("{folder} is arriving in {}.", parent_name(top)),
                 )),
                 Ok(false) => None,

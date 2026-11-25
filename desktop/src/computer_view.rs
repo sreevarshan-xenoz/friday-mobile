@@ -780,11 +780,11 @@ fn switch_keys(shared: &Mutex<State>, state_dir: &Path, device_id: &str, on: boo
             if friday_mobile_core::local::server::is_running(state_dir) {
                 Ok(())
             } else {
-                Err("Pocketdesk's server is not running here".to_string())
+                Err("FRIDAY Mobile's server is not running here".to_string())
             }
         });
     if let Err(e) = saved {
-        eprintln!("Pocketdesk: Keys by position not saved for this computer: {e}");
+        eprintln!("FRIDAY Mobile: Keys by position not saved for this computer: {e}");
         state.saved_note = Some((format!("Not saved: {e}"), Instant::now()));
     }
 }
@@ -1977,7 +1977,7 @@ fn send_view_ask(
                         view_ask(&request_for, hevc, cursor, slot, fit),
                         now_unix(),
                     ) {
-                        eprintln!("Pocketdesk: a computer's screen was not asked for: {e}");
+                        eprintln!("FRIDAY Mobile: a computer's screen was not asked for: {e}");
                     }
                 });
             if let Err(e) = waited {
@@ -4077,7 +4077,7 @@ fn watch(state_dir: &Path, worker: &std::sync::Weak<Mutex<State>>, ctx: &egui::C
             if file.is_none() {
                 if state.asked_at.is_some_and(|at| at.elapsed() >= NO_ANSWER) {
                     state.ended = Some(
-                        "The server did not answer: is Pocketdesk's server running on this computer?"
+                        "The server did not answer: is FRIDAY Mobile's server running on this computer?"
                             .to_string(),
                     );
                     ctx.request_repaint_of(viewport);
@@ -4181,7 +4181,7 @@ fn watch(state_dir: &Path, worker: &std::sync::Weak<Mutex<State>>, ctx: &egui::C
                 Ok(why) if !why.is_empty() => why,
                 Ok(_) => format!("The view of {} ended.", wanted.name),
                 Err(e) => {
-                    format!("Lost the connection to this computer's Pocketdesk server ({e}).")
+                    format!("Lost the connection to this computer's FRIDAY Mobile server ({e}).")
                 }
             };
             state.ended = Some(why);
@@ -7010,7 +7010,7 @@ mod tests {
             std::thread::sleep(Duration::from_millis(20));
         }
         assert!(lock(&view.shared).ended.as_deref().is_some_and(|why| {
-            why.starts_with("Lost the connection to this computer's Pocketdesk server")
+            why.starts_with("Lost the connection to this computer's FRIDAY Mobile server")
         }),);
         let _ = std::fs::remove_dir_all(&dir);
     }

@@ -1963,7 +1963,7 @@ impl PrivacyHost {
             tracing::info!("{words}");
             if let Ok(runtime) = tokio::runtime::Handle::try_current() {
                 runtime.spawn_blocking(move || {
-                    crate::platform::notify("Pocketdesk", &words, Duration::from_secs(10))
+                    crate::platform::notify("FRIDAY Mobile", &words, Duration::from_secs(10))
                 });
             }
         });

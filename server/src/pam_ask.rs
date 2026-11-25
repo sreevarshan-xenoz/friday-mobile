@@ -109,9 +109,9 @@ impl GiveUp {
             GiveUp::NotPinned(why) => format!("no phone key pinned: {why}"),
             GiveUp::NoUser => "no such user".to_string(),
             GiveUp::Off => "Approve with my phone is off".to_string(),
-            GiveUp::ServerDown => "Pocketdesk is not running".to_string(),
+            GiveUp::ServerDown => "FRIDAY Mobile is not running".to_string(),
             GiveUp::NoPhone => "no phone that may approve is linked".to_string(),
-            GiveUp::NotTaken => "Pocketdesk did not take the request".to_string(),
+            GiveUp::NotTaken => "FRIDAY Mobile did not take the request".to_string(),
             GiveUp::NoAnswer => "no answer in time".to_string(),
             GiveUp::Refused(Refusal::Declined) => "declined on the phone".to_string(),
             GiveUp::Refused(r) => format!("the answer was refused ({r:?})"),
@@ -951,7 +951,7 @@ fn pin_child(account: &User, mut approval: Approval) -> Result<PinAnswer, String
         .map(|b| format!("{b:02x}"))
         .collect();
     if !friday_mobile_core::local::server::is_running(&state) {
-        return Err("Pocketdesk is not running for this user".to_string());
+        return Err("FRIDAY Mobile is not running for this user".to_string());
     }
     // Advisory only: which phones turned it on, to ask them.
     let phones: Vec<String> = files::keys(&state)

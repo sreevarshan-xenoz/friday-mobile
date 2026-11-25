@@ -224,7 +224,7 @@ fn frame(shared: &Mutex<State>, ui: &mut egui::Ui, state_dir: &Path) {
         }
         ui.label(
             egui::RichText::new(
-                "Needs \"Typing from the computer's keyboard\" on in Pocketdesk's Settings on the phone, with its Accessibility service and notification access. Never into a password field, nor while the phone is locked; the phone shows that it is being typed on.",
+                "Needs \"Typing from the computer's keyboard\" on in FRIDAY Mobile's Settings on the phone, with its Accessibility service and notification access. Never into a password field, nor while the phone is locked; the phone shows that it is being typed on.",
             )
             .small()
             .weak(),

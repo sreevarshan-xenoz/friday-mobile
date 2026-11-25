@@ -66,7 +66,7 @@ impl Root {
 
     #[zbus(property)]
     fn identity(&self) -> String {
-        "Pocketdesk (the phone's music)".to_string()
+        "FRIDAY Mobile (the phone's music)".to_string()
     }
 
     #[zbus(property)]
@@ -111,7 +111,7 @@ impl Player {
             .map_or(0, |d| d.as_secs());
         if let Err(e) = crate::model::press_phone_media(&self.state_dir, &shown.phone, command, now)
         {
-            eprintln!("Pocketdesk tray: a media press was not sent: {e}");
+            eprintln!("FRIDAY Mobile tray: a media press was not sent: {e}");
             return;
         }
         if command == "playPause" {
@@ -418,7 +418,7 @@ impl Watch {
                     new = true;
                 }
                 Err(e) => {
-                    eprintln!("Pocketdesk tray: no media controls ({e})");
+                    eprintln!("FRIDAY Mobile tray: no media controls ({e})");
                     self.failed = Some(std::time::Instant::now());
                 }
             }

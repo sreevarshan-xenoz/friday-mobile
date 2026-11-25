@@ -337,7 +337,7 @@ pub fn mute(app: &str) {
             tracing::info!("Notifications from {app} muted on this computer");
             (
                 format!("{app} muted"),
-                "Its notifications from phones are not shown here now. Unmute it in Pocketdesk's Settings, under Notifications and texts.".to_string(),
+                "Its notifications from phones are not shown here now. Unmute it in FRIDAY Mobile's Settings, under Notifications and texts.".to_string(),
             )
         }
         Err(e) => {
@@ -403,7 +403,7 @@ pub fn send(answers: &Answerable, answer: Answer) {
                 ),
                 _ => "The answer could not be sent to the phone.".to_string(),
             };
-            crate::platform::notify("Pocketdesk", &why, std::time::Duration::from_secs(5));
+            crate::platform::notify("FRIDAY Mobile", &why, std::time::Duration::from_secs(5));
         }
     }
 }

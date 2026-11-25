@@ -291,7 +291,7 @@ mod tests {
                 _ => "?".into(),
             })
             .collect();
-        assert_eq!(labels, ["Open Pocketdesk", "Pair a phone", "-", "Quit"]);
+        assert_eq!(labels, ["Open FRIDAY Mobile", "Pair a phone", "-", "Quit"]);
         let mut item = item;
         for entry in &menu {
             if let ksni::MenuItem::Standard(s) = entry {

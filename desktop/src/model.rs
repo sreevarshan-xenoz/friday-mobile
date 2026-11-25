@@ -388,7 +388,7 @@ pub fn version_words(version: Option<&str>, hints: bool) -> Option<(String, bool
 /// What a device's release says on hover (item 4).
 pub fn version_hover() -> String {
     format!(
-        "The Pocketdesk release it said it runs as it last connected. This computer runs {}. Each device updates on its own: from its package manager, the installer or the app store it came from.",
+        "The FRIDAY Mobile release it said it runs as it last connected. This computer runs {}. Each device updates on its own: from its package manager, the installer or the app store it came from.",
         friday_mobile_core::version::THIS_VERSION
     )
 }
@@ -448,21 +448,21 @@ pub fn phone_rows<'a>(
                 ring: if !allows(Capability::Ring) {
                     Err("Ring is off for this phone, on the Devices page.")
                 } else if !device.linked {
-                    Err("Not linked now: it rings while it keeps a link to this computer, which a session or \"Ring from the computer\" in Pocketdesk's Settings on the phone opens.")
+                    Err("Not linked now: it rings while it keeps a link to this computer, which a session or \"Ring from the computer\" in FRIDAY Mobile's Settings on the phone opens.")
                 } else {
                     Ok(())
                 },
                 mute: if !allows(Capability::Mute) {
                     Err("Mute is off for this phone, on the Devices page.")
                 } else if !device.linked {
-                    Err("Not linked now: it is muted while it keeps a link to this computer, which \"Let the computer mute this phone\" in Pocketdesk's Settings on the phone opens.")
+                    Err("Not linked now: it is muted while it keeps a link to this computer, which \"Let the computer mute this phone\" in FRIDAY Mobile's Settings on the phone opens.")
                 } else {
                     Ok(())
                 },
                 file: if !allows(Capability::Files) {
                     Err("Files are off for this phone, on the Devices page.")
                 } else if !device.takes_files {
-                    Err("Files reach it in a screen or sound session (not the remote alone), or at home with \"Files from the computer in the background\" on in Pocketdesk's Settings on the phone.")
+                    Err("Files reach it in a screen or sound session (not the remote alone), or at home with \"Files from the computer in the background\" on in FRIDAY Mobile's Settings on the phone.")
                 } else {
                     Ok(())
                 },
@@ -650,7 +650,7 @@ pub const FEATURES: &[Feature] = &[
         what: "Its copies sent here by themselves",
         phone_switch: "Send my copies by themselves",
         permission_name: "Share the clipboard",
-        android: "the Pocketdesk control Accessibility service (Android 13 and later)",
+        android: "the FRIDAY Mobile control Accessibility service (Android 13 and later)",
     },
     Feature {
         key: "files",
@@ -748,14 +748,14 @@ pub const FEATURES: &[Feature] = &[
         what: "Controlling it from its screen here",
         phone_switch: "Let the computer control this phone",
         permission_name: "Show its screen or camera here",
-        android: "the Pocketdesk control Accessibility service",
+        android: "the FRIDAY Mobile control Accessibility service",
     },
     Feature {
         key: "typing",
         what: "Typing on it from this keyboard",
         phone_switch: "Typing from the computer's keyboard",
         permission_name: "Show its screen or camera here",
-        android: "the Pocketdesk control Accessibility service, notification access and its notifications",
+        android: "the FRIDAY Mobile control Accessibility service, notification access and its notifications",
     },
     Feature {
         key: "dial",
@@ -783,7 +783,7 @@ pub const FEATURES: &[Feature] = &[
         what: "Screenshots of it and locking it from here",
         phone_switch: "Let the computer take screenshots and lock this phone",
         permission_name: "Screenshot, lock and open its apps",
-        android: "the Pocketdesk control Accessibility service and notification access",
+        android: "the FRIDAY Mobile control Accessibility service and notification access",
     },
     Feature {
         key: "apps",
@@ -918,7 +918,7 @@ pub fn switch_rows(
                     fixes.push(format!("turn on \"{label}\" in Settings"));
                 }
                 if android == Some(false) && !f.android.is_empty() {
-                    fixes.push(format!("give Pocketdesk {} on the phone", f.android));
+                    fixes.push(format!("give FRIDAY Mobile {} on the phone", f.android));
                 }
             }
             let advice = (!fixes.is_empty()).then(|| {
@@ -978,16 +978,16 @@ pub fn phone_actions_refused(
     };
     Some(match (refused("control"), refused("notifications")) {
         (true, false) => {
-            "\"Pocketdesk control\" is off in its Accessibility settings, so it refuses a screenshot or a lock."
+            "\"FRIDAY Mobile control\" is off in its Accessibility settings, so it refuses a screenshot or a lock."
         }
         (false, true) => {
-            "Pocketdesk's notification access is off in its Android settings, so it refuses a screenshot or a lock."
+            "FRIDAY Mobile's notification access is off in its Android settings, so it refuses a screenshot or a lock."
         }
         (true, true) => {
-            "\"Pocketdesk control\" is off in its Accessibility settings and notification access is off too, so it refuses a screenshot or a lock."
+            "\"FRIDAY Mobile control\" is off in its Accessibility settings and notification access is off too, so it refuses a screenshot or a lock."
         }
         (false, false) => {
-            "Android is not letting Pocketdesk's control service or notification access work on it, so it refuses a screenshot or a lock."
+            "Android is not letting FRIDAY Mobile's control service or notification access work on it, so it refuses a screenshot or a lock."
         }
     })
 }
@@ -1835,7 +1835,7 @@ mod tests {
         let row = |what: &str| rows.iter().find(|r| r.what == what).unwrap().clone();
         assert_eq!(
             row("Its notifications here").advice.as_deref(),
-            Some("Give Pocketdesk notification access on the phone.")
+            Some("Give FRIDAY Mobile notification access on the phone.")
         );
         assert_eq!(
             row("Links from here").advice,
@@ -1877,7 +1877,7 @@ mod tests {
         assert_eq!(
             notifications.advice.as_deref(),
             Some(
-                "Turn on \"Phone notifications\" in Settings, and give Pocketdesk notification access on the phone."
+                "Turn on \"Phone notifications\" in Settings, and give FRIDAY Mobile notification access on the phone."
             )
         );
         // A phone as it comes: every feature off but links, no fault shown.

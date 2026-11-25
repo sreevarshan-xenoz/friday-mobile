@@ -265,7 +265,7 @@ pub fn run_cli(phone: &str, script: &str) -> i32 {
         }
     };
     if !friday_mobile_core::local::server::is_running(&dir) {
-        eprintln!("phone-screen-test: no Pocketdesk server is running");
+        eprintln!("phone-screen-test: no FRIDAY Mobile server is running");
         return exit::NO_SERVER;
     }
     let request = Request {

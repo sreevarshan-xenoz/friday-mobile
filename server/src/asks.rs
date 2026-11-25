@@ -58,7 +58,7 @@ pub fn run_cli(question: &str, wait_secs: u64) -> i32 {
         .and_then(|path| TrustStore::read(path).ok());
     if !anyone_may_answer(store.as_ref()) {
         eprintln!(
-            "pocketdesk ask: no paired phone may answer. Turn on \"Answer my questions\" for your phone in Pocketdesk (Devices)."
+            "pocketdesk ask: no paired phone may answer. Turn on \"Answer my questions\" for your phone in FRIDAY Mobile (Devices)."
         );
         return 2;
     }

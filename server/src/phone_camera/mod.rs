@@ -762,7 +762,7 @@ fn fail(session_id: u64, why: &io::Error) {
     let _ = friday_mobile_core::streaming::sessions::end_session(session_id, CAMERA_FAILED);
     let body = format!("The phone's camera was taken away: {why}.");
     if !crate::platform::notify(
-        "Pocketdesk: the phone's camera stopped",
+        "FRIDAY Mobile: the phone's camera stopped",
         &body,
         Duration::from_secs(10),
     ) {

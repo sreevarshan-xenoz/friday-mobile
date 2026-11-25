@@ -1,4 +1,4 @@
-# Contributing to Pocketdesk
+# Contributing to FRIDAY Mobile
 
 Thank you for your interest in contributing! This document covers the basics.
 
@@ -80,7 +80,7 @@ See the Architecture section of [docs/guide.md](docs/guide.md#architecture), and
 Key components:
 - `core/` — Shared protocol, streaming, and utility code
 - `server/` — the desktop server for Linux and Windows (the `pocketdesk` command, CLI + service)
-- `desktop/` — the Pocketdesk desktop app (egui): status, pairing, devices, sessions, files
+- `desktop/` — the FRIDAY Mobile desktop app (egui): status, pairing, devices, sessions, files
 - `android/` — Native Kotlin Android client + Rust JNI bridge
 
 The server command, its config and state paths, and the Android package id `dev.pocketdesk.android`

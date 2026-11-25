@@ -841,7 +841,7 @@ fn report_refusal(
         ),
     };
     std::thread::spawn(move || {
-        let summary = "Pocketdesk: a session was refused";
+        let summary = "FRIDAY Mobile: a session was refused";
         if !crate::platform::notify(summary, &body, Duration::from_secs(10)) {
             tracing::warn!("{summary} — {body}");
         }
@@ -1681,7 +1681,7 @@ async fn respond_pair_as(sender: &dyn DeviceSender, paired: bool, server_id: &st
 /// daemon would otherwise hold a runtime worker for as long as it hangs.
 fn show_pin_notification(pin: &str) {
     let fallback = pin.to_string();
-    let summary = format!("Pocketdesk pairing PIN: {pin}");
+    let summary = format!("FRIDAY Mobile pairing PIN: {pin}");
     let body = "Enter it on your phone. It expires in 5 minutes.";
     std::thread::spawn(move || {
         if !crate::platform::notify(&summary, body, std::time::Duration::from_secs(300)) {

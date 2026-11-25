@@ -144,7 +144,7 @@ pub fn fitted(body: &serde_json::Value) -> Result<Fitted, String> {
 
 /// The words for an ask that got no answer.
 const NO_ANSWER: &str =
-    "it did not answer (an older Pocketdesk there cannot make a screen to fit a window)";
+    "it did not answer (an older FRIDAY Mobile there cannot make a screen to fit a window)";
 
 /// The ask `action` for the window `slot` (`size` for a `fit`), sent through
 /// `send` and awaited at most [`ANSWER_WAIT`]; the answer's body. A link

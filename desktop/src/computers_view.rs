@@ -237,7 +237,7 @@ pub fn check_link(text: &str, own_id: Option<&str>) -> LinkCheck {
 }
 
 /// What the line under the box says of a text that is not a link.
-pub const NOT_A_LINK: &str = "Not a Pocketdesk link. Copy it on the other computer's Pair page.";
+pub const NOT_A_LINK: &str = "Not a FRIDAY Mobile link. Copy it on the other computer's Pair page.";
 /// Whether a link's certificate fingerprint is whole: 32 bytes in hex, as
 /// the server reads it (its `parse_fingerprint`).
 fn whole_fingerprint(fingerprint: Option<&str>) -> bool {
@@ -1219,7 +1219,7 @@ pub struct Outcome {
 pub const TOO_LATE: &str = "Too late to cancel: the server is already pairing.";
 
 /// What the timeout of a pairing says: the commonest failure.
-pub const NO_ANSWER: &str = "The other computer didn't answer. Check both are on the same network and Pocketdesk is running there.";
+pub const NO_ANSWER: &str = "The other computer didn't answer. Check both are on the same network and FRIDAY Mobile is running there.";
 
 /// The server's `outcome` of a pairing with `name` (`paired`, or `failed:
 /// <why>` in the server's words) as the owner reads it.
@@ -1278,7 +1278,7 @@ pub fn outcome_words(outcome: &str, name: &str) -> Outcome {
     } else if has("refused") {
         failed(
             format!(
-                "{name} turned the connection away: Pocketdesk may not be running there, or a firewall blocks it."
+                "{name} turned the connection away: FRIDAY Mobile may not be running there, or a firewall blocks it."
             ),
             true,
         )

@@ -102,7 +102,7 @@ pub fn checklist(facts: Facts) -> Vec<Step> {
     vec![
         step(
             facts.server_running,
-            "Pocketdesk is running",
+            "FRIDAY Mobile is running",
             "It carries the keyboard and mouse.",
             Some(Fix::StartServer),
         ),
@@ -284,7 +284,7 @@ fn phone_words(standing: &str, name: &str, this_name: &str) -> (String, bool) {
         ),
         PHONE_NEEDS_SERVICE => (
             format!(
-                "Needs the accessibility service on {name}: turn on Pocketdesk control in \
+                "Needs the accessibility service on {name}: turn on FRIDAY Mobile control in \
                  Android's Accessibility settings"
             ),
             true,
@@ -293,8 +293,14 @@ fn phone_words(standing: &str, name: &str, this_name: &str) -> (String, bool) {
             format!("Turn on \"{this_name} may drive {name}\" to use it"),
             false,
         ),
-        PHONE_AWAY | "" => (format!("Not linked now: open Pocketdesk on {name}"), false),
-        _ => (format!("Not linked now: open Pocketdesk on {name}"), false),
+        PHONE_AWAY | "" => (
+            format!("Not linked now: open FRIDAY Mobile on {name}"),
+            false,
+        ),
+        _ => (
+            format!("Not linked now: open FRIDAY Mobile on {name}"),
+            false,
+        ),
     }
 }
 
@@ -307,7 +313,7 @@ fn capture_words(word: &str) -> Option<(&'static str, bool)> {
             false,
         ),
         CAPTURE_NEEDS_PERMISSION => (
-            "Needs permission: your desktop shows a dialog asking to let Pocketdesk capture \
+            "Needs permission: your desktop shows a dialog asking to let FRIDAY Mobile capture \
              input; allow it (turn sharing off and on to be asked again)",
             true,
         ),

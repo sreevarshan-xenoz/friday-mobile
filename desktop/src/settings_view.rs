@@ -770,7 +770,7 @@ pub(crate) fn drawn_here(key: &str) -> bool {
 /// timer is Windows' only (BK10 review M8).
 pub(crate) fn quick_note() -> &'static str {
     if cfg!(windows) {
-        "While the pointer is on another computer, or this one is driven, and keys or moves keep coming: Windows' timer runs finer for Pocketdesk, and this computer sends the other a byte every 50 ms so its Wi-Fi does not doze between keys. Moves go at most every 2 ms, the newest kept. A little more battery while it lasts."
+        "While the pointer is on another computer, or this one is driven, and keys or moves keep coming: Windows' timer runs finer for FRIDAY Mobile, and this computer sends the other a byte every 50 ms so its Wi-Fi does not doze between keys. Moves go at most every 2 ms, the newest kept. A little more battery while it lasts."
     } else {
         "While the pointer is on another computer, or this one is driven, and keys or moves keep coming: this computer sends the other a byte every 50 ms so its Wi-Fi does not doze between keys. Moves go at most every 2 ms, the newest kept. A little more battery while it lasts."
     }
@@ -1497,9 +1497,9 @@ impl SettingsForm {
                         note(
                             ui,
                             if cfg!(windows) {
-                                "For a train, a café with client isolation or a guest Wi-Fi, where a phone cannot reach this computer. You start each link, the phone joins this computer's own Wi-Fi for Pocketdesk only, and it turns itself off. It uses Windows' Mobile Hotspot, which shares this computer's internet connection (so it needs one), and while a link is on it changes the hotspot's name and passphrase and puts them back when it ends. If your own hotspot is on, no link is made."
+                                "For a train, a café with client isolation or a guest Wi-Fi, where a phone cannot reach this computer. You start each link, the phone joins this computer's own Wi-Fi for FRIDAY Mobile only, and it turns itself off. It uses Windows' Mobile Hotspot, which shares this computer's internet connection (so it needs one), and while a link is on it changes the hotspot's name and passphrase and puts them back when it ends. If your own hotspot is on, no link is made."
                             } else {
-                                "For a train, a café with client isolation or a guest Wi-Fi, where a phone cannot reach this computer. You start each link, the phone joins this computer's own Wi-Fi for Pocketdesk only, and it turns itself off. If this computer's Wi-Fi card cannot host its own network beside its connection, this computer's Wi-Fi disconnects while the link is on, and the Pair page says so first. Needs NetworkManager (and dnsmasq for sharing)."
+                                "For a train, a café with client isolation or a guest Wi-Fi, where a phone cannot reach this computer. You start each link, the phone joins this computer's own Wi-Fi for FRIDAY Mobile only, and it turns itself off. If this computer's Wi-Fi card cannot host its own network beside its connection, this computer's Wi-Fi disconnects while the link is on, and the Pair page says so first. Needs NetworkManager (and dnsmasq for sharing)."
                             },
                         );
                     });
@@ -1855,9 +1855,9 @@ impl SettingsForm {
                         note(
                             ui,
                             if cfg!(windows) {
-                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), Windows' media controls show its song with Previous, Play/Pause and Next; a paused one stays five minutes. The keyboard's media keys may then go to the phone instead of a player here. It needs the tray program (friday-mobile-tray) beside the app."
+                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, FRIDAY Mobile in front on the phone, and Media on the Devices page here), Windows' media controls show its song with Previous, Play/Pause and Next; a paused one stays five minutes. The keyboard's media keys may then go to the phone instead of a player here. It needs the tray program (friday-mobile-tray) beside the app."
                             } else {
-                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, Pocketdesk in front on the phone, and Media on the Devices page here), the desktop's media controls (GNOME's and KDE's, playerctl) show its song as a player named \"Pocketdesk (the phone's music)\", with Previous, Play/Pause and Next; a paused one stays five minutes. Media keys your desktop sends to the newest player may then go to the phone. It needs the tray program (friday-mobile-tray) beside the app."
+                                "While a phone in a session plays music and says so (\"My media on the computer\" on in its Settings, FRIDAY Mobile in front on the phone, and Media on the Devices page here), the desktop's media controls (GNOME's and KDE's, playerctl) show its song as a player named \"FRIDAY Mobile (the phone's music)\", with Previous, Play/Pause and Next; a paused one stays five minutes. Media keys your desktop sends to the newest player may then go to the phone. It needs the tray program (friday-mobile-tray) beside the app."
                             },
                         );
                     });
@@ -1880,7 +1880,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "Only into a folder whose \"The computer may add files\" is on in Pocketdesk's Settings on the phone. Nothing on the phone is replaced, removed or renamed: a name taken gets the next free one.",
+                        "Only into a folder whose \"The computer may add files\" is on in FRIDAY Mobile's Settings on the phone. Nothing on the phone is replaced, removed or renamed: a name taken gets the next free one.",
                     );
                 });
                 // Only where it locks: Windows, and Linux since R3 (V5: this
@@ -2127,7 +2127,7 @@ impl SettingsForm {
                     }
                     note(
                         ui,
-                        "A folder that is not there, or is Pocketdesk's own, means the default. Files already kept stay where they are if you change it.",
+                        "A folder that is not there, or is FRIDAY Mobile's own, means the default. Files already kept stay where they are if you change it.",
                     );
                 });
                 row(ui, "kept_folders_cap_gb", |ui| {
@@ -2186,7 +2186,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "Only once the phone allows it: \"Let the computer control this phone\" in Pocketdesk's Settings on the phone.",
+                        "Only once the phone allows it: \"Let the computer control this phone\" in FRIDAY Mobile's Settings on the phone.",
                     );
                 });
                 row(ui, "phone_apps_page", |ui| {
@@ -2196,7 +2196,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "The page shows a linked phone's apps and opens one there, with its screen in a window here. On the phone it needs \"Let the computer open my apps\" on (off by default) and Pocketdesk's control service.",
+                        "The page shows a linked phone's apps and opens one there, with its screen in a window here. On the phone it needs \"Let the computer open my apps\" on (off by default) and FRIDAY Mobile's control service.",
                     );
                 });
                 row(ui, "phone_apps_pin", |ui| {
@@ -2216,7 +2216,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "One file at a time; if the app takes no such file it stays in Downloads and the window says so. On the phone it needs \"Let the computer open my apps\" on (off by default) and Pocketdesk's control service, with the screen shown to this computer. Pocketdesk reads only which app is in front, once, when the file is dropped.",
+                        "One file at a time; if the app takes no such file it stays in Downloads and the window says so. On the phone it needs \"Let the computer open my apps\" on (off by default) and FRIDAY Mobile's control service, with the screen shown to this computer. FRIDAY Mobile reads only which app is in front, once, when the file is dropped.",
                     );
                 });
                 row(ui, "phone_app_windows", |ui| {
@@ -2264,7 +2264,7 @@ impl SettingsForm {
                         );
                         note(
                             ui,
-                            "Use as a camera, on the Overview, asks a phone with \u{201c}Use its camera as a webcam\u{201d} on (Devices); the phone asks its owner in a notification, and while its camera is in use apps here see \u{201c}Pocketdesk camera (phone)\u{201d} (PipeWire; apps that only read /dev/video reach it through pw-v4l2). No kernel module. Stopped from the phone's notification.",
+                            "Use as a camera, on the Overview, asks a phone with \u{201c}Use its camera as a webcam\u{201d} on (Devices); the phone asks its owner in a notification, and while its camera is in use apps here see \u{201c}FRIDAY Mobile camera (phone)\u{201d} (PipeWire; apps that only read /dev/video reach it through pw-v4l2). No kernel module. Stopped from the phone's notification.",
                         );
                     });
                     if e.phone_camera {
@@ -2310,7 +2310,7 @@ impl SettingsForm {
                         );
                         note(
                             ui,
-                            "This computer serves one location source to itself only and tells GeoClue about it over Avahi (needs avahi-daemon running); when an app wants a place, the phone is asked for one fix, at most every ten minutes, and only with \u{201c}Give my computer my location\u{201d} on in Pocketdesk's Settings on the phone. Nothing is stored or logged but the accuracy; each fix shows in Activity. Off by default.",
+                            "This computer serves one location source to itself only and tells GeoClue about it over Avahi (needs avahi-daemon running); when an app wants a place, the phone is asked for one fix, at most every ten minutes, and only with \u{201c}Give my computer my location\u{201d} on in FRIDAY Mobile's Settings on the phone. Nothing is stored or logged but the accuracy; each fix shows in Activity. Off by default.",
                         );
                     });
                     if e.phone_location {
@@ -2358,7 +2358,7 @@ impl SettingsForm {
                 row(ui, "version_hints", |ui| {
                     ui.checkbox(
                         &mut e.version_hints,
-                        "say which to update when a phone or computer runs another Pocketdesk release than this one",
+                        "say which to update when a phone or computer runs another FRIDAY Mobile release than this one",
                     );
                     note(
                         ui,
@@ -2475,7 +2475,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "With \"Alarms on the computer\" on in Pocketdesk's Settings on the phone. On Windows it stays on screen with an alarm's sound until it stops on the phone, its Snooze or Stop is pressed, or ten minutes pass; on Linux it is an urgent notification that stays. Closing it here leaves the phone ringing: its Stop stops both. One that reaches this computer more than two minutes late shows as a plain notification. With this off, every alarm shows as a plain notification. A pause, quiet hours and a muted app hold it as any other.",
+                        "With \"Alarms on the computer\" on in FRIDAY Mobile's Settings on the phone. On Windows it stays on screen with an alarm's sound until it stops on the phone, its Snooze or Stop is pressed, or ten minutes pass; on Linux it is an urgent notification that stays. Closing it here leaves the phone ringing: its Stop stops both. One that reaches this computer more than two minutes late shows as a plain notification. With this off, every alarm shows as a plain notification. A pause, quiet hours and a muted app hold it as any other.",
                     );
                 });
                 row(ui, "toast_answers", |ui| {
@@ -2496,7 +2496,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "With \"Toast only on the computer I'm using\" on in Pocketdesk's Settings on the phone, a phone notification then pops up only on the computer in use; the others log it on their Activity page, and keep it on their Notifications page when they may answer it. Off, or paused, this computer always shows them. Any paired phone with Notifications on may ask, and hears only whether input came in the last two minutes. Windows only: Linux does not say yet.",
+                        "With \"Toast only on the computer I'm using\" on in FRIDAY Mobile's Settings on the phone, a phone notification then pops up only on the computer in use; the others log it on their Activity page, and keep it on their Notifications page when they may answer it. Off, or paused, this computer always shows them. Any paired phone with Notifications on may ask, and hears only whether input came in the last two minutes. Windows only: Linux does not say yet.",
                     );
                 });
                 row(ui, "notification_pictures", |ui| {
@@ -3068,7 +3068,7 @@ impl SettingsForm {
                     );
                     note(
                         ui,
-                        "With that computer's own lock, when the window closes, or Pocketdesk quits with it open, while it shows that computer (not while it reconnects); a notification says when it could not lock. That computer decides: its Devices page needs \u{201c}Lock, sleep, privacy and wake others\u{201d} on for this computer. The window's bar has it too, with \u{201c}Hide what I do there\u{201d}.",
+                        "With that computer's own lock, when the window closes, or FRIDAY Mobile quits with it open, while it shows that computer (not while it reconnects); a notification says when it could not lock. That computer decides: its Devices page needs \u{201c}Lock, sleep, privacy and wake others\u{201d} on for this computer. The window's bar has it too, with \u{201c}Hide what I do there\u{201d}.",
                     );
                 });
                 row(ui, "computer_view_fit", |ui| {

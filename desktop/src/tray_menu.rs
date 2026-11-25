@@ -157,7 +157,7 @@ pub fn menu(rows: &[PhoneRow], devices: &[Device], now_unix: u64) -> Vec<Entry> 
         action,
     };
     let mut entries = vec![
-        item("Open Pocketdesk", Some(TrayAction::Open)),
+        item("Open FRIDAY Mobile", Some(TrayAction::Open)),
         item("Pair a phone", Some(TrayAction::Pair)),
     ];
     if !rows.is_empty() {
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(
             labels(&menu),
             [
-                ("Open Pocketdesk".to_string(), true),
+                ("Open FRIDAY Mobile".to_string(), true),
                 ("Pair a phone".to_string(), true),
                 ("-".to_string(), false),
                 ("Quit".to_string(), true),

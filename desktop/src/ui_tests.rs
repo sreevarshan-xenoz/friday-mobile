@@ -245,7 +245,7 @@ fn devices_show_each_features_sides_and_what_holds_it_back() {
     );
     friday_mobile_core::local::phone_switches::write(fixture.state(), &phones).expect("written");
     let mut app = fixture.open(Some(Tab::Devices));
-    let advice = "Give Pocketdesk notification access on the phone.";
+    let advice = "Give FRIDAY Mobile notification access on the phone.";
     assert!(app.query_by_label(advice).is_none(), "closed until opened");
     app.get_by_label("Features on both sides for Test Phone")
         .click();

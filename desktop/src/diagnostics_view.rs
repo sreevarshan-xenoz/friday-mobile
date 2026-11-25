@@ -193,7 +193,7 @@ fn latency_lines(l: &LatencyReport, now: u64) -> [String; 3] {
             l.samples
         ),
         format!(
-            "Pocketdesk: {} typical, {} at worst (p95).",
+            "FRIDAY Mobile: {} typical, {} at worst (p95).",
             ms(l.ours_p50_us),
             ms(l.ours_p95_us)
         ),
@@ -621,7 +621,7 @@ mod tests {
         assert!(lines[0].contains("over 400 keys and moves"), "{lines:?}");
         assert_eq!(
             lines[1],
-            "Pocketdesk: 0.18 ms typical, 2.35 ms at worst (p95)."
+            "FRIDAY Mobile: 0.18 ms typical, 2.35 ms at worst (p95)."
         );
         assert_eq!(
             lines[2],

@@ -195,7 +195,7 @@ pub fn landed(batch: &DropBatch, sent: &[SentFile], now: Instant) -> Option<Land
             }
             None => out
                 .failed
-                .push("this computer's Pocketdesk server did not take it".to_string()),
+                .push("this computer's FRIDAY Mobile server did not take it".to_string()),
         }
     }
     Some(out)

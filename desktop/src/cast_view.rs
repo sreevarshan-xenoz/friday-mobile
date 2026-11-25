@@ -166,7 +166,7 @@ pub fn share_words(
     match result {
         R::Shared => format!("Shared {name} into {}.", app.unwrap_or("the app in front")),
         R::NoApp => format!(
-            "{name} is in Downloads on the phone: Pocketdesk could not tell which app is in front (or it is not one the phone lists)."
+            "{name} is in Downloads on the phone: FRIDAY Mobile could not tell which app is in front (or it is not one the phone lists)."
         ),
         R::CannotTake => {
             format!("{front} takes no file like {name}, so it is in Downloads on the phone.")
@@ -175,7 +175,7 @@ pub fn share_words(
             "{name} was not shared: \u{201c}Let the computer open my apps\u{201d} is off on the phone. The file itself is in Downloads."
         ),
         R::ControlOff => format!(
-            "{name} was not shared: Pocketdesk control is off on the phone. The file itself is in Downloads."
+            "{name} was not shared: FRIDAY Mobile control is off on the phone. The file itself is in Downloads."
         ),
         R::Locked | R::LockedSecure => {
             format!("{name} was not shared: the phone is locked. The file itself is in Downloads.")
@@ -864,9 +864,9 @@ fn draw(shared: &Arc<Mutex<State>>, ui: &mut egui::Ui, control: bool, keymaps: b
                         ui.colored_label(
                             egui::Color32::LIGHT_GRAY,
                             if window.is_some() {
-                                "This window shows the app only: touch and typing go to it when \u{201c}Separate windows (Shizuku)\u{201d} is on in Pocketdesk's Settings on the phone."
+                                "This window shows the app only: touch and typing go to it when \u{201c}Separate windows (Shizuku)\u{201d} is on in FRIDAY Mobile's Settings on the phone."
                             } else {
-                                "To control the phone from here, turn on \u{201c}Let the computer control this phone\u{201d} in Pocketdesk's Settings on the phone."
+                                "To control the phone from here, turn on \u{201c}Let the computer control this phone\u{201d} in FRIDAY Mobile's Settings on the phone."
                             },
                         );
                     }

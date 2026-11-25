@@ -149,7 +149,7 @@ impl InputOptions {
             let edit = edit.on_hover_text(if cfg!(windows) {
                 "Pressed anywhere, moves the keyboard and mouse on to the next computer; the screen's edge still switches."
             } else {
-                "Pressed while the keyboard and mouse are on another computer, moves them on to the next (or home). Linux gives Pocketdesk no keys at home, so a crossing starts at the screen's edge there."
+                "Pressed while the keyboard and mouse are on another computer, moves them on to the next (or home). Linux gives FRIDAY Mobile no keys at home, so a crossing starts at the screen's edge there."
             });
             if edit.lost_focus() && self.hotkey.trim() != config.shared_input_hotkey {
                 config.shared_input_hotkey = self.hotkey.trim().to_string();

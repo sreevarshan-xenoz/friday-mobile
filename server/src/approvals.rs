@@ -168,9 +168,9 @@ fn prompt_words(
     peer: SocketAddr,
 ) -> (String, String) {
     let kind = if computer { "a computer" } else { "a phone" };
-    let summary = format!("Pocketdesk: {kind} wants to connect");
+    let summary = format!("FRIDAY Mobile: {kind} wants to connect");
     let body = format!(
-        "{} from {}. Allow or deny it in the Pocketdesk app within {APPROVAL_TIMEOUT_SECS} s.",
+        "{} from {}. Allow or deny it in the FRIDAY Mobile app within {APPROVAL_TIMEOUT_SECS} s.",
         name.unwrap_or(device_id),
         peer_label(peer)
     );
@@ -223,13 +223,13 @@ mod tests {
     fn the_prompt_says_computer_or_phone_and_names_the_device() {
         let peer: SocketAddr = PEER.parse().unwrap();
         let (summary, body) = prompt_words(true, Some("Desk computer"), "c0ffee", peer);
-        assert_eq!(summary, "Pocketdesk: a computer wants to connect");
+        assert_eq!(summary, "FRIDAY Mobile: a computer wants to connect");
         assert!(
             body.starts_with("Desk computer from 192.0.2.7:51000."),
             "{body}"
         );
         let (summary, body) = prompt_words(false, None, "a1b2c3", peer);
-        assert_eq!(summary, "Pocketdesk: a phone wants to connect");
+        assert_eq!(summary, "FRIDAY Mobile: a phone wants to connect");
         assert!(body.starts_with("a1b2c3 from 192.0.2.7:51000."), "{body}");
     }
 

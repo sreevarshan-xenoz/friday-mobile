@@ -382,7 +382,7 @@ pub(crate) fn take_from(device: &str, body: &serde_json::Value) {
     if let Some(warning) = warning.filter(|_| !crate::paused::now()) {
         tracing::info!("{warning}");
         std::thread::spawn(move || {
-            crate::platform::notify("Pocketdesk", &warning, Duration::from_secs(15));
+            crate::platform::notify("FRIDAY Mobile", &warning, Duration::from_secs(15));
         });
     }
 }

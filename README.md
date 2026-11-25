@@ -107,7 +107,7 @@ Close calls were checked against each project's documentation on 2026-10-31 (the
 
 - [Before you start](docs/guide.md#before-you-start): which network carries what, trust at first contact, and what the internet path reveals.
 - [Features](docs/guide.md#features), [installing every other way](docs/guide.md#installation), [commands and settings](docs/guide.md#usage), and [architecture](docs/guide.md#architecture): all in the [guide](docs/guide.md).
-- [SECURITY.md](SECURITY.md): read it before using Pocketdesk on a network you do not control.
+- [SECURITY.md](SECURITY.md): read it before using FRIDAY Mobile on a network you do not control.
 - [Privacy policy](docs/privacy.md): no account, no analytics; which public services it uses by default, and how to turn each off.
 - [docs/protocol.md](docs/protocol.md): everything that is sent, and to whom.
 

@@ -315,7 +315,7 @@ mod windows_player {
                         // A cover that will not load leaves the song shown.
                         match thumbnail(&path) {
                             Ok(cover) => updater.SetThumbnail(&cover)?,
-                            Err(e) => eprintln!("Pocketdesk tray: a cover was not shown ({e})"),
+                            Err(e) => eprintln!("FRIDAY Mobile tray: a cover was not shown ({e})"),
                         }
                     }
                     let music = updater.MusicProperties()?;
@@ -370,7 +370,7 @@ mod windows_player {
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_secs());
         if let Err(e) = crate::model::press_phone_media(state_dir, &phone, command, now) {
-            eprintln!("Pocketdesk tray: a media press was not sent: {e}");
+            eprintln!("FRIDAY Mobile tray: a media press was not sent: {e}");
             return None;
         }
         (command == "playPause").then(|| {
@@ -435,7 +435,7 @@ mod windows_player {
                         self.failed = None;
                     }
                     Err(e) => {
-                        eprintln!("Pocketdesk tray: no media controls ({e})");
+                        eprintln!("FRIDAY Mobile tray: no media controls ({e})");
                         self.failed = Some(std::time::Instant::now());
                     }
                 }
@@ -443,7 +443,7 @@ mod windows_player {
             if let Some(player) = &mut self.player
                 && let Err(e) = player.show(shown)
             {
-                eprintln!("Pocketdesk tray: the media controls did not update ({e})");
+                eprintln!("FRIDAY Mobile tray: the media controls did not update ({e})");
                 self.player = None;
                 self.failed = Some(std::time::Instant::now());
             }

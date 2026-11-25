@@ -100,7 +100,7 @@ pub fn ask_open(
 pub fn mode_words(mode: WindowsMode, setting: bool, open: usize) -> String {
     let limit = mode.limit();
     match (limit, setting) {
-        (0, _) => "Apps open on the phone's screen and are shown here. For separate windows, turn on \u{201c}Separate windows (Shizuku)\u{201d} in Pocketdesk's Settings on the phone (it needs Shizuku installed and running there; optional).".into(),
+        (0, _) => "Apps open on the phone's screen and are shown here. For separate windows, turn on \u{201c}Separate windows (Shizuku)\u{201d} in FRIDAY Mobile's Settings on the phone (it needs Shizuku installed and running there; optional).".into(),
         (_, false) => "This phone can open apps in windows of their own; \u{201c}Open phone apps in windows of their own\u{201d} is off in this computer's Settings, so they open on the phone's screen.".into(),
         (n, true) => format!(
             "Apps open in windows of their own ({open} of {n} open): the phone's screen stays as it is."
