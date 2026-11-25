@@ -1,10 +1,10 @@
 # Maintainer: xenoz <https://github.com/sreevarshan-xenoz>
 pkgname=friday-mobile
-pkgver=0.9.0
+pkgver=0.10.0
 pkgrel=1
 pkgdesc="Your Linux or Windows desktop on your Android phone: screen, input, clipboard, files and notifications over LAN, Tailscale or the internet"
 arch=('x86_64')
-url="https://github.com/sreevarshan-xenoz/Pocketdesk"
+url="https://github.com/sreevarshan-xenoz/friday-mobile"
 license=('MIT OR Apache-2.0')
 # The libraries the binaries link to (the .deb's Depends, and namcap's check).
 depends=('ffmpeg' 'glibc' 'hicolor-icon-theme' 'libgcc' 'libpipewire' 'libxcb' 'mesa' 'opus')

@@ -42,7 +42,7 @@ set -euo pipefail
 # ─── Configuration ───────────────────────────────────────────────────────────
 
 REPO_OWNER="sreevarshan-xenoz"
-REPO_NAME="Pocketdesk"
+REPO_NAME="friday-mobile"
 BINARY_NAME="friday-mobile"
 INSTALL_PREFIX="/usr"
 SERVICE_FILE=""
@@ -221,7 +221,7 @@ EXIT CODES
     4    Checksum verification failed
     5    Rollback failed
 
-For more information, see: https://github.com/sreevarshan-xenoz/Pocketdesk
+For more information, see: https://github.com/sreevarshan-xenoz/friday-mobile
 EOF
 }
 
