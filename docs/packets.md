@@ -48,6 +48,8 @@ Each packet is one line of JSON on the control channel (`docs/protocol-spec.md`)
 | `kdeconnect.pocketdesk.file_offer_declined` | yes |  | Files | share |
 | `kdeconnect.pocketdesk.folder_fetch` | yes |  | Browse | share |
 | `kdeconnect.pocketdesk.folder_fetch_reply` |  | yes |  | share |
+| `kdeconnect.pocketdesk.friday_answer` |  | yes |  | friday_ask |
+| `kdeconnect.pocketdesk.friday_ask` | yes |  | FridayAsk | friday_ask |
 | `kdeconnect.pocketdesk.hyprland.event` |  | yes |  | server |
 | `kdeconnect.pocketdesk.hyprland.state` |  | yes |  | server |
 | `kdeconnect.pocketdesk.in_use` | yes |  | Notifications | in_use |
