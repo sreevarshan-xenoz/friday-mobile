@@ -14,6 +14,10 @@ FRIDAY Mobile is FRIDAY's phone app: your Linux or Windows computer on your Andr
 
 `SHA256SUMS` lists every file's checksum (`sha256sum -c SHA256SUMS`).
 
+## What's new in 0.11.1
+
+- **The Android app starts again:** 0.11.0 closed at launch on phones, with "FRIDAY Mobile keeps stopping" (0.10.0 was built the same way). The release build had dropped a piece the app's background jobs need. If you installed one of those, install this APK over it.
+
 ## What's new in 0.11.0
 
 - **Ask FRIDAY from your phone:** share text or a link to "Ask FRIDAY", add a question if you like, and FRIDAY on your computer answers on the phone, with Copy. Turn it on for a phone on the computer's Devices page ("Ask FRIDAY", off until you do); it needs FRIDAY installed on the computer. Each ask is a new FRIDAY conversation, apart from the one at your desk. The shared text goes to FRIDAY as quoted context, so FRIDAY asks you before it does anything, and FRIDAY Mobile logs nothing you asked or got back.

@@ -2314,7 +2314,7 @@ dependencies = [
 
 [[package]]
 name = "friday-mobile-android-bridge"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2335,7 +2335,7 @@ dependencies = [
 
 [[package]]
 name = "friday-mobile-core"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "anyhow",
  "ashpd",
@@ -2391,7 +2391,7 @@ dependencies = [
 
 [[package]]
 name = "friday-mobile-desktop"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "base64 0.22.1",
  "dirs 5.0.1",
@@ -2415,14 +2415,14 @@ dependencies = [
 
 [[package]]
 name = "friday-mobile-ffmpeg"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "ffmpeg-next",
 ]
 
 [[package]]
 name = "friday-mobile-server"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "ab_glyph",
  "anyhow",

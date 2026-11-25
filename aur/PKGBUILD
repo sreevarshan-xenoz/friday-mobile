@@ -1,6 +1,6 @@
 # Maintainer: xenoz <https://github.com/sreevarshan-xenoz>
 pkgname=friday-mobile
-pkgver=0.11.0
+pkgver=0.11.1
 pkgrel=1
 pkgdesc="Your Linux or Windows desktop on your Android phone: screen, input, clipboard, files and notifications over LAN, Tailscale or the internet"
 arch=('x86_64')
