@@ -964,19 +964,19 @@ mod tests {
     fn only_the_same_program_counts_as_a_server() {
         use std::path::Path;
         assert!(same_program(
-            Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe"),
-            Path::new(r"E:\build\POCKETDESK.EXE")
+            Path::new(r"C:\Program Files\FRIDAY Mobile\friday-mobile.exe"),
+            Path::new(r"E:\build\FRIDAY-MOBILE.EXE")
         ));
         assert!(
             same_program(
-                Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe"),
+                Path::new(r"C:\Program Files\FRIDAY Mobile\friday-mobile.exe"),
                 Path::new(r"E:\build\pd.exe")
             ),
             "the short name is the same program"
         );
         assert!(
             !same_program(
-                Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe"),
+                Path::new(r"C:\Program Files\FRIDAY Mobile\friday-mobile.exe"),
                 Path::new(r"E:\build\friday-mobile-app.exe")
             ),
             "the desktop app is not the server"
