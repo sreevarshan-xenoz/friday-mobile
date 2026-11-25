@@ -12,4 +12,4 @@ To turn these off, open Pocketdesk's Settings after installing: "Reachable from 
 
 On your own network, the computer announces itself so phones there find it ("Visible on this network" turns that off).
 
-The full privacy policy: https://github.com/sreevarshan-xenoz/Pocketdesk/blob/main/docs/privacy.md
+The full privacy policy: https://github.com/sreevarshan-xenoz/friday-mobile/blob/main/docs/privacy.md

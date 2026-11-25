@@ -79,14 +79,14 @@ cat > "$pkg/DEBIAN/control" <<EOF
 Package: friday-mobile
 Version: $version
 Architecture: $arch
-Maintainer: FRIDAY Mobile <https://github.com/sreevarshan-xenoz/Pocketdesk/issues>
+Maintainer: FRIDAY Mobile <https://github.com/sreevarshan-xenoz/friday-mobile/issues>
 Installed-Size: $(du -sk "$pkg" | cut -f1)
 Depends: $depends
 Recommends: ffmpeg, pipewire, xdg-desktop-portal, wl-clipboard | xclip
 Suggests: tailscale, playerctl
 Section: net
 Priority: optional
-Homepage: https://github.com/sreevarshan-xenoz/Pocketdesk
+Homepage: https://github.com/sreevarshan-xenoz/friday-mobile
 Description: your computer on your Android phone
  FRIDAY Mobile shows this computer's screen on an Android phone at low
  latency and lets the phone drive it, with its sound, and moves the

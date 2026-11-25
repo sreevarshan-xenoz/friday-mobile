@@ -321,7 +321,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           mkdir -p ../release
-          base="pocketdesk-${{ needs.version.outputs.name }}-android-arm64"
+          base="friday-mobile-${{ needs.version.outputs.name }}-android-arm64"
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
             ./gradlew assembleRelease --no-daemon
@@ -355,7 +355,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: android
-          path: release/pocketdesk-*.apk
+          path: release/friday-mobile-*.apk
 
   publish:
     needs: [version, build-linux, build-windows, build-android]
@@ -391,5 +391,4 @@ jobs:
           prerelease: ${{ needs.version.outputs.prerelease }}
           files: |
             dist/friday-mobile-*
-            dist/pocketdesk-*
             dist/SHA256SUMS

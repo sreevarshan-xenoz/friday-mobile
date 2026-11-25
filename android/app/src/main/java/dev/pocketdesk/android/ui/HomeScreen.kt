@@ -169,7 +169,7 @@ private fun tryPorts(change: FoundComputers.Moved, context: android.content.Cont
 }
 
 /** Where the empty Home sends a phone with no computer yet: the newest release's downloads. */
-private const val DESKTOP_APP_URL = "https://github.com/sreevarshan-xenoz/Pocketdesk/releases/latest"
+private const val DESKTOP_APP_URL = "https://github.com/sreevarshan-xenoz/friday-mobile/releases/latest"
 
 /**
  * Landing screen: the saved-desktop card list. Tapping a card connects;

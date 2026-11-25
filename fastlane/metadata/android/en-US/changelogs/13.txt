@@ -1,0 +1,3 @@
+* FRIDAY Mobile: FRIDAY's phone app, with FRIDAY's name, icon and colours.
+* Installs beside Pocketdesk, with its own app id and its own signing key.
+* Pairs with phones and computers still on Pocketdesk.
