@@ -126,7 +126,7 @@ impl LinksPlugin {
                         );
                         (self.show)(
                             &format!(
-                                "Pocketdesk: could not open a link with {}",
+                                "FRIDAY Mobile: could not open a link with {}",
                                 program.display()
                             ),
                             url,
@@ -141,13 +141,13 @@ impl LinksPlugin {
                     }
                     Err(e) => {
                         tracing::warn!("Could not open a link from {device}: {e}");
-                        (self.show)("Pocketdesk: could not open a link from your phone", url);
+                        (self.show)("FRIDAY Mobile: could not open a link from your phone", url);
                         return;
                     }
                 },
             }
         }
-        (self.show)("Pocketdesk: a link from your phone", url);
+        (self.show)("FRIDAY Mobile: a link from your phone", url);
     }
 }
 
@@ -443,7 +443,7 @@ pub(crate) fn open_or_show(url: &str) -> std::result::Result<(), String> {
     if OPEN_LINKS.load(Ordering::Relaxed) {
         open_detached(url)
     } else {
-        show_link("Pocketdesk: a link from your phone's deck", url);
+        show_link("FRIDAY Mobile: a link from your phone's deck", url);
         Ok(())
     }
 }
@@ -459,7 +459,7 @@ fn open_detached(url: &str) -> std::result::Result<(), String> {
             if let Err(e) = open_in_browser(&url) {
                 tracing::warn!("Could not open a link: {e}");
                 // Said as a failure, not as a link to look at (P8).
-                show_link("Pocketdesk: could not open a link from your phone", &url);
+                show_link("FRIDAY Mobile: could not open a link from your phone", &url);
             }
         })
         .map(|_| ())
@@ -502,7 +502,7 @@ fn run_detached(program: &std::path::Path, url: &str) -> std::result::Result<(),
                     tracing::warn!("Could not open a link with {}: {e}", program.display());
                     show_link(
                         &format!(
-                            "Pocketdesk: could not open a link with {}",
+                            "FRIDAY Mobile: could not open a link with {}",
                             program.display()
                         ),
                         &url,
@@ -691,7 +691,7 @@ mod tests {
         assert_eq!(shown.len(), 2);
         assert!(shown[0].ends_with("|https://video.example.org/watch"));
         assert!(
-            shown[1].starts_with("Pocketdesk: could not open a link with"),
+            shown[1].starts_with("FRIDAY Mobile: could not open a link with"),
             "{shown:?}"
         );
     }

@@ -85,7 +85,7 @@ fn tell(title: &str, text: &str) {
         }
     };
     if !friday_mobile_core::local::server::is_running(&dir) {
-        eprintln!("pocketdesk done: no Pocketdesk server is running to tell the phone");
+        eprintln!("pocketdesk done: no FRIDAY Mobile server is running to tell the phone");
         return;
     }
     if let Err(e) = alerts::request(

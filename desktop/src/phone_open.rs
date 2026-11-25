@@ -46,7 +46,7 @@ pub fn check(
     }
     if !device.linked {
         return Err(format!(
-            "{who} is not linked now. Open Pocketdesk on it, or turn on one of its background features, to link it."
+            "{who} is not linked now. Open FRIDAY Mobile on it, or turn on one of its background features, to link it."
         ));
     }
     list.and_then(|l| l.apps.iter().find(|a| a.id == app))

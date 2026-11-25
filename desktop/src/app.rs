@@ -165,7 +165,7 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
     (
         Capability::Webcam,
         "Use its camera as a webcam",
-        "On Linux, with \u{201c}Offer phones as a camera\u{201d} on in Settings (Phones), this computer can ask the phone to be its camera (Use the phone as a camera, on the Overview): apps here then see \u{201c}Pocketdesk camera\u{201d}. The phone asks its owner each time in a notification, and shows its own while the camera is in use, with \u{201c}Let the computer use my camera\u{201d} on there. Off unless you turn it on.",
+        "On Linux, with \u{201c}Offer phones as a camera\u{201d} on in Settings (Phones), this computer can ask the phone to be its camera (Use the phone as a camera, on the Overview): apps here then see \u{201c}FRIDAY Mobile camera\u{201d}. The phone asks its owner each time in a notification, and shows its own while the camera is in use, with \u{201c}Let the computer use my camera\u{201d} on there. Off unless you turn it on.",
     ),
     (
         Capability::Dial,
@@ -180,7 +180,7 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
     (
         Capability::PhoneActions,
         "Screenshot, lock and open its apps",
-        "Screenshot of the phone and Lock the phone, on the Overview and in the tray, and Open an app on the phone\u{2026} on the Overview. The phone takes a screenshot or locks with \u{201c}Let the computer take screenshots and lock this phone\u{201d} on and its Pocketdesk control service, and opens apps with \u{201c}Let the computer open my apps\u{201d} on; a screenshot arrives as its new screenshots do.",
+        "Screenshot of the phone and Lock the phone, on the Overview and in the tray, and Open an app on the phone\u{2026} on the Overview. The phone takes a screenshot or locks with \u{201c}Let the computer take screenshots and lock this phone\u{201d} on and its FRIDAY Mobile control service, and opens apps with \u{201c}Let the computer open my apps\u{201d} on; a screenshot arrives as its new screenshots do.",
     ),
     (
         Capability::Notes,
@@ -2311,7 +2311,7 @@ impl PocketdeskApp {
                 now_unix(),
             ) {
                 Ok(_) => Ok(format!(
-                    "Asked {who}: tap its notification to start the camera (\u{201c}Let the computer use my camera\u{201d} on in its Settings); apps here then see \u{201c}Pocketdesk camera\u{201d}. Stop it from the phone's notification."
+                    "Asked {who}: tap its notification to start the camera (\u{201c}Let the computer use my camera\u{201d} on in its Settings); apps here then see \u{201c}FRIDAY Mobile camera\u{201d}. Stop it from the phone's notification."
                 )),
                 Err(e) => Err(format!("Could not ask {who} for its camera: {e}")),
             },
@@ -2507,7 +2507,7 @@ impl PocketdeskApp {
                 if model::mute_refused(device.quiet.as_ref(), now) {
                     ui.label(
                         RichText::new(
-                            "It said no to the mute: turn on \"Let the computer mute this phone\" in Pocketdesk's Settings on the phone.",
+                            "It said no to the mute: turn on \"Let the computer mute this phone\" in FRIDAY Mobile's Settings on the phone.",
                         )
                         .color(crate::theme::warn(ui)),
                     );
@@ -2581,7 +2581,7 @@ impl PocketdeskApp {
                     }
                     // G2: as the tray offers it, where files reach the phone.
                     let photo_why = row.file.err().unwrap_or(
-                        "With \"Photos the computer asks for\" on in Pocketdesk's Settings on the phone, it shows a notification that opens its camera; the photo comes here as a received file.",
+                        "With \"Photos the computer asks for\" on in FRIDAY Mobile's Settings on the phone, it shows a notification that opens its camera; the photo comes here as a received file.",
                     );
                     if ui
                         .add_enabled(row.file.is_ok(), egui::Button::new("Take a photo"))
@@ -2599,7 +2599,7 @@ impl PocketdeskApp {
                         device.linked,
                     );
                     let webcam_why = webcam_reach.err().unwrap_or(
-                        "The phone shows a notification; a tap there starts its camera, and apps here see \u{201c}Pocketdesk camera\u{201d} until it stops. On the phone it needs \u{201c}Let the computer use my camera\u{201d} on.",
+                        "The phone shows a notification; a tap there starts its camera, and apps here see \u{201c}FRIDAY Mobile camera\u{201d} until it stops. On the phone it needs \u{201c}Let the computer use my camera\u{201d} on.",
                     );
                     if ui
                         .add_enabled(webcam_reach.is_ok(), egui::Button::new("Use as a camera"))
@@ -2614,7 +2614,7 @@ impl PocketdeskApp {
                         && ui
                             .button("Stop camera")
                             .on_hover_text(
-                                "Ends the phone's session here, which closes its camera; apps here lose \u{201c}Pocketdesk camera\u{201d}.",
+                                "Ends the phone's session here, which closes its camera; apps here lose \u{201c}FRIDAY Mobile camera\u{201d}.",
                             )
                             .clicked()
                     {
@@ -2629,12 +2629,12 @@ impl PocketdeskApp {
                         (
                             "Screenshot of the phone",
                             friday_mobile_core::protocol::phone_action::PhoneAction::Screenshot,
-                            "The phone takes a screenshot, which comes here as its new screenshots do. On the phone it needs \"Let the computer take screenshots and lock this phone\" and \"Send new screenshots\" on, and the Pocketdesk control service.",
+                            "The phone takes a screenshot, which comes here as its new screenshots do. On the phone it needs \"Let the computer take screenshots and lock this phone\" and \"Send new screenshots\" on, and the FRIDAY Mobile control service.",
                         ),
                         (
                             "Lock the phone",
                             friday_mobile_core::protocol::phone_action::PhoneAction::Lock,
-                            "The phone locks its screen. On the phone it needs \"Let the computer take screenshots and lock this phone\" on, and the Pocketdesk control service.",
+                            "The phone locks its screen. On the phone it needs \"Let the computer take screenshots and lock this phone\" on, and the FRIDAY Mobile control service.",
                         ),
                     ] {
                         let why = action_reach.err().unwrap_or(why);
@@ -2681,7 +2681,7 @@ impl PocketdeskApp {
                     }
                     // P2: one of the phone's apps opened from here.
                     let apps_why = action_reach.err().unwrap_or(
-                        "The Phone apps page: the phone's apps as icons, to open one there with its screen in a window here. On the phone it needs \"Let the computer open my apps\" on, and the Pocketdesk control service.",
+                        "The Phone apps page: the phone's apps as icons, to open one there with its screen in a window here. On the phone it needs \"Let the computer open my apps\" on, and the FRIDAY Mobile control service.",
                     );
                     if ui
                         .add_enabled(action_reach.is_ok(), egui::Button::new("Phone apps…"))
@@ -2700,7 +2700,7 @@ impl PocketdeskApp {
                         device.permissions.allows(Capability::Cast),
                     );
                     let type_why = type_reach.err().unwrap_or(
-                        "A window that types what you type at the phone's field. On the phone it needs \"Typing from the computer's keyboard\" on in Pocketdesk's Settings, its Accessibility service and notification access.",
+                        "A window that types what you type at the phone's field. On the phone it needs \"Typing from the computer's keyboard\" on in FRIDAY Mobile's Settings, its Accessibility service and notification access.",
                     );
                     if ui
                         .add_enabled(type_reach.is_ok(), egui::Button::new("Type on the phone"))
@@ -2902,7 +2902,7 @@ impl PocketdeskApp {
                     } else if !device.permissions.allows(Capability::Ring) {
                         "Ring is off for this phone, in its section below."
                     } else if !device.linked {
-                        "Not linked now: it rings in a session, or with \"Ring from the computer\" on in Pocketdesk's Settings on the phone."
+                        "Not linked now: it rings in a session, or with \"Ring from the computer\" on in FRIDAY Mobile's Settings on the phone."
                     } else {
                         "Ring it for 30 seconds, through Do Not Disturb when the phone lets alarms through: at full volume before Android 17, at the phone's alarm volume on 17 and newer. At most once a minute."
                     };

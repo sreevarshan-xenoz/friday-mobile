@@ -70,7 +70,7 @@ pub fn notice(networks: &[Network]) -> Option<String> {
         }
     };
     Some(format!(
-        "Windows treats {which} as Public, so other devices can't reach Pocketdesk. Set {it} to \
+        "Windows treats {which} as Public, so other devices can't reach FRIDAY Mobile. Set {it} to \
          Private in Settings → Network & internet → Ethernet or Wi-Fi → the network → Network \
          profile type."
     ))
@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(
             said,
             "Windows treats the network \"Network 2\" as Public, so other devices can't reach \
-             Pocketdesk. Set it to Private in Settings → Network & internet → Ethernet or Wi-Fi \
+             FRIDAY Mobile. Set it to Private in Settings → Network & internet → Ethernet or Wi-Fi \
              → the network → Network profile type."
         );
         // Beside a Private one, the Public one is still said.

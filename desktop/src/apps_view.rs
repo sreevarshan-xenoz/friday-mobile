@@ -162,14 +162,14 @@ impl Status {
                 "{who} may not be asked for its apps: \"Screenshot, lock and open its apps\" is off for it in Devices."
             ),
             Status::NotLinked => format!(
-                "{who} is not linked now. Open Pocketdesk on it, or turn on one of its background features, to link it."
+                "{who} is not linked now. Open FRIDAY Mobile on it, or turn on one of its background features, to link it."
             ),
             Status::Asking => format!("Asking {who} for its apps…"),
             Status::NoAnswer => format!(
-                "{who} did not answer. It answers while unlocked, with \"Let the computer open my apps\" on in Pocketdesk's Settings there."
+                "{who} did not answer. It answers while unlocked, with \"Let the computer open my apps\" on in FRIDAY Mobile's Settings there."
             ),
             Status::ListRefused(AppResult::Off) => format!(
-                "{who} keeps its apps to itself: turn on \"Let the computer open my apps\" in Pocketdesk's Settings there (off by default)."
+                "{who} keeps its apps to itself: turn on \"Let the computer open my apps\" in FRIDAY Mobile's Settings there (off by default)."
             ),
             Status::ListRefused(AppResult::Locked) => {
                 format!("{who} is locked. Unlock the phone once, then ask again.")
@@ -190,23 +190,23 @@ impl Status {
                 "{app} opens after you tap the notification on {who} to show its screen here (Android asks once for the connection)."
             ),
             Status::NeedsTap(app) => format!(
-                "{app} needs one tap on {who}: tap its notification to share the screen here (Pocketdesk could not press Android's own question for you), and the app opens after."
+                "{app} needs one tap on {who}: tap its notification to share the screen here (FRIDAY Mobile could not press Android's own question for you), and the app opens after."
             ),
             Status::OpenRefused(result, app) => match result {
                 AppResult::ControlOff => format!(
-                    "Pocketdesk's control service is off on {who}. To open {app} from here, turn on Pocketdesk control in Android's Accessibility settings; it is used only to start apps and to control the screen shown here."
+                    "FRIDAY Mobile's control service is off on {who}. To open {app} from here, turn on FRIDAY Mobile control in Android's Accessibility settings; it is used only to start apps and to control the screen shown here."
                 ),
                 AppResult::Locked => {
                     format!("{who} is locked: unlock the phone once, then open {app} again.")
                 }
                 AppResult::LockedSecure => format!(
-                    "{who} has a lock Pocketdesk never bypasses. {EXTEND_UNLOCK_HINT} Then open {app} again."
+                    "{who} has a lock FRIDAY Mobile never bypasses. {EXTEND_UNLOCK_HINT} Then open {app} again."
                 ),
                 AppResult::Asleep => {
                     format!("{who}'s screen is off: wake it, then open {app} again.")
                 }
                 AppResult::Off => format!(
-                    "{who} keeps its apps to itself: turn on \"Let the computer open my apps\" in Pocketdesk's Settings there."
+                    "{who} keeps its apps to itself: turn on \"Let the computer open my apps\" in FRIDAY Mobile's Settings there."
                 ),
                 AppResult::NotListed => {
                     format!("{who} does not know {app} yet: the list is asked again.")

@@ -1,6 +1,6 @@
 # Packaging
 
-Ready-made entries for the places people install Pocketdesk from. Each one is published outside this repository, so sending it is the owner's decision; everything here is prepared and checked so that it is one step.
+Ready-made entries for the places people install FRIDAY Mobile from. Each one is published outside this repository, so sending it is the owner's decision; everything here is prepared and checked so that it is one step.
 
 ## Obtainium (the APK from the releases)
 
@@ -15,8 +15,8 @@ The APK is signed with the release key. Its certificate's SHA-256, for AppVerifi
 `packaging/windows/friday-mobile.iss` is the Inno Setup 6 script for `friday-mobile-<version>-windows-x86_64-setup.exe`. The release workflow builds it beside the zip.
 
 **What it does:**
-- Shows what Pocketdesk sends to whom before installing (`privacy.txt`, a short form of `docs/privacy.md`).
-- Installs to Program Files and adds Pocketdesk to the Start menu and to Apps & features.
+- Shows what FRIDAY Mobile sends to whom before installing (`privacy.txt`, a short form of `docs/privacy.md`).
+- Installs to Program Files and adds FRIDAY Mobile to the Start menu and to Apps & features.
 - Offers three tasks:
   - start at sign-in: `firewall-add` elevated, then `install --no-firewall` as the user who ran it;
   - `friday-mobile` on the system `PATH`;

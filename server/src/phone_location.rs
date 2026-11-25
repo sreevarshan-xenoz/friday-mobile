@@ -199,7 +199,7 @@ fn refusal(body: &Value) -> String {
     match body.get("error").and_then(Value::as_str) {
         Some("off") => TURNED_OFF,
         Some("permission") => "it has no location permission",
-        Some("background") => "it needs Pocketdesk open, or location allowed all the time",
+        Some("background") => "it needs FRIDAY Mobile open, or location allowed all the time",
         Some("unavailable") => "it found no place",
         Some(_) => "it did not give one",
         None => "its answer was not a place",

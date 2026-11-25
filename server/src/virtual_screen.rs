@@ -543,7 +543,7 @@ pub(crate) fn remove(name: &str) {
         }
         Some(Desk::Sway) if is_virtual(name) => run(&format!("output {name} unplug")),
         _ => {
-            tracing::warn!("Not removing {name}: not a screen Pocketdesk makes");
+            tracing::warn!("Not removing {name}: not a screen FRIDAY Mobile makes");
             return;
         }
     };
@@ -635,7 +635,7 @@ impl Host for Live {
         match desk() {
             None => Some("This computer cannot add a screen: only Sway and Hyprland can for now"),
             Some(Desk::Hyprland) if this_tag().is_none() => {
-                Some("This computer cannot add a screen: Pocketdesk has no state folder here")
+                Some("This computer cannot add a screen: FRIDAY Mobile has no state folder here")
             }
             _ => None,
         }

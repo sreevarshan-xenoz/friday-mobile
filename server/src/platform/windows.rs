@@ -818,7 +818,7 @@ pub(super) fn force_stop(pid: u32) -> std::io::Result<bool> {
         tracing::warn!(
             pid,
             image = %image.display(),
-            "not terminating: that pid is not a Pocketdesk server"
+            "not terminating: that pid is not a FRIDAY Mobile server"
         );
         Ok(false)
     };

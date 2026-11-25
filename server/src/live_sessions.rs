@@ -182,20 +182,20 @@ async fn tell_phones(sessions: &[(u64, String)], driver: Option<u64>) {
 /// What a new session is, for its notification.
 fn session_summary(streamed: &friday_mobile_core::streaming::sessions::Streamed) -> &'static str {
     if streamed.webcam {
-        "Pocketdesk: a phone is this computer's camera"
+        "FRIDAY Mobile: a phone is this computer's camera"
     } else if streamed.cast {
-        "Pocketdesk: a phone is showing its screen here"
+        "FRIDAY Mobile: a phone is showing its screen here"
     } else if streamed.phone_sound {
         // The phone's sound alone (M7).
-        "Pocketdesk: a phone is playing its sound here"
+        "FRIDAY Mobile: a phone is playing its sound here"
     } else if streamed.video {
-        "Pocketdesk: a device is streaming this desktop"
+        "FRIDAY Mobile: a device is streaming this desktop"
     } else if streamed.input {
         // The phone as a remote (T10i) sees nothing; it only gives input.
-        "Pocketdesk: a device is controlling this desktop (no screen)"
+        "FRIDAY Mobile: a device is controlling this desktop (no screen)"
     } else {
         // A sound session (N5): neither picture nor input.
-        "Pocketdesk: a phone is this computer's speaker and mic"
+        "FRIDAY Mobile: a phone is this computer's speaker and mic"
     }
 }
 
@@ -909,7 +909,7 @@ mod tests {
         };
         assert_eq!(
             session_summary(&alone),
-            "Pocketdesk: a phone is playing its sound here"
+            "FRIDAY Mobile: a phone is playing its sound here"
         );
         let mut session = session(Some("phone"), true);
         session.streamed = alone;

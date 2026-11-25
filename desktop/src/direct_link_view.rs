@@ -284,7 +284,7 @@ impl DirectLinkCard {
     ) {
         ui.label(
             "No shared network, a café with client isolation or a guest Wi-Fi? Make this \
-             computer's own Wi-Fi for one phone: it joins for Pocketdesk only, and keeps its \
+             computer's own Wi-Fi for one phone: it joins for FRIDAY Mobile only, and keeps its \
              mobile data for everything else.",
         );
         ui.label(
@@ -437,7 +437,7 @@ impl DirectLinkCard {
                     ui.label("In the app, tap \"Scan pairing code\".");
                     ui.label(
                         "The phone asks to join this computer's Wi-Fi. Allow it: it is used \
-                         for Pocketdesk only.",
+                         for FRIDAY Mobile only.",
                     );
                     if let Some(file) = &on_file {
                         let remaining = pin::remaining(file, now_unix).as_secs();

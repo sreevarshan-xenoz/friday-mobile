@@ -348,7 +348,7 @@ pub fn run_cli(computer: &str, keys: u32, moves: u32, pause_ms: u32) -> i32 {
         }
     };
     if !friday_mobile_core::local::server::is_running(&dir) {
-        eprintln!("share-test: no Pocketdesk server is running");
+        eprintln!("share-test: no FRIDAY Mobile server is running");
         return exit::NO_SERVER;
     }
     let request = Request {
@@ -429,7 +429,7 @@ fn report(outcome: &Outcome) -> String {
     ));
     match (&outcome.latency, &outcome.unmeasured) {
         (Some(r), _) => out.push_str(&format!(
-            "latency over {} keys and moves:\n  Pocketdesk's share: p50 {} µs, p95 {} µs (sending p95 {} µs, \
+            "latency over {} keys and moves:\n  FRIDAY Mobile's share: p50 {} µs, p95 {} µs (sending p95 {} µs, \
              injecting there p95 {} µs)\n  the network's share: p50 {} µs, p95 {} µs (one way)\n",
             r.samples,
             r.ours_p50_us,
@@ -691,7 +691,7 @@ async fn run_one(dir: &Path, request: &Request) -> Outcome {
         (None, _) => Err("no ping was answered".to_string()),
         (Some(_), None) => Err(
             "the other computer sent no timings back (it does not take this one's input, only \
-             records it, or runs an older Pocketdesk)"
+             records it, or runs an older FRIDAY Mobile)"
                 .to_string(),
         ),
         (Some(_), Some(timings)) => split_stages(&sent, &timings, &pongs, now_unix())
@@ -947,7 +947,7 @@ mod tests {
         );
         assert!(said.contains("latency over 200 keys and moves"), "{said}");
         assert!(
-            said.contains("Pocketdesk's share: p50 120 µs, p95 480 µs"),
+            said.contains("FRIDAY Mobile's share: p50 120 µs, p95 480 µs"),
             "{said}"
         );
         assert!(

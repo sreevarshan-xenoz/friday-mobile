@@ -1638,9 +1638,9 @@ async fn send_notification_dbus(
         .call::<_, _, u32>(
             "Notify",
             &(
-                "Pocketdesk", // app_name
-                replaces,     // replaces_id
-                "",           // app_icon
+                "FRIDAY Mobile", // app_name
+                replaces,        // replaces_id
+                "",              // app_icon
                 summary.as_str(),
                 body.as_str(),
                 actions,

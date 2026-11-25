@@ -20,7 +20,7 @@ pub const NONE_PAIRED: &str = "No phone is paired yet";
 pub const NOT_LINKED: &str = "No phone is linked now";
 /// How a phone comes to show its folders here, when none is linked.
 pub const NOT_LINKED_HOW: &str = "A phone shows its folders here while it is linked: open \
-     Pocketdesk on it, or turn on \"Folders the computer may open\" in its Settings to stay linked.";
+     FRIDAY Mobile on it, or turn on \"Folders the computer may open\" in its Settings to stay linked.";
 pub const FILES_OFF_HOW: &str = "Turn it on in Devices to open its folders here.";
 pub const NO_REACH_HOW: &str = "It is linked from away: turn on \"Files over the internet\" in \
      Settings, or join the same network.";
@@ -175,7 +175,7 @@ impl PhoneFilesView {
             ui.label(
                 RichText::new(
                     "Files copied onto it go only into a folder whose \"The computer may add files\" \
-                     is on in Pocketdesk's Settings on the phone, with \"The phone's folders take files\" \
+                     is on in FRIDAY Mobile's Settings on the phone, with \"The phone's folders take files\" \
                      on here; elsewhere it is read-only.",
                 )
                 .small()
@@ -234,7 +234,7 @@ impl PhoneFilesView {
                     self.waiting = None;
                     self.notice = crate::notice::Notice::error(
                         "The phone did not answer. Is it connected, with \"Send files\" on in Devices, \
-                         and Pocketdesk allowed to run in the background on it?",
+                         and FRIDAY Mobile allowed to run in the background on it?",
                     );
                 }
                 None => {
@@ -275,7 +275,7 @@ impl PhoneFilesView {
         if listing.roots.is_empty() {
             ui.label(
                 RichText::new(
-                    "The phone shares no folder yet: add one in Pocketdesk's Settings on the phone, \"Folders the computer may open\".",
+                    "The phone shares no folder yet: add one in FRIDAY Mobile's Settings on the phone, \"Folders the computer may open\".",
                 )
                 .color(crate::theme::muted(ui)),
             );

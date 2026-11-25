@@ -46,7 +46,7 @@ pub const CONFIRM: &str = "Confirm";
 /// Why a computer may not show, each a line (the plan's reasons).
 pub fn reasons() -> Vec<&'static str> {
     let mut why = vec![
-        "Pocketdesk isn't running there.",
+        "FRIDAY Mobile isn't running there.",
         "\"Visible on this network\" is off there.",
         "It's on another network, or a VPN.",
     ];

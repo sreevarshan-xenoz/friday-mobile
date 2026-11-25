@@ -241,7 +241,7 @@ impl Gpu {
             match unsafe { Drawn::new(gl) } {
                 Ok(drawn) => inner.gl = Some(drawn),
                 Err(e) => {
-                    eprintln!("Pocketdesk: the NV12 shader failed ({e}); drawing RGBA");
+                    eprintln!("FRIDAY Mobile: the NV12 shader failed ({e}); drawing RGBA");
                     FAILED.store(true, Ordering::Relaxed);
                     return;
                 }

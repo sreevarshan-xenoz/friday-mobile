@@ -464,7 +464,7 @@ pub fn send_in(
     if !running() {
         return refused(
             exit::NO_SERVER,
-            "no Pocketdesk server is running to send it".to_string(),
+            "no FRIDAY Mobile server is running to send it".to_string(),
         );
     }
     let ids = match trust_store(state_dir) {
@@ -513,7 +513,7 @@ pub fn send_in(
                     format!("{device_id} is linked by the internet road, and {INTERNET_FILES_OFF}")
                 } else {
                     format!(
-                        "{device_id} is not connected where files can reach it: open Pocketdesk on the phone first"
+                        "{device_id} is not connected where files can reach it: open FRIDAY Mobile on the phone first"
                     )
                 },
             );
@@ -571,7 +571,7 @@ pub fn send_in(
             }
         }
         if !running() {
-            out["reason"] = json!("the Pocketdesk server stopped while waiting");
+            out["reason"] = json!("the FRIDAY Mobile server stopped while waiting");
             return (versioned(out), exit::NO_SERVER);
         }
         if std::time::Instant::now() >= deadline {
@@ -593,7 +593,7 @@ fn wait_deadline(wait: std::time::Duration) -> std::time::Instant {
 pub fn call_in(state_dir: &Path, query: &str, number: &str, running: bool) -> (Value, i32) {
     if !running {
         return (
-            error("no Pocketdesk server is running to send it"),
+            error("no FRIDAY Mobile server is running to send it"),
             exit::NO_SERVER,
         );
     }
@@ -684,7 +684,7 @@ pub fn command_in(
     use friday_mobile_core::protocol::command::{valid_name, valid_text};
     if !running {
         return (
-            error("no Pocketdesk server is running to send it"),
+            error("no FRIDAY Mobile server is running to send it"),
             exit::NO_SERVER,
         );
     }
@@ -773,7 +773,7 @@ pub fn run_command(query: &str, name: &str, text: &str, as_json: bool) -> i32 {
 pub fn link_in(state_dir: &Path, query: &str, url: &str, running: bool) -> (Value, i32) {
     if !running {
         return (
-            error("no Pocketdesk server is running to send it"),
+            error("no FRIDAY Mobile server is running to send it"),
             exit::NO_SERVER,
         );
     }
@@ -829,7 +829,7 @@ pub fn link_in(state_dir: &Path, query: &str, url: &str, running: bool) -> (Valu
 pub fn ring_in(state_dir: &Path, query: &str, running: bool) -> (Value, i32) {
     if !running {
         return (
-            error("no Pocketdesk server is running to ring it"),
+            error("no FRIDAY Mobile server is running to ring it"),
             exit::NO_SERVER,
         );
     }
@@ -898,7 +898,7 @@ pub fn quiet_in(state_dir: &Path, query: &str, minutes: u32, running: bool) -> (
     }
     if !running {
         return (
-            error("no Pocketdesk server is running to mute it"),
+            error("no FRIDAY Mobile server is running to mute it"),
             exit::NO_SERVER,
         );
     }
@@ -1088,7 +1088,7 @@ pub fn clipboard_in(
     }
     if !running {
         return (
-            error("no Pocketdesk server is running to send it"),
+            error("no FRIDAY Mobile server is running to send it"),
             exit::NO_SERVER,
         );
     }
@@ -1326,7 +1326,7 @@ pub fn send_to_phone_in(
     }
     if !running() {
         return not_sent(
-            "Pocketdesk is not running on this computer.".to_string(),
+            "FRIDAY Mobile is not running on this computer.".to_string(),
             exit::NO_SERVER,
         );
     }
@@ -1336,7 +1336,7 @@ pub fn send_to_phone_in(
             if linked_without_files(state_dir, now, true) {
                 format!("The phone is linked by the internet road, and {INTERNET_FILES_OFF}.")
             } else {
-                "No phone is connected where files can reach it: open Pocketdesk on your phone."
+                "No phone is connected where files can reach it: open FRIDAY Mobile on your phone."
                     .to_string()
             },
             exit::FAILED,
@@ -1639,7 +1639,7 @@ pub fn usage_error(args: &[std::ffi::OsString], parsed: &clap::Error) -> Option<
 pub fn kick_in(state_dir: &Path, target: &str, running: bool) -> (Value, i32) {
     if !running {
         return (
-            error("no running Pocketdesk server to end sessions through"),
+            error("no running FRIDAY Mobile server to end sessions through"),
             exit::NO_SERVER,
         );
     }
@@ -2113,13 +2113,13 @@ mod tests {
         let (out, code) = send_in(&dir, "5f1c9b", &file, &|| true, None);
         assert_eq!(code, exit::FAILED, "a link files cannot reach: {out}");
         // S3: linked by the internet road with files over it off; the phone
-        // is open, so "open Pocketdesk" is not the reason.
+        // is open, so "open FRIDAY Mobile" is not the reason.
         let reason = out["reason"].as_str().unwrap_or_default();
         assert!(
             reason.contains("files over the internet are off on this computer"),
             "says why: {out}"
         );
-        assert!(!reason.contains("open Pocketdesk"), "{out}");
+        assert!(!reason.contains("open FRIDAY Mobile"), "{out}");
     }
 
     #[test]
@@ -2262,7 +2262,12 @@ mod tests {
         let (out, code) = send_in(&dir, "5f1c9b", &file, &|| true, None);
         assert_eq!(code, exit::FAILED, "{out}");
         assert!(out["error"].as_str().unwrap().contains("not connected"));
-        assert!(out["error"].as_str().unwrap().contains("open Pocketdesk"));
+        assert!(
+            out["error"]
+                .as_str()
+                .unwrap()
+                .contains("open FRIDAY Mobile")
+        );
         assert!(
             friday_mobile_core::local::outbox::take_all(
                 &dir,
@@ -2372,9 +2377,9 @@ mod tests {
 
     #[test]
     fn a_failure_in_json_is_an_object_a_script_can_read() {
-        let failed = error("no running Pocketdesk server");
+        let failed = error("no running FRIDAY Mobile server");
         assert_eq!(failed["api"], API);
-        assert_eq!(failed["error"], "no running Pocketdesk server");
+        assert_eq!(failed["error"], "no running FRIDAY Mobile server");
     }
 
     #[test]

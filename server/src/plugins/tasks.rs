@@ -312,11 +312,11 @@ async fn ask_owner(device_id: &str, task: &str, asker: &str) -> TaskVerdict {
         held.push(request.clone());
         write_held(&held);
     }
-    let summary = format!("Pocketdesk: {asker} wants to run \"{task}\"");
+    let summary = format!("FRIDAY Mobile: {asker} wants to run \"{task}\"");
     std::thread::spawn(move || {
         crate::platform::notify(
             &summary,
-            "Allow or deny it in the Pocketdesk app.",
+            "Allow or deny it in the FRIDAY Mobile app.",
             Duration::from_secs(15),
         );
     });

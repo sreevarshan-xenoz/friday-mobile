@@ -51,7 +51,7 @@ pub async fn run(config: Config) -> Result<()> {
         .filter(|&pid| pid != std::process::id())
         .filter(|_| friday_mobile_core::local::server::is_running(&state_dir))
     {
-        anyhow::bail!("a Pocketdesk server already runs for this state folder (pid {pid})");
+        anyhow::bail!("a FRIDAY Mobile server already runs for this state folder (pid {pid})");
     }
     // Named before any portal call on the shared connection, which the
     // portal ties to the first name it hears (KDE spike, 2026-10-31).
@@ -1073,7 +1073,7 @@ const STOP_WAIT: Duration = Duration::from_secs(10);
 pub async fn stop() -> Result<()> {
     let pid_file = state::pid_file_path()?;
     if !pid_file.exists() {
-        println!("No running Pocketdesk server found");
+        println!("No running FRIDAY Mobile server found");
         return Ok(());
     }
 
@@ -1101,7 +1101,7 @@ pub async fn stop() -> Result<()> {
                 .await
                 .unwrap_or(false)
         {
-            println!("Pocketdesk server (pid {pid}) stopped");
+            println!("FRIDAY Mobile server (pid {pid}) stopped");
             return Ok(());
         }
         println!("Stop requested from pid {pid}; it has not exited yet");
@@ -1115,7 +1115,7 @@ pub async fn stop() -> Result<()> {
         // a Pocketdesk server rather than whatever reused it.
         if crate::platform::force_stop(pid).context("failed to terminate the server")? {
             let _ = std::fs::remove_file(&pid_file);
-            println!("Pocketdesk server (pid {pid}) force-stopped");
+            println!("FRIDAY Mobile server (pid {pid}) force-stopped");
             return Ok(());
         }
     }

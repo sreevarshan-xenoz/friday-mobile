@@ -69,7 +69,7 @@ pub fn tel_in(
     };
     if !running {
         return not_called(
-            "Pocketdesk is not running on this computer.".to_string(),
+            "FRIDAY Mobile is not running on this computer.".to_string(),
             exit::NO_SERVER,
         );
     }
