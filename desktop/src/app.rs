@@ -91,7 +91,7 @@ fn switches_table(
 }
 
 /// The Devices tab's switches, in the order a person thinks of them.
-pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
+pub(crate) const PERMISSIONS: [(Capability, &str, &str); 27] = [
     (
         Capability::Input,
         "Control the mouse and keyboard",
@@ -193,6 +193,11 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
         "A script here can ask a Yes or No with pocketdesk ask, and wait for the answer from the phone: No is one tap there, Yes takes its fingerprint or screen lock. Off unless you turn it on: a Yes can let a deploy through. The phone takes questions with \u{201c}Questions from the computer\u{201d} on.",
     ),
     (
+        Capability::FridayAsk,
+        "Ask FRIDAY",
+        "Ask FRIDAY: the phone can send text to FRIDAY on this computer and get its answer back (needs FRIDAY installed).",
+    ),
+    (
         Capability::Peek,
         "Peek at this screen",
         "The phone can see this screen as one still, from its Home, with no session; each look is a new still, never a stream. Off unless you turn it on; held while this computer is paused, and by \u{201c}Phones may peek at this screen\u{201d} in Settings.",
@@ -274,6 +279,7 @@ pub(crate) const PERMISSION_GROUPS: [(&str, &[Capability]); 5] = [
             Capability::Exec,
             Capability::Command,
             Capability::Ask,
+            Capability::FridayAsk,
             Capability::Tasks,
             Capability::AwayLock,
         ],
@@ -383,6 +389,7 @@ fn shown_for(capability: Capability, computer: bool) -> bool {
                 | Capability::Ask
                 | Capability::Notes
                 | Capability::Webcam
+                | Capability::FridayAsk
         ))
 }
 

@@ -347,6 +347,17 @@ fun SettingsScreen(onBack: () -> Unit, initialQuery: String = "") {
                         noteShown = it
                     },
                 )
+                // "Ask FRIDAY" in the share sheet.
+                var askFridayShown by remember { mutableStateOf(dev.pocketdesk.android.AskShare.shown(context)) }
+                SettingSwitch(
+                    stringResource(R.string.settings_ask_friday),
+                    stringResource(R.string.settings_ask_friday_summary),
+                    askFridayShown,
+                    {
+                        dev.pocketdesk.android.AskShare.setShown(context, it)
+                        askFridayShown = it
+                    },
+                )
                 // BF1: `pocketdesk done` saying a command on the computer ended.
                 SettingSwitch(
                     stringResource(R.string.settings_computer_alerts),

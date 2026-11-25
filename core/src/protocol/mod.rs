@@ -10,6 +10,7 @@ pub mod conversation;
 pub mod cursor;
 pub mod dial;
 pub mod file_time;
+pub mod friday_ask;
 pub mod in_use;
 pub mod introductions;
 pub mod kdeconnect;
