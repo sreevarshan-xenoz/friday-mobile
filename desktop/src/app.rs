@@ -125,7 +125,7 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
     (
         Capability::Mic,
         "Use the phone as a microphone",
-        "The phone's microphone becomes \"Pocketdesk Mic\" here.",
+        "The phone's microphone becomes \"FRIDAY Mobile Mic\" here.",
     ),
     (
         Capability::Power,

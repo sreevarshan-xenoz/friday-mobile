@@ -199,7 +199,7 @@ pub(super) fn monotonic_ms() -> u32 {
 
 /// An anonymous file holding `map` and its terminating NUL.
 pub(super) fn keymap_fd(map: &str) -> std::io::Result<OwnedFd> {
-    let name = c"pocketdesk-keymap";
+    let name = c"friday-mobile-keymap";
     // SAFETY: memfd_create with a valid C string; the result is checked.
     let raw = unsafe { libc::memfd_create(name.as_ptr(), libc::MFD_CLOEXEC) };
     if raw < 0 {

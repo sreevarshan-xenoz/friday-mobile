@@ -244,7 +244,7 @@ impl Capabilities {
                         frame_duration_ms: out.frame_duration_ms,
                         this_build_encodes: cfg!(feature = "opus"),
                         // The desktop plays it: on Linux `mic_relay.rs` feeds a
-                        // `pw-loopback` source named "Pocketdesk Mic"; on Windows
+                        // `pw-loopback` source named "FRIDAY Mobile Mic"; on Windows
                         // `mic_relay_windows.rs` plays into a virtual audio cable
                         // (the note below says that one needs installing).
                         played_on_the_receiving_end: cfg!(any(target_os = "linux", windows)),

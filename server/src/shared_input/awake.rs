@@ -35,7 +35,7 @@ struct Holder {
 
 /// The name and the reason the inhibitor is asked with.
 #[cfg(target_os = "linux")]
-const INHIBIT: (&str, &str) = ("Pocketdesk", "Using this computer from another");
+const INHIBIT: (&str, &str) = ("FRIDAY Mobile", "Using this computer from another");
 
 impl KeepAwake {
     pub fn is_held(&self) -> bool {

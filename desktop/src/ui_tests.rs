@@ -1051,7 +1051,7 @@ fn the_logs_page_shows_the_newest_lines() {
         .join(friday_mobile_core::local::paths::LOG_DIR);
     std::fs::create_dir_all(&logs).expect("logs");
     std::fs::write(
-        logs.join("pocketdesk.2026-10-20.log"),
+        logs.join("friday-mobile.2026-10-20.log"),
         "2026-10-20T06:00:00Z  INFO pocketdesk: server starting\n2026-10-20T06:00:01Z  WARN pocketdesk: a refusal\n",
     )
     .expect("log");
@@ -1082,7 +1082,7 @@ fn an_empty_log_is_a_log() {
         .state()
         .join(friday_mobile_core::local::paths::LOG_DIR);
     std::fs::create_dir_all(&logs).expect("logs");
-    std::fs::write(logs.join("pocketdesk.2026-10-21.log"), "").expect("log");
+    std::fs::write(logs.join("friday-mobile.2026-10-21.log"), "").expect("log");
     let app = fixture.open(Some(Tab::Logs));
     assert!(app.query_by_label("Open log folder").is_some());
     assert!(app.query_by_label("0 of the last 0 lines").is_some());

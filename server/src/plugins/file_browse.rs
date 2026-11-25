@@ -529,7 +529,7 @@ mod tests {
     #[test]
     fn the_servers_own_files_cannot_be_fetched() {
         let (_state, home) = temp_home("private");
-        let state = home.join("docs").join("pocketdesk");
+        let state = home.join("docs").join("friday-mobile");
         std::fs::create_dir_all(state.join("certs")).unwrap();
         std::fs::write(state.join("certs").join("identity.key"), "secret").unwrap();
         let private = [state.canonicalize().unwrap()];

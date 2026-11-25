@@ -335,7 +335,7 @@ impl Badge {
                 &surface,
                 Some(output),
                 Layer::Overlay,
-                "pocketdesk-badge".to_string(),
+                "friday-mobile-badge".to_string(),
                 &qh,
                 surface_index,
             );
@@ -404,7 +404,7 @@ fn buffer(
     qh: &QueueHandle<State>,
     picture: &Picture,
 ) -> Option<(OwnedFd, WlShmPool, WlBuffer)> {
-    let name = std::ffi::CString::new("pocketdesk-badge").ok()?;
+    let name = std::ffi::CString::new("friday-mobile-badge").ok()?;
     // SAFETY: a valid C string; the descriptor is checked below.
     let raw = unsafe { libc::memfd_create(name.as_ptr(), libc::MFD_CLOEXEC) };
     if raw < 0 {

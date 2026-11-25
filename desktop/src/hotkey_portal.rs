@@ -18,7 +18,7 @@ pub const CLIPBOARD: &str = "send-clipboard";
 pub const TYPING: &str = "type-on-phone";
 
 /// The app id the portal knows this program by, and its desktop file's name.
-const APP_ID: &str = "dev.pocketdesk.Pocketdesk";
+const APP_ID: &str = "dev.friday.Mobile";
 
 const DESTINATION: &str = "org.freedesktop.portal.Desktop";
 const PATH: &str = "/org/freedesktop/portal/desktop";
@@ -197,7 +197,7 @@ const OLD_HIDDEN_STUB: &str =
 /// The desktop file this program writes now (its `Exec=` aside). When it
 /// changes, the text it had joins [`PAST_STUBS`], so the files earlier
 /// releases wrote are still known as ours (review N10).
-const CURRENT_STUB: &str = "[Desktop Entry]\nType=Application\nName=Pocketdesk\nComment=Your computer, on your Android phone\nExec=\nIcon=pocketdesk\nTerminal=false\nCategories=Network;RemoteAccess;\nX-Pocketdesk-Stub=true\n";
+const CURRENT_STUB: &str = "[Desktop Entry]\nType=Application\nName=FRIDAY Mobile\nComment=Your computer, on your Android phone\nExec=\nIcon=pocketdesk\nTerminal=false\nCategories=Network;RemoteAccess;\nX-Friday-Mobile-Stub=true\n";
 
 /// What an `Exec=` value of ours looks like in each template.
 #[derive(Debug, Clone, Copy)]
@@ -432,11 +432,11 @@ fn register_host(conn: &Connection) {
         // that is not UTF-8 is not written into the file.
         let beside = std::env::current_exe()
             .ok()
-            .and_then(|p| p.parent().map(|d| d.join("pocketdesk-app")))
+            .and_then(|p| p.parent().map(|d| d.join("friday-mobile-app")))
             .filter(|p| p.is_file());
         let app = match &beside {
             Some(path) => path.to_str().map(str::to_string),
-            None => Some("pocketdesk-app".to_string()),
+            None => Some("friday-mobile-app".to_string()),
         };
         let own = std::fs::read_to_string(&file).ok();
         match plan_stub(own.as_deref(), packaged, app.as_deref()) {
@@ -468,7 +468,7 @@ fn bind(
     shortcuts: &[(&'static str, String, &'static str)],
     token: u32,
 ) -> zbus::Result<(OwnedObjectPath, Vec<String>)> {
-    let handle_token = format!("pocketdesk_keys_{}_{token}", std::process::id());
+    let handle_token = format!("friday_mobile_keys_{}_{token}", std::process::id());
     let mut options: HashMap<&str, Value<'_>> = HashMap::new();
     options.insert("handle_token", Value::from(handle_token.as_str()));
     options.insert("session_handle_token", Value::from(handle_token.as_str()));
@@ -650,13 +650,13 @@ mod tests {
         let expected = [
             "[Desktop Entry]",
             "Type=Application",
-            "Name=Pocketdesk",
+            "Name=FRIDAY Mobile",
             "Comment=Your computer, on your Android phone",
             "Exec=",
             "Icon=pocketdesk",
             "Terminal=false",
             "Categories=Network;RemoteAccess;",
-            "X-Pocketdesk-Stub=true",
+            "X-Friday-Mobile-Stub=true",
             "",
         ]
         .join("\n");

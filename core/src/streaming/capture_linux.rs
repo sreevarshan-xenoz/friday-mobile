@@ -749,7 +749,7 @@ fn run_pipewire_capture(
     };
 
     // Create the stream
-    let stream = pipewire::stream::StreamBox::new(&core, "pocketdesk-capture", stream_props)
+    let stream = pipewire::stream::StreamBox::new(&core, "friday-mobile-capture", stream_props)
         .context("Failed to create PipeWire stream")?;
 
     // The `Meta` params: with the pointer as metadata (local cursor) the

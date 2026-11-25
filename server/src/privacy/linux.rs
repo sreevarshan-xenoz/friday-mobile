@@ -182,7 +182,7 @@ async fn session_path(conn: &zbus::Connection) -> Option<String> {
 /// remote path itself — and switch-only devices (lid, power button) stay
 /// visible to logind.
 pub fn should_grab(name: &str, keys: &AttributeSetRef<KeyCode>, has_relative_axes: bool) -> bool {
-    if name.starts_with("Pocketdesk") {
+    if name.starts_with("FRIDAY Mobile") || name.starts_with("Pocketdesk") {
         return false;
     }
     let keyboard = keys.contains(KeyCode::KEY_A);
@@ -358,10 +358,10 @@ mod tests {
     fn virtual_devices_are_never_grabbed() {
         let mut keyboard = AttributeSet::<KeyCode>::new();
         keyboard.insert(KeyCode::KEY_A);
-        assert!(!should_grab("Pocketdesk Virtual Input", &keyboard, true));
+        assert!(!should_grab("FRIDAY Mobile Virtual Input", &keyboard, true));
         let mut touch = AttributeSet::<KeyCode>::new();
         touch.insert(KeyCode::BTN_LEFT);
-        assert!(!should_grab("Pocketdesk Virtual Touch", &touch, false));
+        assert!(!should_grab("FRIDAY Mobile Virtual Touch", &touch, false));
     }
 
     #[test]

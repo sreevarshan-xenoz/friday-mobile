@@ -1610,9 +1610,9 @@ enum UinputDevice {
 impl UinputDevice {
     fn label(self) -> &'static str {
         match self {
-            UinputDevice::Main => "Pocketdesk Virtual Input",
-            UinputDevice::Abs => "Pocketdesk Virtual Abs Pointer",
-            UinputDevice::Pen => "Pocketdesk Virtual Pen",
+            UinputDevice::Main => "FRIDAY Mobile Virtual Input",
+            UinputDevice::Abs => "FRIDAY Mobile Virtual Abs Pointer",
+            UinputDevice::Pen => "FRIDAY Mobile Virtual Pen",
         }
     }
 }
@@ -1665,7 +1665,7 @@ fn build_pen_device() -> Result<VirtualDevice> {
         .context("Failed to set up the pen's ABS_TILT_X")?
         .with_absolute_axis(&axis(AbsoluteAxisCode::ABS_TILT_Y, -tilt, tilt, 57))
         .context("Failed to set up the pen's ABS_TILT_Y")?
-        .name(b"Pocketdesk Virtual Pen")
+        .name(b"FRIDAY Mobile Virtual Pen")
         .build()
         .context("Failed to build the uinput pen")?;
     Ok(device)
@@ -1804,7 +1804,7 @@ fn build_pad() -> Result<VirtualDevice> {
     #[allow(deprecated)]
     let device = VirtualDeviceBuilder::new()
         .context("Failed to create the game controller's builder")?
-        .name(b"Pocketdesk Gamepad")
+        .name(b"FRIDAY Mobile Gamepad")
         .input_id(evdev::InputId::new(
             evdev::BusType::BUS_USB,
             0x045e,
@@ -1894,7 +1894,7 @@ fn build_main_device() -> Result<VirtualDevice> {
         .context("Failed to set up virtual keys")?
         .with_relative_axes(&rel)
         .context("Failed to set up relative axes")?
-        .name(b"Pocketdesk Virtual Input")
+        .name(b"FRIDAY Mobile Virtual Input")
         .build()
         .context(
             "Failed to build virtual device. \
@@ -1936,7 +1936,7 @@ fn build_abs_device() -> Result<VirtualDevice> {
         .context("Failed to set up ABS_X")?
         .with_absolute_axis(&abs_y)
         .context("Failed to set up ABS_Y")?
-        .name(b"Pocketdesk Virtual Abs Pointer")
+        .name(b"FRIDAY Mobile Virtual Abs Pointer")
         .build()
         .context("Failed to build uinput absolute pointer device")?;
 

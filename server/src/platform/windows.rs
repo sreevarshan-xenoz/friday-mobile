@@ -709,7 +709,7 @@ pub(super) fn notify(summary: &str, body: &str) -> bool {
 /// so other logon sessions cannot reach it; [`listen_for_stop_event`] refuses
 /// one that already exists, so a squatter cannot hand us its own.
 fn stop_event_name(pid: u32) -> HSTRING {
-    HSTRING::from(format!(r"Local\Pocketdesk-{pid}-stop"))
+    HSTRING::from(format!(r"Local\Friday-Mobile-{pid}-stop"))
 }
 
 /// Create this process's stop event and forward its signal to `tx`.

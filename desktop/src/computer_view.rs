@@ -1218,7 +1218,7 @@ pub const ON_AIR_RED: egui::Color32 = egui::Color32::from_rgb(255, 92, 92);
 /// What "Send my mic" says of itself on the bar (PC10).
 pub fn mic_hover(name: &str) -> String {
     format!(
-        "Send this computer's microphone to {name}, where it becomes the microphone \u{201c}Pocketdesk Mic\u{201d} (on Windows, the virtual cable's \u{201c}CABLE Output\u{201d}). {name} decides: its Devices page needs \u{201c}Use the phone as a microphone\u{201d} on for this computer. Settings \u{2192} Other computers picks the microphone here."
+        "Send this computer's microphone to {name}, where it becomes the microphone \u{201c}FRIDAY Mobile Mic\u{201d} (on Windows, the virtual cable's \u{201c}CABLE Output\u{201d}). {name} decides: its Devices page needs \u{201c}Use the phone as a microphone\u{201d} on for this computer. Settings \u{2192} Other computers picks the microphone here."
     )
 }
 
@@ -2614,7 +2614,7 @@ pub const MIC_SWITCH_WORDS: &str = "Mic stopped: the next screen does not take t
 /// Why a second window's mic is refused (PC11).
 pub fn mic_elsewhere_words(name: &str) -> String {
     format!(
-        "Another window already sends your microphone to {name}: it has one \u{201c}Pocketdesk Mic\u{201d}. Turn it off there first."
+        "Another window already sends your microphone to {name}: it has one \u{201c}FRIDAY Mobile Mic\u{201d}. Turn it off there first."
     )
 }
 
@@ -6741,7 +6741,7 @@ mod tests {
         let said = mic_hover("Desk");
         assert!(said.contains("to Desk"));
         assert!(said.contains("Use the phone as a microphone"));
-        assert!(said.contains("Pocketdesk Mic"));
+        assert!(said.contains("FRIDAY Mobile Mic"));
     }
 
     /// PR #563 review I1: a write to the relay that fails ends the

@@ -599,7 +599,7 @@ fn rate_file() -> Option<PathBuf> {
     // SAFETY: geteuid has no preconditions.
     let euid = unsafe { libc::geteuid() };
     let dir = if euid == 0 {
-        PathBuf::from("/run/pocketdesk")
+        PathBuf::from("/run/friday-mobile")
     } else {
         PathBuf::from(format!("/run/user/{euid}"))
     };
@@ -808,8 +808,8 @@ pub fn pam_mode(forced: Option<Kind>, env: &PamEnv) -> Result<String, GiveUp> {
         counted = true;
     }
     become_user(&account)?;
-    let state_dir = account.home.join(".local/state/pocketdesk");
-    let config = Config::load_from(&account.home.join(".config/pocketdesk/config.toml"))
+    let state_dir = account.home.join(".local/state/friday-mobile");
+    let config = Config::load_from(&account.home.join(".config/friday-mobile/config.toml"))
         .map_err(|e| GiveUp::Broken(format!("the settings do not read: {e}")))?;
     let running = friday_mobile_core::local::server::is_running(&state_dir);
     let phones = precheck(ask, &config, running, &pin)?;
@@ -872,7 +872,7 @@ fn test_mode() -> i32 {
     let running = friday_mobile_core::local::server::is_running(&state_dir);
     let ask = Ask {
         kind: Kind::Admin,
-        service: "pocketdesk-test",
+        service: "friday-mobile-test",
         user: &user,
         requester: None,
         remote: false,
@@ -895,7 +895,7 @@ fn test_mode() -> i32 {
     let approval = Approval {
         id: uuid::Uuid::new_v4().to_string(),
         kind: Kind::Admin,
-        service: "pocketdesk-test".to_string(),
+        service: "friday-mobile-test".to_string(),
         user: user.clone(),
         requester: user.clone(),
         action: String::new(),
@@ -939,7 +939,7 @@ struct PinAnswer {
 /// attested key for `approval`, and return their answer.
 fn pin_child(account: &User, mut approval: Approval) -> Result<PinAnswer, String> {
     become_user(account).map_err(|e| e.said())?;
-    let state = account.home.join(".local/state/pocketdesk");
+    let state = account.home.join(".local/state/friday-mobile");
     let cert = read_users_file(
         &state.join(friday_mobile_core::local::paths::CERT_FILE),
         account.uid,

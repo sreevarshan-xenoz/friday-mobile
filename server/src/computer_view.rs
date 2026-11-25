@@ -1494,7 +1494,7 @@ pub struct MicLink {
     sending: tokio::sync::Mutex<()>,
     /// Which view sends each computer the window's mic (PC11): one a
     /// computer, shared by the relay's views, as that computer has one
-    /// "Pocketdesk Mic".
+    /// "FRIDAY Mobile Mic".
     holders: MicHolders,
 }
 
@@ -3220,7 +3220,7 @@ pub const POINTER_LEASE: Duration = Duration::from_secs(3);
 /// [`InputPacket::Mic`] frames go on. Its stop goes to the other computer
 /// as the window says off, as the reader ends with it on, and, as a last
 /// word, as the reader is dropped or aborted with it on (a window
-/// replaced, or the view ending), so that computer's "Pocketdesk Mic" never
+/// replaced, or the view ending), so that computer's "FRIDAY Mobile Mic" never
 /// outlives the window that fed it.
 struct WindowMic {
     on: bool,

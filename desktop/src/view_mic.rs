@@ -1,6 +1,6 @@
 //! "Send my mic" in the window that shows another computer's screen
 //! (PC10): this computer's microphone goes to that computer, where it
-//! becomes its "Pocketdesk Mic", as a phone's microphone does (R4 E2).
+//! becomes its "FRIDAY Mobile Mic", as a phone's microphone does (R4 E2).
 //!
 //! While the window controls that computer and the switch on its bar is
 //! on, a thread reads the microphone ([`MicSource`]: WASAPI on Windows,
@@ -136,7 +136,7 @@ impl Framer {
 }
 
 /// The start a phone sends first: the other computer makes its
-/// "Pocketdesk Mic".
+/// "FRIDAY Mobile Mic".
 pub fn start_packet() -> InputPacket {
     InputPacket::Mic {
         enabled: true,

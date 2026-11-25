@@ -2110,7 +2110,7 @@ impl SettingsForm {
                 row(ui, "kept_folders_root", |ui| {
                     ui.add(
                         egui::TextEdit::singleline(&mut e.kept_folders_root)
-                            .hint_text("Documents/Pocketdesk phones")
+                            .hint_text("Documents/FRIDAY Mobile phones")
                             .desired_width(320.0),
                     );
                     if crate::pick_file::AVAILABLE

@@ -111,7 +111,7 @@ static STATE: tokio::sync::Mutex<State> = tokio::sync::Mutex::const_new(State {
 struct Sink;
 
 // The interface name is `super::kde::INTERFACE`.
-#[zbus::interface(name = "dev.pocketdesk.Windows")]
+#[zbus::interface(name = "dev.friday_mobile.Windows")]
 impl Sink {
     /// The script's report; the reply names the windows to raise.
     async fn update(

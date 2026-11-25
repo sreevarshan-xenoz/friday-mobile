@@ -131,7 +131,7 @@ pub fn desktop_entry(label: &str, exe: &str, phone: &str, app: &str, icon: &str)
         exec_quote(app)?
     );
     Some(format!(
-        "[Desktop Entry]\nType=Application\nVersion=1.0\nName={name}\nComment={comment}\nExec={exec}\nIcon={}\nTerminal=false\nCategories=Utility;\nStartupNotify=false\nX-Pocketdesk-Phone={phone}\nX-Pocketdesk-App={app}\n",
+        "[Desktop Entry]\nType=Application\nVersion=1.0\nName={name}\nComment={comment}\nExec={exec}\nIcon={}\nTerminal=false\nCategories=Utility;\nStartupNotify=false\nX-Friday-Mobile-Phone={phone}\nX-Friday-Mobile-App={app}\n",
         value(icon)?
     ))
 }
@@ -311,11 +311,13 @@ pub fn pin(
         if ico_from_png(png).is_none() {
             return Err(io::Error::new(io::ErrorKind::InvalidData, "not an icon"));
         }
-        let icon_path = places.icons.join(format!("pocketdesk-phone-{hashed}.png"));
+        let icon_path = places
+            .icons
+            .join(format!("friday-mobile-phone-{hashed}.png"));
         std::fs::write(&icon_path, png)?;
         let file_path = places
             .shortcuts
-            .join(format!("pocketdesk-phone-{hashed}.desktop"));
+            .join(format!("friday-mobile-phone-{hashed}.desktop"));
         (icon_path, file_path)
     };
     write_shortcut(&file_path, exe_text, &label, phone, app, utf8(&icon_path)?)?;
@@ -361,7 +363,7 @@ fn made_here(name: &str, windows: bool) -> bool {
                 && head.ends_with(SUFFIX)
         })
     } else {
-        let rest = name.strip_prefix("pocketdesk-phone-");
+        let rest = name.strip_prefix("friday-mobile-phone-");
         rest.and_then(|r| {
             r.strip_suffix(".desktop")
                 .or_else(|| r.strip_suffix(".png"))
@@ -705,7 +707,7 @@ mod tests {
 
     /// Unpin removes only files named as this module names them.
     #[test]
-    fn only_files_named_as_pocketdesk_names_them_are_removed() {
+    fn only_files_named_as_friday_mobile_names_them_are_removed() {
         for good in [
             "My App (phone).lnk",
             "My App (phone) 2.lnk",
@@ -715,8 +717,8 @@ mod tests {
             assert!(!made_here(good, false), "{good}");
         }
         for good in [
-            "pocketdesk-phone-0123456789abcdef.desktop",
-            "pocketdesk-phone-0123456789ABCDEF.png",
+            "friday-mobile-phone-0123456789abcdef.desktop",
+            "friday-mobile-phone-0123456789ABCDEF.png",
         ] {
             assert!(made_here(good, false), "{good}");
             assert!(!made_here(good, true), "{good}");
@@ -730,8 +732,8 @@ mod tests {
             "0123456789abcde.ico",
             "0123456789abcdeg.ico",
             "document.ico",
-            "pocketdesk-phone-0123.desktop",
-            "pocketdesk-phone-0123456789abcdef.txt",
+            "friday-mobile-phone-0123.desktop",
+            "friday-mobile-phone-0123456789abcdef.txt",
             "firefox.desktop",
             "0123456789abcdef.png",
             "",

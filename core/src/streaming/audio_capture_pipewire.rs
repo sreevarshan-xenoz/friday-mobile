@@ -79,8 +79,9 @@ fn run_pipewire_audio_capture(
         *pipewire::keys::STREAM_CAPTURE_SINK => "true",
     };
 
-    let stream = pipewire::stream::StreamBox::new(&core, "pocketdesk-audio-capture", stream_props)
-        .context("Failed to create PipeWire audio stream")?;
+    let stream =
+        pipewire::stream::StreamBox::new(&core, "friday-mobile-audio-capture", stream_props)
+            .context("Failed to create PipeWire audio stream")?;
 
     // Calculate frames per buffer
     let _frame_bytes =

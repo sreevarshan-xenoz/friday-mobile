@@ -39,7 +39,7 @@ const SILENCE_CHECK: Duration = Duration::from_secs(5);
 
 /// Whether a mic packet from a session stays here (PC10 review): a
 /// computer's start and frames while its session is view-only. Its stop
-/// always passes, so "Pocketdesk Mic" never outlives it; a phone's mic
+/// always passes, so "FRIDAY Mobile Mic" never outlives it; a phone's mic
 /// goes on in a view-only session (R4 E2).
 fn mic_held_back(mic_needs_control: bool, enabled: bool, view_only: bool) -> bool {
     mic_needs_control && enabled && view_only

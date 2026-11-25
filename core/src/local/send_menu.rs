@@ -108,7 +108,7 @@ pub fn places(data: &Path, exe: &Path) -> Vec<Place> {
                 path: data
                     .join("kio")
                     .join("servicemenus")
-                    .join("pocketdesk-send.desktop"),
+                    .join("friday-mobile-send.desktop"),
                 kind: Kind::File(dolphin_menu(exe)),
             },
         ]

@@ -268,7 +268,7 @@ impl Overlay {
             &surface,
             self.outputs.get(output),
             Layer::Overlay,
-            "pocketdesk-laser".to_string(),
+            "friday-mobile-laser".to_string(),
             &qh,
             (),
         );
@@ -358,7 +358,7 @@ fn picture(
     size: u32,
 ) -> Option<(OwnedFd, WlShmPool, WlBuffer)> {
     let pixels = render_dot(size);
-    let name = std::ffi::CString::new("pocketdesk-laser").ok()?;
+    let name = std::ffi::CString::new("friday-mobile-laser").ok()?;
     // SAFETY: a valid C string; the descriptor is checked below.
     let raw = unsafe { libc::memfd_create(name.as_ptr(), libc::MFD_CLOEXEC) };
     if raw < 0 {

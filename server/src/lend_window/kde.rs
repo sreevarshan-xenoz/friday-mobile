@@ -44,15 +44,15 @@ pub const NOT_KDE: &str = "This computer is not running KDE Plasma";
 
 /// The name the script is loaded under, so a script left from a server that
 /// was killed is found and replaced.
-pub const PLUGIN: &str = "pocketdesk-windows";
+pub const PLUGIN: &str = "friday-mobile-windows";
 
 /// The global shortcut the script registers, which the server triggers (over
 /// KDE's global-shortcut service) to make the script report at once.
 pub const POKE_SHORTCUT: &str = "PocketdeskPoke";
 
 /// Where the script's reports are received, and what they are called.
-pub const OBJECT_PATH: &str = "/dev/pocketdesk/Windows";
-pub const INTERFACE: &str = "dev.pocketdesk.Windows";
+pub const OBJECT_PATH: &str = "/dev/friday_mobile/Windows";
+pub const INTERFACE: &str = "dev.friday_mobile.Windows";
 
 /// The portal's `AvailableSourceTypes` bit for a single window.
 const WINDOW_SOURCE: u32 = 2;

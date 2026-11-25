@@ -102,7 +102,7 @@ async fn main_async() -> Result<()> {
         std::fs::create_dir_all(&dir)?;
         let appender = tracing_appender::rolling::Builder::new()
             .rotation(tracing_appender::rolling::Rotation::DAILY)
-            .filename_prefix("pocketdesk")
+            .filename_prefix("friday-mobile")
             .filename_suffix("log")
             .max_log_files(7)
             .build(&dir)?;

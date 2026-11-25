@@ -18,7 +18,7 @@ use zbus::zvariant::{ObjectPath, OwnedValue, Value};
 use super::{Button, Choice, command};
 
 /// The player's name on the session bus.
-const BUS_NAME: &str = "org.mpris.MediaPlayer2.pocketdesk_phone";
+const BUS_NAME: &str = "org.mpris.MediaPlayer2.friday_mobile_phone";
 
 /// Where MPRIS players are served.
 const PATH: &str = "/org/mpris/MediaPlayer2";
@@ -139,7 +139,7 @@ fn metadata(shown: Option<&Shown>) -> HashMap<String, OwnedValue> {
     let Some(shown) = shown else {
         return map;
     };
-    if let Ok(path) = ObjectPath::try_from("/dev/pocketdesk/phone/track")
+    if let Ok(path) = ObjectPath::try_from("/dev/friday_mobile/phone/track")
         && let Ok(id) = OwnedValue::try_from(Value::from(path))
     {
         map.insert("mpris:trackid".to_string(), id);

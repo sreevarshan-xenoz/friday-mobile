@@ -505,9 +505,9 @@ fn open_window(state_dir: &Path, page: &str, phone: Option<&str>) -> std::io::Re
     friday_mobile_core::local::app_open::request(state_dir, page, phone, now_unix())?;
     let exe = std::env::current_exe()?;
     let window = exe.with_file_name(if cfg!(windows) {
-        "pocketdesk-app.exe"
+        "friday-mobile-app.exe"
     } else {
-        "pocketdesk-app"
+        "friday-mobile-app"
     });
     tray_instance::start(&window)
 }

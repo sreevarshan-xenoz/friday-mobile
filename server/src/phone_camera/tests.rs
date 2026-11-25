@@ -2,18 +2,21 @@ use super::*;
 
 #[test]
 fn a_camera_is_named_for_its_phone() {
-    assert_eq!(camera_name(Some("Pixel 8")), "Pocketdesk camera (Pixel 8)");
-    assert_eq!(camera_name(None), "Pocketdesk camera (phone)");
-    assert_eq!(camera_name(Some("  ")), "Pocketdesk camera (phone)");
+    assert_eq!(
+        camera_name(Some("Pixel 8")),
+        "FRIDAY Mobile camera (Pixel 8)"
+    );
+    assert_eq!(camera_name(None), "FRIDAY Mobile camera (phone)");
+    assert_eq!(camera_name(Some("  ")), "FRIDAY Mobile camera (phone)");
     assert_eq!(
         camera_name(Some("ab\u{202E}c\nd")),
-        "Pocketdesk camera (abcd)",
+        "FRIDAY Mobile camera (abcd)",
         "no control or format characters"
     );
     let long = "x".repeat(100);
     assert_eq!(
         camera_name(Some(&long)).len(),
-        "Pocketdesk camera ()".len() + 40
+        "FRIDAY Mobile camera ()".len() + 40
     );
 }
 
@@ -172,7 +175,7 @@ fn a_camera_decodes_from_a_keyframe_and_asks_after_a_gap() {
 
 #[test]
 fn a_camera_without_a_size_takes_nothing() {
-    let mut camera = PhoneCamera::new("Pocketdesk camera (test)".into(), 30);
+    let mut camera = PhoneCamera::new("FRIDAY Mobile camera (test)".into(), 30);
     assert!(!camera.frame(true, 0, &[0, 0, 0, 1]).unwrap());
     assert_eq!(camera.counts(), (0, 0));
     assert_eq!(camera.node_id(), None);
@@ -215,7 +218,7 @@ fn a_stopped_decoder_is_collected_and_seen() {
 #[cfg(unix)]
 #[test]
 fn a_camera_whose_decoder_keeps_stopping_restarts_then_ends() {
-    let mut camera = PhoneCamera::new("Pocketdesk camera (test)".into(), 30);
+    let mut camera = PhoneCamera::new("FRIDAY Mobile camera (test)".into(), 30);
     camera.start_decoder = dying_decoder;
     let t0 = Instant::now();
     assert_eq!(camera.lifecycle.config(64, 48, t0), Step::Open(64, 48));
@@ -381,7 +384,7 @@ mod pipewire_node {
     #[test]
     #[ignore = "needs a running PipeWire"]
     fn the_node_is_there_while_the_camera_is_and_gone_after() {
-        let name = "Pocketdesk camera (lifecycle test)";
+        let name = "FRIDAY Mobile camera (lifecycle test)";
         let latest = Arc::new(Latest::default());
         let node =
             super::super::node::Node::open(name, 640, 480, 30, latest).expect("PipeWire reachable");
@@ -416,7 +419,7 @@ mod pipewire_node {
         let Some(units) = test_stream(90) else {
             panic!("needs ffmpeg with libx264");
         };
-        let mut camera = PhoneCamera::new("Pocketdesk camera (frames test)".into(), 30);
+        let mut camera = PhoneCamera::new("FRIDAY Mobile camera (frames test)".into(), 30);
         assert!(camera.config(64, 48).expect("published"), "asks a keyframe");
         let deadline = Instant::now() + std::time::Duration::from_secs(5);
         while camera.node_id().is_none() && Instant::now() < deadline {
@@ -488,7 +491,7 @@ mod pipewire_node {
             .find(|o| {
                 o["info"]["props"]["node.description"]
                     .as_str()
-                    .is_some_and(|d| d.starts_with("Pocketdesk camera"))
+                    .is_some_and(|d| d.starts_with("FRIDAY Mobile camera"))
             })
             .expect("a published camera");
         let id = node["id"].as_u64().expect("its id") as u32;

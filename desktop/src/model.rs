@@ -1570,7 +1570,7 @@ pub fn newest_log(state_dir: &Path) -> Option<std::path::PathBuf> {
         .filter(|p| {
             p.file_name()
                 .and_then(|n| n.to_str())
-                .is_some_and(|n| n.starts_with("pocketdesk.") && n.ends_with(".log"))
+                .is_some_and(|n| n.starts_with("friday-mobile.") && n.ends_with(".log"))
         })
         .max()
 }
@@ -2604,9 +2604,9 @@ mod tests {
         let dir = temp_dir("logs");
         let logs = dir.join(LOG_DIR);
         std::fs::create_dir_all(&logs).unwrap();
-        std::fs::write(logs.join("pocketdesk.2026-10-11.log"), "old\n").unwrap();
+        std::fs::write(logs.join("friday-mobile.2026-10-11.log"), "old\n").unwrap();
         let lines: String = (0..250).map(|i| format!("line {i}\n")).collect();
-        std::fs::write(logs.join("pocketdesk.2026-10-12.log"), lines).unwrap();
+        std::fs::write(logs.join("friday-mobile.2026-10-12.log"), lines).unwrap();
         let tail = log_tail(&dir, 200);
         assert_eq!(tail.len(), 200);
         assert_eq!(tail.first().map(String::as_str), Some("line 50"));
@@ -2624,7 +2624,7 @@ mod tests {
         let lines: String = (0..20_000)
             .map(|i| format!("line {i:05} {}\n", "x".repeat(20)))
             .collect();
-        std::fs::write(logs.join("pocketdesk.2026-10-20.log"), &lines).unwrap();
+        std::fs::write(logs.join("friday-mobile.2026-10-20.log"), &lines).unwrap();
         let tail = log_tail(&dir, 400);
         assert_eq!(tail.len(), 400);
         assert!(tail.last().unwrap().starts_with("line 19999"));
@@ -2653,7 +2653,7 @@ mod tests {
         let logs = dir.join(LOG_DIR);
         std::fs::create_dir_all(&logs).unwrap();
         assert_eq!(log_stamp(&dir), None);
-        let file = logs.join("pocketdesk.2026-10-20.log");
+        let file = logs.join("friday-mobile.2026-10-20.log");
         std::fs::write(&file, "a\n").unwrap();
         let first = log_stamp(&dir);
         assert!(first.is_some());

@@ -60,9 +60,9 @@ pub fn camera_name(phone: Option<&str>) -> String {
         .collect();
     let phone = phone.trim();
     if phone.is_empty() {
-        "Pocketdesk camera (phone)".to_string()
+        "FRIDAY Mobile camera (phone)".to_string()
     } else {
-        format!("Pocketdesk camera ({phone})")
+        format!("FRIDAY Mobile camera ({phone})")
     }
 }
 

@@ -32,7 +32,7 @@ fn helper() -> Option<PathBuf> {
     let beside = std::env::current_exe()
         .ok()?
         .parent()?
-        .join("pocketdesk-pam-ask");
+        .join("friday-mobile-pam-ask");
     beside.is_file().then_some(beside)
 }
 

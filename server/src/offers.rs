@@ -1914,7 +1914,7 @@ mod tests {
     #[test]
     fn a_folder_leaves_out_the_servers_own_files() {
         let home = temp_dir("folder-private").join("home");
-        let state = home.join("AppData").join("pocketdesk");
+        let state = home.join("AppData").join("friday-mobile");
         std::fs::create_dir_all(&state).unwrap();
         std::fs::write(state.join("identity.key"), b"k").unwrap();
         std::fs::write(home.join("notes.txt"), b"n").unwrap();

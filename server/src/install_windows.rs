@@ -546,7 +546,9 @@ mod tests {
     #[test]
     fn only_program_files_counts_as_admin_owned_and_env_cannot_move_it() {
         let pf = known_folder(&FOLDERID_ProgramFiles).expect("Program Files exists");
-        assert!(in_program_files(&pf.join(r"Pocketdesk\friday-mobile.exe")));
+        assert!(in_program_files(
+            &pf.join(r"FRIDAY Mobile\friday-mobile.exe")
+        ));
         assert!(!in_program_files(Path::new(
             r"C:\Users\me\Downloads\friday-mobile.exe"
         )));

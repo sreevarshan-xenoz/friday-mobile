@@ -156,7 +156,7 @@ fn images_dir() -> io::Result<PathBuf> {
     let base = std::env::temp_dir();
     #[cfg(not(windows))]
     let base = dirs::cache_dir().ok_or_else(|| io::Error::other("no cache folder"))?;
-    Ok(base.join("pocketdesk-browser"))
+    Ok(base.join("friday-mobile-browser"))
 }
 
 /// Keep `image` in its own owner-only folder under `dir`, so the phone gets
@@ -768,13 +768,13 @@ mod tests {
         let dir = images_dir().unwrap();
         #[cfg(not(windows))]
         assert!(!dir.starts_with("/tmp"), "{}", dir.display());
-        assert!(dir.ends_with("pocketdesk-browser"));
+        assert!(dir.ends_with("friday-mobile-browser"));
     }
 
     #[test]
     fn a_file_where_the_folder_should_be_is_left_alone() {
         let base = temp("not-a-folder");
-        let dir = base.join("pocketdesk-browser");
+        let dir = base.join("friday-mobile-browser");
         std::fs::write(&dir, b"someone else's").unwrap();
         let image = Image {
             bytes: vec![1],
@@ -799,7 +799,7 @@ mod tests {
         let home = temp("home");
         std::fs::create_dir_all(home.join(".config/google-chrome")).unwrap();
         std::fs::create_dir_all(home.join(".mozilla")).unwrap();
-        let exe = Path::new("/usr/bin/pocketdesk");
+        let exe = Path::new("/usr/bin/friday-mobile");
         let done = install_linux(&home, exe).unwrap();
         assert_eq!(done, vec!["Chrome", "Firefox"]);
         let chrome: Value = serde_json::from_str(
@@ -813,7 +813,7 @@ mod tests {
             chrome["allowed_origins"][0],
             format!("chrome-extension://{CHROMIUM_EXTENSION_ID}/")
         );
-        assert_eq!(chrome["path"], "/usr/bin/pocketdesk");
+        assert_eq!(chrome["path"], "/usr/bin/friday-mobile");
         let firefox: Value = serde_json::from_str(
             &std::fs::read_to_string(
                 home.join(".mozilla/native-messaging-hosts/dev.pocketdesk.host.json"),

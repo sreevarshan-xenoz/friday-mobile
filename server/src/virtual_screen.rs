@@ -1275,12 +1275,16 @@ mod tests {
 
     #[test]
     fn a_hyprland_screen_is_named_with_the_servers_tag() {
-        let tag = hypr_tag(std::path::Path::new("/home/user/.local/state/pocketdesk"));
+        let tag = hypr_tag(std::path::Path::new(
+            "/home/user/.local/state/friday-mobile",
+        ));
         assert_eq!(tag.len(), 8);
         assert!(tag.bytes().all(|b| b.is_ascii_hexdigit()));
         assert_eq!(
             tag,
-            hypr_tag(std::path::Path::new("/home/user/.local/state/pocketdesk")),
+            hypr_tag(std::path::Path::new(
+                "/home/user/.local/state/friday-mobile"
+            )),
             "the same folder, the same tag"
         );
         assert_ne!(

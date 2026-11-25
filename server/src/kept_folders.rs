@@ -133,7 +133,7 @@ fn root(config: &Config) -> Result<PathBuf, String> {
     let base = dirs::document_dir()
         .or_else(dirs::home_dir)
         .ok_or("no documents or home folder for the kept folders")?;
-    Ok(base.join("Pocketdesk phones"))
+    Ok(base.join("FRIDAY Mobile phones"))
 }
 
 /// Decide where `file` of `size` bytes from `device` goes, and whether it
