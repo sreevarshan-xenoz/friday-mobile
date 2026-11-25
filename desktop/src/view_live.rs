@@ -106,8 +106,8 @@ pub(crate) fn server(
 ) -> Child {
     let mut command = Command::new(exe);
     command
-        .env("POCKETDESK_CONFIG_DIR", config)
-        .env("POCKETDESK_STATE_DIR", state)
+        .env("FRIDAY_MOBILE_CONFIG_DIR", config)
+        .env("FRIDAY_MOBILE_STATE_DIR", state)
         .env("POCKETDESK_CLIPBOARD_FILE", base.join("clipboard.txt"))
         .env(
             "POCKETDESK_CLIPBOARD_IMAGE_FILE",

@@ -140,8 +140,8 @@ fn a_floating_window_at_the_edge_is_picked_and_dragged_back_where_the_pointer_ca
         std::env::remove_var("WAYLAND_SOCKET");
         std::env::remove_var("XDG_CURRENT_DESKTOP");
         std::env::remove_var("HYPRLAND_INSTANCE_SIGNATURE");
-        std::env::set_var("POCKETDESK_STATE_DIR", &state);
-        std::env::set_var("POCKETDESK_CONFIG_DIR", &config);
+        std::env::set_var("FRIDAY_MOBILE_STATE_DIR", &state);
+        std::env::set_var("FRIDAY_MOBILE_CONFIG_DIR", &config);
         std::env::set_var("SWAYSOCK", &sway_socket);
     }
     std::fs::write(config.join("config.toml"), "lend_windows = true\n").unwrap();

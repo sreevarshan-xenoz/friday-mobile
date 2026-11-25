@@ -225,7 +225,7 @@ def owner_state_dirs() -> list[pathlib.Path]:
             bases.append(pathlib.Path(os.environ[var]))
     bases += [pathlib.Path.home() / ".local" / "state", pathlib.Path.home() / ".config"]
     dirs = [b / name for b in bases for name in ("pocketdesk", "linux-link")]
-    for var in ("POCKETDESK_STATE_DIR", "POCKETDESK_CONFIG_DIR"):
+    for var in ("FRIDAY_MOBILE_STATE_DIR", "FRIDAY_MOBILE_CONFIG_DIR"):
         if os.environ.get(var):
             dirs.append(pathlib.Path(os.environ[var]))
     return dirs
@@ -476,8 +476,8 @@ class Server:
     def env(self) -> dict:
         return self.extra | {
             "COMPUTERNAME": "Test Desk",
-            "POCKETDESK_STATE_DIR": str(self.root / "state"),
-            "POCKETDESK_CONFIG_DIR": str(self.root / "config"),
+            "FRIDAY_MOBILE_STATE_DIR": str(self.root / "state"),
+            "FRIDAY_MOBILE_CONFIG_DIR": str(self.root / "config"),
             "POCKETDESK_CLIPBOARD_FILE": str(self.root / "clip.txt"),
             # AD1: the clipboard's image, a PNG (none while it is absent).
             "POCKETDESK_CLIPBOARD_IMAGE_FILE": str(self.root / "clip.png"),

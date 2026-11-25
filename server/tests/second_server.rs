@@ -1,5 +1,5 @@
 //! A second server runs beside the installed one (reliability pass, R6a):
-//! `POCKETDESK_CONFIG_DIR` and `POCKETDESK_STATE_DIR` give it its own
+//! `FRIDAY_MOBILE_CONFIG_DIR` and `FRIDAY_MOBILE_STATE_DIR` give it its own
 //! config (ports), iroh identity, device id and pairings, and `pocketdesk
 //! stop` with the same variables stops only it.
 //!
@@ -31,8 +31,8 @@ fn folders(name: &str, control: u16, streaming: u16) -> (PathBuf, PathBuf) {
 fn pocketdesk(config: &Path, state: &Path) -> Command {
     let mut command = Command::new(EXE);
     command
-        .env("POCKETDESK_CONFIG_DIR", config)
-        .env("POCKETDESK_STATE_DIR", state)
+        .env("FRIDAY_MOBILE_CONFIG_DIR", config)
+        .env("FRIDAY_MOBILE_STATE_DIR", state)
         .stdout(Stdio::null())
         .stderr(Stdio::null());
     command

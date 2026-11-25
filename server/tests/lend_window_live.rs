@@ -213,8 +213,8 @@ fn a_window_is_lent_to_a_screen_of_its_size_and_returned() {
         std::env::remove_var("DISPLAY");
         std::env::remove_var("WAYLAND_SOCKET");
         std::env::remove_var("XDG_CURRENT_DESKTOP");
-        std::env::set_var("POCKETDESK_STATE_DIR", &state);
-        std::env::set_var("POCKETDESK_CONFIG_DIR", &config);
+        std::env::set_var("FRIDAY_MOBILE_STATE_DIR", &state);
+        std::env::set_var("FRIDAY_MOBILE_CONFIG_DIR", &config);
         match &sway_socket {
             Some(socket) => std::env::set_var("SWAYSOCK", socket),
             None => std::env::remove_var("SWAYSOCK"),

@@ -186,7 +186,7 @@ fn main() -> eframe::Result {
                 width: 64,
                 height: 64,
             }),
-        // A throwaway instance (`POCKETDESK_CONFIG_DIR`, as R6a's second
+        // A throwaway instance (`FRIDAY_MOBILE_CONFIG_DIR`, as R6a's second
         // server) keeps its window and page beside its config, never the
         // installed app's.
         persistence_path: std::env::var_os(friday_mobile_core::local::paths::CONFIG_DIR_VAR)

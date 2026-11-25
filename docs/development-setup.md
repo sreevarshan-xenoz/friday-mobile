@@ -69,7 +69,7 @@ always sends on Cubic (BK11).
 POCKETDESK_CC=cubic cargo run --bin pocketdesk -- start
 ```
 
-`POCKETDESK_STATE_DIR` moves the state folder (pairings, device keys,
+`FRIDAY_MOBILE_STATE_DIR` moves the state folder (pairings, device keys,
 certificates, the PIN, session records) somewhere else, for a portable
 setup or a separate set of pairings. It must be an absolute path, in a
 folder only you can write (not a shared one such as `/tmp`, where another
@@ -77,10 +77,10 @@ user could create it first), and the desktop app needs the same value.
 The config file, and so the ports, stay where they are:
 
 ```bash
-POCKETDESK_STATE_DIR="$HOME/.local/state/pocketdesk-test" cargo run --bin pocketdesk -- start
+FRIDAY_MOBILE_STATE_DIR="$HOME/.local/state/pocketdesk-test" cargo run --bin pocketdesk -- start
 ```
 
-`POCKETDESK_CONFIG_DIR` (also absolute) moves the config folder: `config.toml`
+`FRIDAY_MOBILE_CONFIG_DIR` (also absolute) moves the config folder: `config.toml`
 and the iroh identity (`iroh_secret.key`). With both set, a **second server**
 runs beside the installed one, for measurements and two-computer tests, without
 touching it: give it other ports and keep it off the network's list.
@@ -91,7 +91,7 @@ printf 'control_port = 1816
 streaming_port = 4816
 lan_discovery = false
 ' > "$HOME/pd-second/config/config.toml"
-export POCKETDESK_CONFIG_DIR="$HOME/pd-second/config" POCKETDESK_STATE_DIR="$HOME/pd-second/state"
+export FRIDAY_MOBILE_CONFIG_DIR="$HOME/pd-second/config" FRIDAY_MOBILE_STATE_DIR="$HOME/pd-second/state"
 cargo run --bin pocketdesk -- start      # its own device id, iroh id and pairings
 cargo run --bin pocketdesk -- stop       # with the same variables: stops only this one
 ```
@@ -373,7 +373,7 @@ types into it and posts notifications on it.
    ```
 
 2. Pair the phone with it once by hand: start it with
-   `POCKETDESK_STATE_DIR=<root>/state POCKETDESK_CONFIG_DIR=<root>/config pocketdesk start`,
+   `FRIDAY_MOBILE_STATE_DIR=<root>/state FRIDAY_MOBILE_CONFIG_DIR=<root>/config pocketdesk start`,
    `adb reverse tcp:1716 tcp:1726`, add `127.0.0.1` on the phone and pair. Then stop
    it (`pocketdesk stop` with the same folders) and remove the reverse.
 3. Install the fixture app, `cd android && ./gradlew :fixture:installDebug`, open its
