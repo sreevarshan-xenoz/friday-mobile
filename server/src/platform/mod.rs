@@ -204,7 +204,7 @@ mod markup_tests {
             args,
             [
                 "--app-name",
-                "Pocketdesk",
+                "FRIDAY Mobile",
                 "--expire-time",
                 "8000",
                 "--",

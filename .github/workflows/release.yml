@@ -138,7 +138,7 @@ jobs:
         timeout-minutes: 30
         run: |
           retry() { for n in 1 2 3; do "$@" && return 0; echo "attempt $n failed: $*" >&2; sleep 20; done; return 1; }
-          tarball=$(ls release/pocketdesk-*-linux-x86_64.tar.gz)
+          tarball=$(ls release/friday-mobile-*-linux-x86_64.tar.gz)
           cp "$tarball" "$RUNNER_TEMP/tarball.tar.gz"
           check='set -e
             mkdir /pd && tar -C /pd -xzf /r/tarball.tar.gz && cd /pd/friday-mobile-*
@@ -372,7 +372,7 @@ jobs:
 
       - name: Checksums
         working-directory: dist
-        run: sha256sum friday-mobile-* pocketdesk-* > SHA256SUMS && cat SHA256SUMS
+        run: sha256sum friday-mobile-* > SHA256SUMS && cat SHA256SUMS
 
       # A dry run stops here: the files are in the workflow's artifacts.
       - uses: actions/upload-artifact@v4

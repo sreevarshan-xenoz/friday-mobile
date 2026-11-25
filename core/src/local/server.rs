@@ -21,9 +21,9 @@ pub fn is_running(state_dir: &Path) -> bool {
     server_pid(state_dir).is_some_and(process_is_server)
 }
 
-/// The names the server runs under: the `pocketdesk` command and its short
-/// form `pd`. The desktop app (`pocketdesk-app`) is not one of them.
-pub const SERVER_PROGRAMS: [&str; 2] = ["pocketdesk", "pd"];
+/// The names the server runs under: the `friday-mobile` command and its
+/// short form `pd`. The desktop app (`friday-mobile-app`) is not one of them.
+pub const SERVER_PROGRAMS: [&str; 2] = ["friday-mobile", "pd"];
 
 /// Whether an executable's file name is the server's, with or without
 /// `.exe`, in any case.

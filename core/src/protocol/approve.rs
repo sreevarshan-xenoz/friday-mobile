@@ -61,7 +61,7 @@ pub const MAX_CHAIN: usize = 8;
 const MAX_CERT_B64: usize = 16 * 1024;
 
 /// Where the packages install the PAM helper; the PAM lines name it.
-pub const HELPER_PATH: &str = "/usr/lib/pocketdesk/pocketdesk-pam-ask";
+pub const HELPER_PATH: &str = "/usr/lib/friday-mobile/friday-mobile-pam-ask";
 /// Where root pins each user's phones' keys (`<user>.json`).
 pub const PIN_DIR: &str = "/etc/friday-mobile/pam";
 

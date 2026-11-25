@@ -236,9 +236,7 @@ begin
   if (CurUninstallStep = usPostUninstall) and not UninstallSilent then
     if MsgBox(CustomMessage('RemoveData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
     begin
-      DelTree(ExpandConstant('{userappdata}\FRIDAY Mobile'), True, True, True);
-      DelTree(ExpandConstant('{localappdata}\FRIDAY Mobile'), True, True, True);
-      DelTree(ExpandConstant('{userappdata}\pocketdesk'), True, True, True);
-      DelTree(ExpandConstant('{localappdata}\pocketdesk'), True, True, True);
+      DelTree(ExpandConstant('{userappdata}\friday-mobile'), True, True, True);
+      DelTree(ExpandConstant('{localappdata}\friday-mobile'), True, True, True);
     end;
 end;

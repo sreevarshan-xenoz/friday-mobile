@@ -158,6 +158,6 @@ chmod 755 "$pkg/DEBIAN/postinst" "$pkg/DEBIAN/prerm" "$pkg/DEBIAN/postrm"
 
 mkdir -p "$out"
 # Named as the release's other files are, so its globs and checksums take it.
-deb="$out/pocketdesk-${name}-linux-${arch}.deb"
+deb="$out/friday-mobile-${name}-linux-${arch}.deb"
 dpkg-deb --root-owner-group -Zxz --build "$pkg" "$deb" >/dev/null
 echo "$deb"
