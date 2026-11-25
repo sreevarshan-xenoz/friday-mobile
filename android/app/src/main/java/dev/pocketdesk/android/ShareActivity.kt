@@ -82,6 +82,12 @@ class ShareActivity : ComponentActivity() {
         val uris = sharedUris(intent)
         val text =
             if (intent.type == "text/plain") intent.getStringExtra(Intent.EXTRA_TEXT) else null
+        if (intent.component?.className == AskShare.ALIAS) {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            val shareText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+            return if (shareText.isNullOrBlank()) done(getString(R.string.share_nothing)) else askFriday(host, shareText)
+        }
         if (intent.component?.className == NoteShare.ALIAS) {
             // Styled text too (BF4 review): it is no String extra.
             val note = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
@@ -179,6 +185,138 @@ class ShareActivity : ComponentActivity() {
         }.start()
     }
 
+    private fun askFriday(host: HostStore.Host, text: String) {
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.ask_friday_question_hint)
+            isSingleLine = false
+            maxLines = 4
+        }
+        val padding = (16 * resources.displayMetrics.density).toInt()
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(padding, padding / 2, padding, 0)
+            addView(input)
+        }
+
+        var asking = false
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.ask_friday_dialog_title)
+            .setView(container)
+            .setPositiveButton(R.string.ask_friday_action) { _, _ ->
+                asking = true
+                val question = input.text?.toString()?.takeIf { it.isNotBlank() }
+                val progress = android.app.AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.ask_friday_asking, HostStore.shownName(this, host.address)))
+                    .setCancelable(false)
+                    .show()
+
+                Thread {
+                    val result = RustCore.sendAsk(host.address, host.controlPort, text, question)
+                    runOnUiThread {
+                        runCatching { progress.dismiss() }
+                        if (result.isSuccess) {
+                            showAnswerOrNotify(result.getOrThrow())
+                        } else {
+                            done(AskShare.words(this, HostStore.shownName(this, host.address), result.exceptionOrNull()?.message))
+                        }
+                    }
+                }.start()
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ ->
+                finish()
+            }
+            .setOnDismissListener {
+                if (!asking) finish()
+            }
+            .create()
+
+        dialog.show()
+    }
+
+    private fun showAnswerOrNotify(answer: String) {
+        if (isFinishing || isDestroyed) {
+            postAnswerNotification(answer)
+            return
+        }
+        val scroll = android.widget.ScrollView(this).apply {
+            val tv = android.widget.TextView(this@ShareActivity).apply {
+                setText(answer)
+                setTextIsSelectable(true)
+                val padding = (16 * resources.displayMetrics.density).toInt()
+                setPadding(padding, padding, padding, padding)
+            }
+            addView(tv)
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.ask_friday_response_title)
+            .setView(scroll)
+            .setPositiveButton(R.string.ask_friday_copy) { _, _ ->
+                val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("FRIDAY", answer))
+                Toast.makeText(applicationContext, R.string.ask_friday_copied, Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .setNegativeButton(R.string.ask_friday_close) { _, _ ->
+                finish()
+            }
+            .setOnDismissListener {
+                finish()
+            }
+            .show()
+    }
+
+    private fun postAnswerNotification(answer: String) {
+        createAskChannelIfNeeded()
+        val notificationId = (System.currentTimeMillis() % 100000).toInt()
+        val copyIntent = Intent(this, dev.pocketdesk.android.ask.AskCopyReceiver::class.java).apply {
+            putExtra(dev.pocketdesk.android.ask.AskCopyReceiver.EXTRA_ANSWER, answer)
+            putExtra(dev.pocketdesk.android.ask.AskCopyReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+        }
+        val copyPending = android.app.PendingIntent.getBroadcast(
+            this,
+            notificationId,
+            copyIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val builder = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.Notification.Builder(this, ASK_CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            android.app.Notification.Builder(this)
+        }
+            .setSmallIcon(R.drawable.ic_stat_pocketdesk)
+            .setContentTitle(getString(R.string.ask_friday_response_title))
+            .setContentText(answer)
+            .setStyle(android.app.Notification.BigTextStyle().bigText(answer))
+            .addAction(
+                android.app.Notification.Action.Builder(
+                    null,
+                    getString(R.string.ask_friday_copy),
+                    copyPending,
+                ).build()
+            )
+            .setAutoCancel(true)
+
+        val manager = getSystemService(android.app.NotificationManager::class.java)
+        manager?.notify(notificationId, builder.build())
+    }
+
+    private fun createAskChannelIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val manager = getSystemService(android.app.NotificationManager::class.java) ?: return
+            if (manager.getNotificationChannel(ASK_CHANNEL_ID) == null) {
+                val channel = android.app.NotificationChannel(
+                    ASK_CHANNEL_ID,
+                    getString(R.string.channel_ask_friday),
+                    android.app.NotificationManager.IMPORTANCE_HIGH,
+                ).apply {
+                    description = getString(R.string.channel_ask_friday_desc)
+                }
+                manager.createNotificationChannel(channel)
+            }
+        }
+    }
+
     /** Say [message] where it outlives this screen, and close it. */
     private fun done(message: String) {
         // AA2: how a share left this screen (its toast's words: counts and a
@@ -191,5 +329,6 @@ class ShareActivity : ComponentActivity() {
     private companion object {
         /** The manifest's "Open on computer" alias of this screen. */
         const val OPEN_ON_COMPUTER = "dev.pocketdesk.android.OpenOnComputer"
+        const val ASK_CHANNEL_ID = "channel_ask_friday"
     }
 }

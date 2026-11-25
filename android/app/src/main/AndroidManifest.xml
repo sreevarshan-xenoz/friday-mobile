@@ -231,6 +231,19 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- Ask FRIDAY: text or a link sent to FRIDAY on the computer. -->
+        <activity-alias
+            android:name=".AskFriday"
+            android:exported="true"
+            android:label="@string/ask_friday_label"
+            android:targetActivity=".ShareActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- M1: keeps the link to the paired computer through the screen off. -->
         <service
             android:name=".service.LinkKeeperService"
@@ -543,6 +556,10 @@
         <!-- N1: Stop on the ring from the computer. -->
         <receiver
             android:name=".ring.StopRingReceiver"
+            android:exported="false" />
+        <!-- Ask FRIDAY: Copy action from notification. -->
+        <receiver
+            android:name=".ask.AskCopyReceiver"
             android:exported="false" />
     </application>
 

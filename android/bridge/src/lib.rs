@@ -18,6 +18,7 @@ mod dial_race;
 mod dials;
 mod download;
 mod extra_links;
+mod friday_ask;
 mod in_use;
 mod introductions;
 mod link;
@@ -1818,6 +1819,27 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeSendNot
     let address = jstring_to_string(&mut env, &address);
     let text = jstring_to_string(&mut env, &text);
     let json = envelope_unit(RUNTIME.block_on(notes::send_note(address, port as u16, text)));
+    to_jstring(&mut env, json)
+}
+
+/// Ask FRIDAY on the computer (Ask FRIDAY): `{"ok": answer}` or `{"error": reason}`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeSendAsk(
+    mut env: JNIEnv<'_>,
+    _class: JClass<'_>,
+    address: JString<'_>,
+    port: jint,
+    text: JString<'_>,
+    question: JString<'_>,
+) -> jstring {
+    let address = jstring_to_string(&mut env, &address);
+    let text = jstring_to_string(&mut env, &text);
+    let question = {
+        let q = jstring_to_string(&mut env, &question);
+        if q.trim().is_empty() { None } else { Some(q) }
+    };
+    let json =
+        envelope(RUNTIME.block_on(friday_ask::send_ask(address, port as u16, text, question)));
     to_jstring(&mut env, json)
 }
 

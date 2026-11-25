@@ -84,10 +84,13 @@ pub enum Capability {
     /// a camera device apps here can open, and this computer asking the
     /// phone to start one. Off unless chosen: a camera seen from afar.
     Webcam,
+    /// Send text from the phone to FRIDAY on this computer and get its
+    /// answer back. Off unless chosen.
+    FridayAsk,
 }
 
 impl Capability {
-    pub const ALL: [Capability; 26] = [
+    pub const ALL: [Capability; 27] = [
         Capability::Input,
         Capability::Clipboard,
         Capability::Files,
@@ -114,6 +117,7 @@ impl Capability {
         Capability::Notes,
         Capability::SharedInput,
         Capability::Webcam,
+        Capability::FridayAsk,
     ];
 
     /// What a device may do when its owner never chose (spec P1): today's
@@ -133,6 +137,7 @@ impl Capability {
                 | Capability::Notes
                 | Capability::SharedInput
                 | Capability::Webcam
+                | Capability::FridayAsk
         )
     }
 }
@@ -229,6 +234,8 @@ pub fn capability_for(packet_type: &str) -> Option<Capability> {
         crate::protocol::note::NOTE => Capability::Notes,
         // The computer asking the phone to be its camera (F6 part 2).
         crate::protocol::phone_camera::START => Capability::Webcam,
+        // Ask FRIDAY on this computer.
+        crate::protocol::friday_ask::FRIDAY_ASK => Capability::FridayAsk,
         _ => return None,
     })
 }
@@ -288,6 +295,8 @@ pub struct DevicePermissions {
     pub shared_input: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub webcam: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub friday_ask: Option<bool>,
     /// Hold each session until the owner approves it at the desktop (spec P5).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ask_first: bool,
@@ -328,6 +337,7 @@ impl DevicePermissions {
             Capability::Notes => &mut self.notes,
             Capability::SharedInput => &mut self.shared_input,
             Capability::Webcam => &mut self.webcam,
+            Capability::FridayAsk => &mut self.friday_ask,
         }
     }
 
@@ -359,6 +369,7 @@ impl DevicePermissions {
             Capability::Notes => self.notes,
             Capability::SharedInput => self.shared_input,
             Capability::Webcam => self.webcam,
+            Capability::FridayAsk => self.friday_ask,
         };
         value.unwrap_or(capability.default_allowed())
     }
@@ -550,6 +561,7 @@ mod tests {
                         | Capability::Notes
                         | Capability::SharedInput
                         | Capability::Webcam
+                        | Capability::FridayAsk
                 ),
                 "{capability:?}"
             );
@@ -773,6 +785,26 @@ mod tests {
             serde_json::from_str(r#"{"input": false, "ask_first": true}"#).unwrap();
         assert!(!stored.allows(Capability::Notes));
         assert!(stored.allows(Capability::Files), "files still go");
+    }
+
+    #[test]
+    fn asking_friday_is_off_until_chosen() {
+        assert_eq!(
+            capability_for(crate::protocol::friday_ask::FRIDAY_ASK),
+            Some(Capability::FridayAsk)
+        );
+        assert!(!DevicePermissions::default().allows(Capability::FridayAsk));
+        assert!(!DevicePermissions::someone_else().allows(Capability::FridayAsk));
+        assert!(!DevicePermissions::computer().allows(Capability::FridayAsk));
+        let stored: DevicePermissions =
+            serde_json::from_str(r#"{"input": false, "ask_first": true}"#).unwrap();
+        assert!(!stored.allows(Capability::FridayAsk));
+        let mut chosen = DevicePermissions::default();
+        chosen.set(Capability::FridayAsk, true);
+        assert_eq!(
+            serde_json::to_value(&chosen).unwrap(),
+            serde_json::json!({ "friday_ask": true })
+        );
     }
 
     #[test]
