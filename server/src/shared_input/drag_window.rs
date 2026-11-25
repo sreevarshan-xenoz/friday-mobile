@@ -40,7 +40,7 @@ use std::time::{Duration, Instant};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 use super::wire::Screen;
 
@@ -441,7 +441,7 @@ impl Offer {
 /// [`TITLE_CHARS`] characters.
 fn clean_title(text: &str) -> String {
     text.chars()
-        .filter(|c| !pocketdesk_core::local::shared_input::is_hidden(*c))
+        .filter(|c| !friday_mobile_core::local::shared_input::is_hidden(*c))
         .take(TITLE_CHARS)
         .collect::<String>()
         .trim()
@@ -1037,10 +1037,10 @@ impl Here for Live {
 
     fn open(&self, device: &str, offer: &Offer) -> std::io::Result<()> {
         let dir = crate::state::state_dir().map_err(std::io::Error::other)?;
-        pocketdesk_core::local::app_open::request_borrow_drop(
+        friday_mobile_core::local::app_open::request_borrow_drop(
             &dir,
             device,
-            &pocketdesk_core::local::app_open::DroppedWindow {
+            &friday_mobile_core::local::app_open::DroppedWindow {
                 window: offer.window.clone(),
                 title: offer.title.clone(),
                 x: offer.x,

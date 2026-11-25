@@ -8,9 +8,9 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     InputPacket, QuinnConnection, SOUND_GRANT_AUDIO, SOUND_GRANT_MIC, SOUND_GRANT_SAID,
     SessionMode, SharedConnection, StreamingClient, StreamingConfig, StreamingServer,
 };

@@ -7,8 +7,8 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::answers::{self, Outcome, State};
-use pocketdesk_core::local::phone_notes::{self, Answer, PhoneNote};
+use friday_mobile_core::local::answers::{self, Outcome, State};
+use friday_mobile_core::local::phone_notes::{self, Answer, PhoneNote};
 
 /// How often the list is read again while the tab is open.
 const REFRESH: Duration = Duration::from_secs(2);
@@ -22,7 +22,7 @@ pub const EMPTY_HOW: &str = "Ones you can answer show here, with their buttons a
 pub struct NotesView {
     notes: Vec<PhoneNote>,
     /// The phones' ongoing updates (N4), newest first.
-    cards: Vec<pocketdesk_core::local::phone_live::LiveCard>,
+    cards: Vec<friday_mobile_core::local::phone_live::LiveCard>,
     /// Settings' "Ongoing updates from phones" is off: none shown.
     pub live_off: bool,
     /// Where each answer stands (E1).
@@ -32,7 +32,7 @@ pub struct NotesView {
     read_at: Option<Instant>,
     /// The apps each phone listed (Apps part 2), to offer opening a
     /// notification's app.
-    app_lists: std::collections::BTreeMap<String, pocketdesk_core::local::phone_apps::AppList>,
+    app_lists: std::collections::BTreeMap<String, friday_mobile_core::local::phone_apps::AppList>,
     /// The phone and app a notification's "Open app on the phone" asked for.
     open_app: Option<(String, String)>,
     /// What it said happened, until the app takes it (E5).
@@ -48,7 +48,7 @@ pub struct NotesView {
 
 /// When `phone`'s icon for `app` was kept, if it is.
 fn icon_stamp(state_dir: &Path, phone: &str, app: &str) -> Option<std::time::SystemTime> {
-    let path = pocketdesk_core::local::notification_icons::icon_path(state_dir, phone, app);
+    let path = friday_mobile_core::local::notification_icons::icon_path(state_dir, phone, app);
     std::fs::metadata(path).and_then(|m| m.modified()).ok()
 }
 
@@ -60,7 +60,7 @@ fn icon_texture(
     phone: &str,
     app: &str,
 ) -> Option<egui::TextureHandle> {
-    use pocketdesk_core::local::notification_icons as icons;
+    use friday_mobile_core::local::notification_icons as icons;
     let path = icons::kept_icon(state_dir, phone, app)?;
     let bytes = std::fs::read(path).ok()?;
     if !icons::icon_fits(&bytes) {
@@ -109,11 +109,11 @@ impl NotesView {
             return;
         }
         self.notes = newest_first(phone_notes::read(state_dir));
-        let mut cards = pocketdesk_core::local::phone_live::read(state_dir);
+        let mut cards = friday_mobile_core::local::phone_live::read(state_dir);
         cards.reverse();
         self.cards = cards;
         self.answers = answers::read(state_dir);
-        self.app_lists = pocketdesk_core::local::phone_apps::read(state_dir);
+        self.app_lists = friday_mobile_core::local::phone_apps::read(state_dir);
         // Drafts for notifications that went are dropped.
         let live: Vec<(String, String)> = self
             .notes
@@ -155,19 +155,19 @@ impl NotesView {
 
     /// M8: ask the phone the call rang on to open its dialer with `number`.
     fn call_back(&mut self, state_dir: &Path, note: &PhoneNote, number: &str, now_unix: u64) {
-        let allowed = pocketdesk_core::protocol::kdeconnect::TrustStore::read(
-            state_dir.join(pocketdesk_core::local::paths::TRUST_FILE),
+        let allowed = friday_mobile_core::protocol::kdeconnect::TrustStore::read(
+            state_dir.join(friday_mobile_core::local::paths::TRUST_FILE),
         )
         .map(|store| {
             store
                 .permissions(&note.device_id)
-                .allows(pocketdesk_core::protocol::permissions::Capability::Dial)
+                .allows(friday_mobile_core::protocol::permissions::Capability::Dial)
         })
         .unwrap_or(true);
         self.notice = crate::notice::Notice::outcome(if !allowed {
             Err("Not asked: Call numbers from here is off for this phone (Devices).".to_string())
         } else {
-            pocketdesk_core::local::dials::request(state_dir, &note.device_id, number, now_unix)
+            friday_mobile_core::local::dials::request(state_dir, &note.device_id, number, now_unix)
                 .map(|_| {
                     format!(
                         "Asked the phone to open its dialer with {number}; it does with \u{201c}Calls from the computer\u{201d} on."
@@ -179,7 +179,7 @@ impl NotesView {
 
     /// Ask the phone to clear `note` (L1).
     fn clear(&mut self, state_dir: &Path, note: &PhoneNote, now_unix: u64) {
-        self.notice = match pocketdesk_core::local::note_clears::request(
+        self.notice = match friday_mobile_core::local::note_clears::request(
             state_dir,
             &note.device_id,
             &note.key,
@@ -335,7 +335,7 @@ impl NotesView {
                         // Apps part 2: the notification's app, as the Phone apps
                         // page opens one, when the phone listed it.
                         if let Some(app) =
-                            pocketdesk_core::protocol::phone_action::app_of_notification_key(
+                            friday_mobile_core::protocol::phone_action::app_of_notification_key(
                                 &note.key,
                             )
                             && let Some(list) = self.app_lists.get(&note.device_id)
@@ -360,7 +360,7 @@ impl NotesView {
                         // call is gone there, so only here (M8 review).
                         if ended_call(note) {
                             if ui.button("Remove").on_hover_text("Remove it from this list").clicked() {
-                                self.notice = match pocketdesk_core::local::phone_notes::forget(
+                                self.notice = match friday_mobile_core::local::phone_notes::forget(
                                     state_dir,
                                     &note.device_id,
                                     &note.key,
@@ -415,7 +415,7 @@ impl NotesView {
 /// nothing left to answer.
 fn ended_call(note: &PhoneNote) -> bool {
     note.key
-        .starts_with(pocketdesk_core::local::phone_notes::CALL_PREFIX)
+        .starts_with(friday_mobile_core::local::phone_notes::CALL_PREFIX)
         && note.actions.is_empty()
         && !note.reply
 }
@@ -426,7 +426,7 @@ fn ended_call(note: &PhoneNote) -> bool {
 pub fn call_back_number(note: &PhoneNote) -> Option<String> {
     if !note
         .key
-        .starts_with(pocketdesk_core::local::phone_notes::CALL_PREFIX)
+        .starts_with(friday_mobile_core::local::phone_notes::CALL_PREFIX)
     {
         return None;
     }
@@ -435,7 +435,7 @@ pub fn call_back_number(note: &PhoneNote) -> Option<String> {
         Some((_, number)) => number,
         None => who,
     };
-    pocketdesk_core::protocol::dial::clean_number(number)
+    friday_mobile_core::protocol::dial::clean_number(number)
 }
 
 /// How an answer's line reads.
@@ -457,10 +457,10 @@ pub const NO_WORD_SECS: u64 = 60;
 /// session now, since one gone away cannot say they ended, and not a bar
 /// gone quiet for half an hour (N4 review: a lost cancel).
 pub fn going_on<'a>(
-    cards: &'a [pocketdesk_core::local::phone_live::LiveCard],
+    cards: &'a [friday_mobile_core::local::phone_live::LiveCard],
     devices: &[crate::model::Device],
     now_unix: u64,
-) -> Vec<&'a pocketdesk_core::local::phone_live::LiveCard> {
+) -> Vec<&'a friday_mobile_core::local::phone_live::LiveCard> {
     cards
         .iter()
         .filter(|c| {
@@ -501,7 +501,7 @@ pub fn answer_line(outcome: &Outcome, now_unix: u64) -> (String, Tone) {
 /// age is the note's own (`note_at_unix`, when it came on the phone) plus
 /// how much older it is than the newest message.
 pub fn thread_lines(
-    messages: &[pocketdesk_core::protocol::conversation::Message],
+    messages: &[friday_mobile_core::protocol::conversation::Message],
     note_at_unix: u64,
     now_unix: u64,
 ) -> Vec<(String, bool)> {
@@ -533,8 +533,8 @@ mod tests {
     /// N4: only a reached phone's cards show.
     #[test]
     fn only_a_reached_phone_s_updates_show() {
-        use pocketdesk_core::local::phone_live::LiveCard;
-        use pocketdesk_core::protocol::live::Live;
+        use friday_mobile_core::local::phone_live::LiveCard;
+        use friday_mobile_core::protocol::live::Live;
         let card = |device: &str| LiveCard {
             device_id: device.into(),
             tag: "t".into(),
@@ -565,7 +565,7 @@ mod tests {
         let stale = going_on(
             &cards,
             &[device("near", true)],
-            1 + pocketdesk_core::local::phone_live::STALE_SECS,
+            1 + friday_mobile_core::local::phone_live::STALE_SECS,
         );
         assert!(stale.is_empty(), "a bar gone quiet");
     }
@@ -642,7 +642,7 @@ mod tests {
     /// D4: a chat's thread, the owner's own as "You", aged from the note.
     #[test]
     fn a_chat_reads_as_a_thread() {
-        use pocketdesk_core::protocol::conversation::Message;
+        use friday_mobile_core::protocol::conversation::Message;
         let lines = thread_lines(
             &[
                 Message {

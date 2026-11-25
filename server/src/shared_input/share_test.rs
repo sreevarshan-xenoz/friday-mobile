@@ -18,7 +18,7 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use pocketdesk_core::local::pin::now_unix;
+use friday_mobile_core::local::pin::now_unix;
 use serde::{Deserialize, Serialize};
 
 use super::link::{self, Channel, Pong};
@@ -78,7 +78,7 @@ const KEYS: [u16; 9] = [30, 31, 32, 33, 34, 35, 36, 37, 38];
 
 /// What `share-test` measured: printed, and kept in
 /// `shared_input_latency.json` for the desktop app's Diagnostics.
-pub use pocketdesk_core::local::shared_input::LatencyReport as Report;
+pub use friday_mobile_core::local::shared_input::LatencyReport as Report;
 
 /// One key or move as this computer sent it: a move (`n` its `seq`) or a
 /// key (`n` the count since the cursor arrived, 1 the first), when the
@@ -347,7 +347,7 @@ pub fn run_cli(computer: &str, keys: u32, moves: u32, pause_ms: u32) -> i32 {
             return exit::FAILED;
         }
     };
-    if !pocketdesk_core::local::server::is_running(&dir) {
+    if !friday_mobile_core::local::server::is_running(&dir) {
         eprintln!("share-test: no Pocketdesk server is running");
         return exit::NO_SERVER;
     }
@@ -475,7 +475,7 @@ fn write_whole(path: &Path, json: &str) -> std::io::Result<()> {
     }
     let tmp = path.with_extension("json.tmp");
     std::fs::write(&tmp, json)?;
-    pocketdesk_core::atomic_file::replace(&tmp, path)
+    friday_mobile_core::atomic_file::replace(&tmp, path)
 }
 
 /// Leave `request` for the server.
@@ -700,7 +700,7 @@ async fn run_one(dir: &Path, request: &Request) -> Outcome {
     match measured {
         Ok((report, stages)) => {
             outcome.stages = Some(stages);
-            if let Err(e) = pocketdesk_core::local::shared_input::write_latency(dir, &report) {
+            if let Err(e) = friday_mobile_core::local::shared_input::write_latency(dir, &report) {
                 tracing::warn!("share-test: the latency could not be kept: {e}");
             }
             outcome.latency = Some(report);
@@ -728,14 +728,14 @@ async fn open_when_direct(device_id: &str) -> Result<Channel, String> {
 /// The names this computer knows its computers by: the ones it paired with
 /// (`computers.json`), and the ones that paired with it (the trust store).
 fn names(dir: &Path) -> Vec<(String, String)> {
-    let mut names: Vec<(String, String)> = pocketdesk_core::local::computers::read(dir)
+    let mut names: Vec<(String, String)> = friday_mobile_core::local::computers::read(dir)
         .computers
         .into_iter()
         .map(|c| (c.device_id, c.name))
         .collect();
     let store = crate::state::trust_store_path()
         .ok()
-        .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok());
+        .and_then(|path| friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok());
     if let Some(store) = store {
         for id in store.trusted_devices() {
             if store.is_computer(&id)

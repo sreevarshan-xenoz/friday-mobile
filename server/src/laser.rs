@@ -156,7 +156,7 @@ fn compositor_draws() -> bool {
             .name("laser-ask".into())
             .spawn(|| {
                 loop {
-                    let draws = pocketdesk_core::streaming::laser_dot::available();
+                    let draws = friday_mobile_core::streaming::laser_dot::available();
                     ANSWER.store(if draws { YES } else { NO }, Ordering::Relaxed);
                     std::thread::sleep(ASK_EVERY);
                 }

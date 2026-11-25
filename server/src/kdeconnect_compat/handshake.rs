@@ -10,7 +10,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::{NetworkPacket, is_invisible_format};
+use friday_mobile_core::protocol::kdeconnect::{NetworkPacket, is_invisible_format};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio_rustls::rustls;
 

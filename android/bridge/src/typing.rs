@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use std::sync::{Condvar, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::typing::{TypeEvent, events_of};
+use friday_mobile_core::protocol::typing::{TypeEvent, events_of};
 
 /// The most batches kept: past it, the typing thread is not taking, so
 /// all are dropped (M4 review: dropping the oldest left a hole mid-text).

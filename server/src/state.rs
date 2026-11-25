@@ -4,7 +4,7 @@
 //! `service.rs`, `v2_multiplexer.rs`, and `kde.rs` don't duplicate logic.
 
 use anyhow::{Context, Result};
-use pocketdesk_core::protocol::kdeconnect::DeviceSender;
+use friday_mobile_core::protocol::kdeconnect::DeviceSender;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::LazyLock;
@@ -21,11 +21,12 @@ pub fn state_dir() -> Result<PathBuf> {
     #[cfg(test)]
     test_dirs_first();
     // The shared resolver, which also moves a folder from before the rename.
-    pocketdesk_core::local::paths::state_dir().context("unable to determine local state directory")
+    friday_mobile_core::local::paths::state_dir()
+        .context("unable to determine local state directory")
 }
 
 /// For tests: this process's throwaway state and config folders
-/// ([`pocketdesk_core::local::paths::use_test_dirs`]), held by the calling
+/// ([`friday_mobile_core::local::paths::use_test_dirs`]), held by the calling
 /// test alone until the guard drops. The folders are one for the process
 /// (the trust store, the pairing PIN, device keys, the peer list), and
 /// tests that changed them side by side lost each other's changes; each
@@ -40,7 +41,7 @@ pub fn state_dir() -> Result<PathBuf> {
 /// to the state folder.
 #[cfg(test)]
 pub(crate) fn use_test_dirs() -> TestState {
-    let dir = pocketdesk_core::local::paths::use_test_dirs("server-tests");
+    let dir = friday_mobile_core::local::paths::use_test_dirs("server-tests");
     let me = std::thread::current();
     let deadline = std::time::Instant::now() + TEST_TURN_WAIT;
     let mut turn = TEST_TURN.lock().unwrap_or_else(|e| e.into_inner());
@@ -138,7 +139,7 @@ impl Drop for TestState {
 /// the owner's, even for a test that reaches one before taking its turn.
 #[cfg(test)]
 fn test_dirs_first() {
-    pocketdesk_core::local::paths::use_test_dirs("server-tests");
+    friday_mobile_core::local::paths::use_test_dirs("server-tests");
 }
 
 /// Where this session keeps the screen-sharing portal's grant (N8), read
@@ -150,7 +151,7 @@ pub fn screen_grant() -> Option<PathBuf> {
     if crate::events::current_config().remember_screen_grant {
         Some(dir)
     } else {
-        let _ = pocketdesk_core::portal_grant::forget(&dir);
+        let _ = friday_mobile_core::portal_grant::forget(&dir);
         None
     }
 }
@@ -159,7 +160,7 @@ pub fn screen_grant() -> Option<PathBuf> {
 /// holds it now (off by default; only a GNOME session acts on it), as each
 /// session starts.
 pub fn apply_gnome_unattended() {
-    pocketdesk_core::streaming::gnome_unattended::set_enabled(
+    friday_mobile_core::streaming::gnome_unattended::set_enabled(
         crate::events::current_config().gnome_unattended,
     );
 }
@@ -417,8 +418,8 @@ pub async fn prune_dead_clients(dead_ids: &[String]) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::error::Result;
-    use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+    use friday_mobile_core::error::Result;
+    use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
     struct Conn(&'static str, &'static str);
 

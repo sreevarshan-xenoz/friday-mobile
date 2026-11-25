@@ -6,7 +6,7 @@
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::quiet::{MAX_MINUTES, QUIET};
+use friday_mobile_core::protocol::quiet::{MAX_MINUTES, QUIET};
 
 /// How long a mute waits for the app: the listener not running, a mute an
 /// hour old must not start when it does (D2 review).

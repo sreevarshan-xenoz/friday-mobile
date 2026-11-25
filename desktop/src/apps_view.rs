@@ -11,10 +11,10 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::phone_apps::{self as store, Outcome};
-use pocketdesk_core::local::phone_pins;
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::phone_action::{AppResult, PhoneAction, PhoneApp, WindowsMode};
+use friday_mobile_core::local::phone_apps::{self as store, Outcome};
+use friday_mobile_core::local::phone_pins;
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::phone_action::{AppResult, PhoneAction, PhoneApp, WindowsMode};
 
 use crate::model::Device;
 
@@ -427,7 +427,7 @@ impl AppsPage {
 
     /// Ask the phone for its list.
     fn ask(&mut self, state_dir: &Path, phone: &str, now: u64) {
-        match pocketdesk_core::local::phone_actions::request(
+        match friday_mobile_core::local::phone_actions::request(
             state_dir,
             phone,
             PhoneAction::Apps,
@@ -496,14 +496,18 @@ impl AppsPage {
             .ok_or_else(|| std::io::Error::other("this system's folders are not known"))?;
         let exe = std::env::current_exe()?;
         // The app's own icon as the phone sent it, else Pocketdesk's.
-        let png =
-            pocketdesk_core::local::phone_app_icons::kept(state_dir, phone, &app.id, app.version)
-                .and_then(|path| std::fs::read(path).ok())
-                // Whatever the phone sent is decoded and written again, so only a
-                // picture this program made lands in a shortcut's icon file.
-                .and_then(|bytes| reencode_png(&bytes))
-                .or_else(own_icon_png)
-                .ok_or_else(|| std::io::Error::other("no icon"))?;
+        let png = friday_mobile_core::local::phone_app_icons::kept(
+            state_dir,
+            phone,
+            &app.id,
+            app.version,
+        )
+        .and_then(|path| std::fs::read(path).ok())
+        // Whatever the phone sent is decoded and written again, so only a
+        // picture this program made lands in a shortcut's icon file.
+        .and_then(|bytes| reencode_png(&bytes))
+        .or_else(own_icon_png)
+        .ok_or_else(|| std::io::Error::other("no icon"))?;
         phone_pins::pin(state_dir, &places, &exe, phone, &app.id, &app.name, &png).map(|_| ())
     }
 
@@ -578,8 +582,12 @@ impl AppsPage {
         app: &PhoneApp,
         budget: &mut usize,
     ) -> Option<egui::TextureHandle> {
-        let path =
-            pocketdesk_core::local::phone_app_icons::kept(state_dir, phone, &app.id, app.version)?;
+        let path = friday_mobile_core::local::phone_app_icons::kept(
+            state_dir,
+            phone,
+            &app.id,
+            app.version,
+        )?;
         if let Some((from, texture)) = self.icons.get(&app.id)
             && *from == path
         {
@@ -818,8 +826,8 @@ pub fn pinned_words(app: &str) -> String {
 /// decoder's limits, as the page's textures are) and encoded again as a PNG:
 /// nothing but the picture survives. `None` when it is not a small PNG.
 fn reencode_png(bytes: &[u8]) -> Option<Vec<u8>> {
+    use friday_mobile_core::local::notification_icons as icons;
     use image::ImageEncoder;
-    use pocketdesk_core::local::notification_icons as icons;
     if !icons::icon_fits(bytes) {
         return None;
     }
@@ -850,7 +858,7 @@ fn own_icon_png() -> Option<Vec<u8>> {
     let mut png = Vec::new();
     image::codecs::png::PngEncoder::new(&mut png)
         .write_image(
-            &pocketdesk_desktop::icon::icon_rgba(64),
+            &friday_mobile_desktop::icon::icon_rgba(64),
             64,
             64,
             image::ExtendedColorType::Rgba8,
@@ -965,7 +973,7 @@ fn cell(
 /// `path` decoded to a texture, if it is a small PNG (held to an icon's
 /// size by its header before anything decodes).
 fn decode(ctx: &egui::Context, path: &Path, name: &str) -> Option<egui::TextureHandle> {
-    use pocketdesk_core::local::notification_icons as icons;
+    use friday_mobile_core::local::notification_icons as icons;
     let bytes = std::fs::read(path).ok()?;
     if !icons::icon_fits(&bytes) {
         return None;
@@ -986,7 +994,7 @@ fn decode(ctx: &egui::Context, path: &Path, name: &str) -> Option<egui::TextureH
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_action::AppReport;
+    use friday_mobile_core::protocol::phone_action::AppReport;
 
     fn app(id: &str, name: &str) -> PhoneApp {
         PhoneApp {
@@ -1032,7 +1040,7 @@ mod tests {
         // Past an icon's size it is refused before anything decodes.
         let big = {
             use image::ImageEncoder;
-            let side = pocketdesk_core::local::notification_icons::MAX_ICON_SIDE + 1;
+            let side = friday_mobile_core::local::notification_icons::MAX_ICON_SIDE + 1;
             let mut png = Vec::new();
             image::codecs::png::PngEncoder::new(&mut png)
                 .write_image(

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceIdentity, KdeConnectService, TrustStore};
+use friday_mobile_core::protocol::kdeconnect::{DeviceIdentity, KdeConnectService, TrustStore};
 use std::path::PathBuf;
 
 use crate::plugins;

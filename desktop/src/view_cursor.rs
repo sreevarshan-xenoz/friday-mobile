@@ -1,6 +1,6 @@
 //! The other computer's pointer in the window that shows its screen (local
 //! cursor): what to draw, each pass, from what that computer last said of
-//! its pointer ([`pocketdesk_core::protocol::cursor`]).
+//! its pointer ([`friday_mobile_core::protocol::cursor`]).
 //!
 //! With the pointer free (the usual way: this computer's pointer is the
 //! other's, one to one), the shape becomes this window's own system
@@ -17,7 +17,7 @@
 use std::sync::Arc;
 
 use eframe::egui;
-use pocketdesk_core::protocol::cursor::{CursorShape, CursorState};
+use friday_mobile_core::protocol::cursor::{CursorShape, CursorState};
 
 /// What the window does with the pointer this pass.
 #[derive(Debug, Clone, PartialEq)]
@@ -161,7 +161,7 @@ pub fn wants_places(state: &CursorState, locked: bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::cursor::CursorMessage;
+    use friday_mobile_core::protocol::cursor::CursorMessage;
 
     fn shape(seed: u8) -> CursorShape {
         CursorShape::new(4, 4, 1, 2, vec![seed; 64]).unwrap()

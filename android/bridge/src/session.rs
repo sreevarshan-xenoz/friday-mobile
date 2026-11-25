@@ -26,7 +26,7 @@ pub(crate) const MAX_AUDIO_PACKETS_PER_RECEIVE: usize = 32;
 /// The write half of a control connection: TLS over TCP (phase B), or a
 /// stream over iroh (the internet road, T10a).
 pub(crate) type ControlWriter =
-    tokio::io::WriteHalf<pocketdesk_core::protocol::connection::ControlDuplex>;
+    tokio::io::WriteHalf<friday_mobile_core::protocol::connection::ControlDuplex>;
 
 /// Global handle for the active control connection writer.
 pub(crate) static CONTROL_WRITER: LazyLock<TokioMutex<Option<Arc<TokioMutex<ControlWriter>>>>> =
@@ -94,7 +94,7 @@ pub(crate) static CONNECTION_STATE: LazyLock<TokioMutex<api::ConnectionState>> =
 
 /// Persistent device identity for the Android client.
 pub(crate) static DEVICE_IDENTITY: LazyLock<
-    std::sync::Mutex<Option<pocketdesk_core::protocol::kdeconnect::DeviceIdentity>>,
+    std::sync::Mutex<Option<friday_mobile_core::protocol::kdeconnect::DeviceIdentity>>,
 > = LazyLock::new(|| std::sync::Mutex::new(None));
 
 /// The name this phone gives itself in its identity (U3), as the app set it.
@@ -105,9 +105,9 @@ pub(crate) static MDNS_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// Exponential backoff state for reconnection.
 pub(crate) static RECONNECT_BACKOFF: LazyLock<
-    std::sync::Mutex<pocketdesk_core::protocol::backoff::ExponentialBackoff>,
+    std::sync::Mutex<friday_mobile_core::protocol::backoff::ExponentialBackoff>,
 > = LazyLock::new(|| {
-    std::sync::Mutex::new(pocketdesk_core::protocol::backoff::ExponentialBackoff::default())
+    std::sync::Mutex::new(friday_mobile_core::protocol::backoff::ExponentialBackoff::default())
 });
 
 /// High-level session status for reconnection state machine.
@@ -136,10 +136,10 @@ pub(crate) static STREAMING_ACTIVE: AtomicBool = AtomicBool::new(false);
 /// feed→drained-frame time, `RENDER_SAMPLES` the gap between frames reaching the
 /// panel. Both are bounded, so a session that reports on its 1 s poller cannot
 /// grow them; a new session clears them (see `install_streaming`).
-pub(crate) static DECODE_SAMPLES: pocketdesk_core::streaming::SampleBatch =
-    pocketdesk_core::streaming::SampleBatch::new();
-pub(crate) static RENDER_SAMPLES: pocketdesk_core::streaming::SampleBatch =
-    pocketdesk_core::streaming::SampleBatch::new();
+pub(crate) static DECODE_SAMPLES: friday_mobile_core::streaming::SampleBatch =
+    friday_mobile_core::streaming::SampleBatch::new();
+pub(crate) static RENDER_SAMPLES: friday_mobile_core::streaming::SampleBatch =
+    friday_mobile_core::streaming::SampleBatch::new();
 
 /// True when the live streaming session rode a relay path (iroh WAN without a
 /// punched direct path). Updated by the RTT poller; LAN sessions are always
@@ -177,7 +177,7 @@ pub(crate) static STREAMING_HANDLE: LazyLock<TokioMutex<Option<StreamingHandle>>
 /// `receive_frames` waits on it for up to its timeout, and holding the
 /// session handle that long held up every input send behind it.
 pub(crate) static VIDEO_RX: LazyLock<
-    TokioMutex<Option<tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::EncodedPacket>>>,
+    TokioMutex<Option<tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::EncodedPacket>>>,
 > = LazyLock::new(|| TokioMutex::new(None));
 
 /// The live session's video byte count, as its frames arrive
@@ -198,7 +198,7 @@ pub(crate) fn video_bytes() -> u64 {
 /// The live session's audio receiver, apart from [`STREAMING_HANDLE`] and
 /// [`VIDEO_RX`] for the same reason: `receive_audio` waits on it.
 pub(crate) static AUDIO_RX: LazyLock<
-    TokioMutex<Option<tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::AudioPacket>>>,
+    TokioMutex<Option<tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::AudioPacket>>>,
 > = LazyLock::new(|| TokioMutex::new(None));
 
 /// Global handle for the active v2 unified connection.
@@ -211,7 +211,7 @@ pub(crate) static CERT_DIR: LazyLock<std::sync::Mutex<Option<PathBuf>>> =
 
 /// Currently active CertManager for trust management UI.
 pub(crate) static CERT_MANAGER: LazyLock<
-    std::sync::Mutex<Option<Arc<pocketdesk_core::streaming::transport::CertManager>>>,
+    std::sync::Mutex<Option<Arc<friday_mobile_core::streaming::transport::CertManager>>>,
 > = LazyLock::new(|| std::sync::Mutex::new(None));
 
 /// Broadcast channel for incoming KDE Connect packets from the control connection.
@@ -390,7 +390,7 @@ pub(crate) fn queue_file_offer(body: &serde_json::Value) {
     if let Some(source) = body
         .get("source")
         .and_then(|v| v.as_str())
-        .filter(|s| pocketdesk_core::protocol::partials::valid_source(s))
+        .filter(|s| friday_mobile_core::protocol::partials::valid_source(s))
     {
         entry["source"] = serde_json::json!(source);
     }
@@ -411,10 +411,10 @@ pub(crate) fn queue_file_offer(body: &serde_json::Value) {
     }
     // The file's date where it came from (K1), held to now.
     if let Some(ms) =
-        pocketdesk_core::protocol::file_time::from_body(body, std::time::SystemTime::now())
-            .and_then(pocketdesk_core::protocol::file_time::to_millis)
+        friday_mobile_core::protocol::file_time::from_body(body, std::time::SystemTime::now())
+            .and_then(friday_mobile_core::protocol::file_time::to_millis)
     {
-        entry[pocketdesk_core::protocol::file_time::FIELD] = serde_json::json!(ms);
+        entry[friday_mobile_core::protocol::file_time::FIELD] = serde_json::json!(ms);
     }
     // When it came: an offer lasts 10 minutes on the computer, and one
     // older is not started (T10d).
@@ -443,7 +443,7 @@ fn offer_fresh(queued_unix: Option<u64>, now: u64) -> bool {
 /// An offer's folder fields (T6b), if all are there and safe: the send's
 /// id (32 hex digits), the folder's name and the file's path under it.
 fn folder_part(body: &serde_json::Value) -> Option<(String, String, Vec<String>)> {
-    use pocketdesk_core::protocol::relpath;
+    use friday_mobile_core::protocol::relpath;
     let id = body.get("folderId")?.as_str()?;
     let folder = body.get("folder")?.as_str()?;
     let path: Vec<String> = body
@@ -496,27 +496,27 @@ pub(crate) fn take_folder_reply(path: &str) -> Option<serde_json::Value> {
 pub(crate) fn kept_from_pollers(packet_type: &str) -> bool {
     packet_type == crate::download::FILE_OFFER
         || packet_type == crate::download::FOLDER_FETCH_REPLY
-        || packet_type == pocketdesk_core::protocol::link::LINK
-        || packet_type == pocketdesk_core::protocol::command::COMMAND
-        || packet_type == pocketdesk_core::protocol::dial::DIAL
-        || packet_type == pocketdesk_core::protocol::phone_action::PHONE_ACTION
-        || packet_type == pocketdesk_core::protocol::typing::TYPE
-        || packet_type == pocketdesk_core::protocol::phone_screen::INPUT
-        || packet_type == pocketdesk_core::protocol::phone_media::PHONE_MEDIA_CONTROL
-        || packet_type == pocketdesk_core::protocol::notification_action::NOTIFICATION_ACTION
-        || packet_type == pocketdesk_core::protocol::notification_action::NOTIFICATION_REPLY
-        || packet_type == pocketdesk_core::protocol::notification_action::NOTIFICATION_OPEN
-        || packet_type == pocketdesk_core::protocol::computer_media::PUSH
-        || packet_type == pocketdesk_core::protocol::in_use::ANSWER
-        || packet_type == pocketdesk_core::protocol::phone_files::LIST
-        || packet_type == pocketdesk_core::protocol::phone_files::FETCH
-        || packet_type == pocketdesk_core::protocol::phone_files::MKDIR
-        || packet_type == pocketdesk_core::protocol::phone_files::PUT
-        || packet_type == pocketdesk_core::protocol::phone_photos::LIST
-        || packet_type == pocketdesk_core::protocol::phone_photos::FETCH
-        || packet_type == pocketdesk_core::protocol::phone_photos::TAKE
-        || packet_type == pocketdesk_core::protocol::bluetooth::PACKET
-        || packet_type == pocketdesk_core::protocol::bluetooth::LINK_PACKET
+        || packet_type == friday_mobile_core::protocol::link::LINK
+        || packet_type == friday_mobile_core::protocol::command::COMMAND
+        || packet_type == friday_mobile_core::protocol::dial::DIAL
+        || packet_type == friday_mobile_core::protocol::phone_action::PHONE_ACTION
+        || packet_type == friday_mobile_core::protocol::typing::TYPE
+        || packet_type == friday_mobile_core::protocol::phone_screen::INPUT
+        || packet_type == friday_mobile_core::protocol::phone_media::PHONE_MEDIA_CONTROL
+        || packet_type == friday_mobile_core::protocol::notification_action::NOTIFICATION_ACTION
+        || packet_type == friday_mobile_core::protocol::notification_action::NOTIFICATION_REPLY
+        || packet_type == friday_mobile_core::protocol::notification_action::NOTIFICATION_OPEN
+        || packet_type == friday_mobile_core::protocol::computer_media::PUSH
+        || packet_type == friday_mobile_core::protocol::in_use::ANSWER
+        || packet_type == friday_mobile_core::protocol::phone_files::LIST
+        || packet_type == friday_mobile_core::protocol::phone_files::FETCH
+        || packet_type == friday_mobile_core::protocol::phone_files::MKDIR
+        || packet_type == friday_mobile_core::protocol::phone_files::PUT
+        || packet_type == friday_mobile_core::protocol::phone_photos::LIST
+        || packet_type == friday_mobile_core::protocol::phone_photos::FETCH
+        || packet_type == friday_mobile_core::protocol::phone_photos::TAKE
+        || packet_type == friday_mobile_core::protocol::bluetooth::PACKET
+        || packet_type == friday_mobile_core::protocol::bluetooth::LINK_PACKET
 }
 
 /// Drain the queued offers as a JSON array.
@@ -535,7 +535,7 @@ pub(crate) fn take_file_offers_json() -> String {
 /// Holds the live streaming client and its packet receiver.
 /// The live input-only session's state (T10i), for `api::remote_state`;
 /// `None` with no such session.
-pub(crate) static REMOTE: std::sync::Mutex<Option<pocketdesk_core::streaming::RemoteFlags>> =
+pub(crate) static REMOTE: std::sync::Mutex<Option<friday_mobile_core::streaming::RemoteFlags>> =
     std::sync::Mutex::new(None);
 
 /// What the live screen session's computer says it takes (E3), as its ready
@@ -553,7 +553,7 @@ pub(crate) struct StreamingHandle {
     /// What the session is for: the computer's screen, the phone as a remote
     /// (T10i) or the phone's own screen (T10k). A connect of another kind is
     /// a new session.
-    pub(crate) mode: pocketdesk_core::streaming::SessionMode,
+    pub(crate) mode: friday_mobile_core::streaming::SessionMode,
     /// Token that can be used to cancel the receive loop.
     pub(crate) cancel: tokio_util::sync::CancellationToken,
     /// JoinHandle of the background `client.start()` task.
@@ -562,10 +562,10 @@ pub(crate) struct StreamingHandle {
     pub(crate) rtt_task: tokio::task::JoinHandle<()>,
     /// The streaming connection (transport-agnostic handle), kept alive for
     /// sending input events.
-    pub(crate) connection: pocketdesk_core::streaming::SharedConnection,
+    pub(crate) connection: friday_mobile_core::streaming::SharedConnection,
     /// Live iroh dial for WAN sessions — owns the endpoint and must be
     /// closed (not dropped) when the session ends.
-    pub(crate) wan_dial: Option<pocketdesk_core::streaming::IrohDial>,
+    pub(crate) wan_dial: Option<friday_mobile_core::streaming::IrohDial>,
 }
 
 /// Holds the unified v2 connection and its persistent control streams.

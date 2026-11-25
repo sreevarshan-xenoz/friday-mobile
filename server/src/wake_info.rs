@@ -3,8 +3,8 @@
 //! outside wake port the user set up, so the phone sends the magic packet
 //! itself instead of asking the computer that is asleep.
 
-use pocketdesk_core::local::wake::WakeFacts;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::wake::WakeFacts;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicBool, AtomicU16, Ordering};
 
@@ -53,7 +53,7 @@ pub fn packet_for_connection(local: Option<IpAddr>) -> NetworkPacket {
         Some(IpAddr::V6(v6)) => v6.to_ipv4_mapped(),
         None => None,
     };
-    let facts = pocketdesk_core::local::wake::wake_facts(local);
+    let facts = friday_mobile_core::local::wake::wake_facts(local);
     packet_for(
         announce,
         facts.as_ref(),

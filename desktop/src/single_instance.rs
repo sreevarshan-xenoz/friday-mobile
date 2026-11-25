@@ -80,7 +80,7 @@ pub fn acquire(window_title: &str, raise: bool) -> Option<Instance> {
     };
     use windows::core::{HSTRING, w};
 
-    let mutex = unsafe { CreateMutexW(None, false, w!("Local\\PocketdeskDesktop")) }.ok()?;
+    let mutex = unsafe { CreateMutexW(None, false, w!("Local\\FRIDAYMobileDesktop")) }.ok()?;
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
         if raise && let Ok(hwnd) = unsafe { FindWindowW(None, &HSTRING::from(window_title)) } {
             unsafe {
@@ -102,9 +102,9 @@ pub fn acquire(window_title: &str, raise: bool) -> Option<Instance> {
 pub fn acquire(_window_title: &str, raise: bool) -> Option<Instance> {
     use std::io::Write;
     use std::os::unix::net::{UnixListener, UnixStream};
-    let dir = pocketdesk_core::local::paths::state_dir().ok()?;
+    let dir = friday_mobile_core::local::paths::state_dir().ok()?;
     std::fs::create_dir_all(&dir).ok()?;
-    let path = dir.join("pocketdesk.sock");
+    let path = dir.join("friday-mobile.sock");
     match UnixListener::bind(&path) {
         Ok(socket) => Some(Instance { socket }),
         Err(_) => match UnixStream::connect(&path) {

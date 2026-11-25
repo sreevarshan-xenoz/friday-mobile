@@ -88,14 +88,14 @@ jobs:
       # this Ubuntu, keeps the in-process encoder.
       - name: Build release binaries
         run: |
-          cargo build --release -p pocketdesk-server --no-default-features --bin pocketdesk --bin pocketdesk-pam-ask
-          mkdir -p portable && cp target/release/pocketdesk target/release/pocketdesk-pam-ask portable/
-          cargo build --release --bin pocketdesk
-          cargo build --release -p pocketdesk-desktop --bin pocketdesk-app --bin pocketdesk-tray
+          cargo build --release -p friday-mobile-server --no-default-features --bin friday-mobile --bin friday-mobile-pam-ask
+          mkdir -p portable && cp target/release/friday-mobile target/release/friday-mobile-pam-ask portable/
+          cargo build --release --bin friday-mobile
+          cargo build --release -p friday-mobile-desktop --bin friday-mobile-app --bin friday-mobile-tray
 
       - name: Check the tarball's programs link no FFmpeg library
         run: |
-          for bin in portable/pocketdesk portable/pocketdesk-pam-ask target/release/pocketdesk-app target/release/pocketdesk-tray; do
+          for bin in portable/friday-mobile portable/friday-mobile-pam-ask target/release/friday-mobile-app target/release/friday-mobile-tray; do
             echo "$bin:"; readelf -d "$bin" | grep NEEDED
             if readelf -d "$bin" | grep -E 'NEEDED.*\[lib(av|sw|postproc)'; then
               echo "$bin links an FFmpeg library; the tarball's programs must not" >&2
@@ -106,7 +106,7 @@ jobs:
       # The floor packaging/README.md and install.sh's preflight name.
       - name: Check the tarball's server needs glibc 2.39 at most
         run: |
-          newest=$(objdump -T portable/pocketdesk | grep -o 'GLIBC_[0-9.]*' | sed 's/GLIBC_//' | sort -V | tail -1)
+          newest=$(objdump -T portable/friday-mobile | grep -o 'GLIBC_[0-9.]*' | sed 's/GLIBC_//' | sort -V | tail -1)
           echo "newest glibc symbol: $newest"
           if [ "$(printf '%s\n' "$newest" 2.39 | sort -V | tail -1)" != 2.39 ]; then
             echo "the tarball's server needs glibc $newest; the documented floor is 2.39" >&2
@@ -118,10 +118,10 @@ jobs:
 
       - name: Create release archive
         run: |
-          name="pocketdesk-${{ needs.version.outputs.name }}-linux-x86_64"
+          name="friday-mobile-${{ needs.version.outputs.name }}-linux-x86_64"
           mkdir -p "release/$name"
-          cp portable/pocketdesk portable/pocketdesk-pam-ask target/release/pocketdesk-app target/release/pocketdesk-tray "release/$name/"
-          cp config.toml.example pocketdesk.service README.md SECURITY.md LICENSE-MIT LICENSE-APACHE "release/$name/"
+          cp portable/friday-mobile portable/friday-mobile-pam-ask target/release/friday-mobile-app target/release/friday-mobile-tray "release/$name/"
+          cp config.toml.example friday-mobile.service README.md SECURITY.md LICENSE-MIT LICENSE-APACHE "release/$name/"
           cp -r man "release/$name/"
           tar -C release -czf "release/$name.tar.gz" "$name"
 
@@ -138,19 +138,19 @@ jobs:
         timeout-minutes: 30
         run: |
           retry() { for n in 1 2 3; do "$@" && return 0; echo "attempt $n failed: $*" >&2; sleep 20; done; return 1; }
-          tarball=$(ls release/pocketdesk-*-linux-x86_64.tar.gz)
+          tarball=$(ls release/friday-mobile-*-linux-x86_64.tar.gz)
           cp "$tarball" "$RUNNER_TEMP/tarball.tar.gz"
           check='set -e
-            mkdir /pd && tar -C /pd -xzf /r/tarball.tar.gz && cd /pd/pocketdesk-*
-            for bin in pocketdesk pocketdesk-app pocketdesk-tray; do
+            mkdir /pd && tar -C /pd -xzf /r/tarball.tar.gz && cd /pd/friday-mobile-*
+            for bin in friday-mobile friday-mobile-app friday-mobile-tray; do
               if ldd "$bin" | grep "not found"; then echo "$bin: missing libraries" >&2; exit 1; fi
             done
-            ./pocketdesk --version
-            ./pocketdesk capabilities > /dev/null && echo "capabilities: ok"
+            ./friday-mobile --version
+            ./friday-mobile capabilities > /dev/null && echo "capabilities: ok"
             echo "H.264 and HEVC encoders in the distro ffmpeg:"
             ffmpeg -hide_banner -encoders 2>/dev/null | grep -E " (libx264|libx265|libopenh264|h264_vaapi|hevc_vaapi|h264_nvenc|hevc_nvenc)( |$)" || echo "  (none of them)"
             if [ "$BENCH" = 1 ]; then
-              ./pocketdesk bench --target software --frames 60 --repeat 1 --json > /tmp/bench.json
+              ./friday-mobile bench --target software --frames 60 --repeat 1 --json > /tmp/bench.json
               grep -q "\"backend\": *\"ffmpeg-sidecar\"" /tmp/bench.json
               echo "software encode through the system ffmpeg: ok"
             fi'
@@ -171,20 +171,20 @@ jobs:
         run: |
           sudo apt-get install -y --no-install-recommends dpkg-dev
           sh packaging/linux/build-deb.sh "${{ needs.version.outputs.name }}" target/release release
-          dpkg-deb --info release/pocketdesk-*.deb
-          dpkg-deb --contents release/pocketdesk-*.deb
+          dpkg-deb --info release/friday-mobile-*.deb
+          dpkg-deb --contents release/friday-mobile-*.deb
 
       # Install it on the runner with apt, check what it put in place, remove
       # it, check it all went: packaging/linux/smoke-test.sh.
       - name: Smoke-test the .deb
-        run: sh packaging/linux/smoke-test.sh release/pocketdesk-*.deb
+        run: sh packaging/linux/smoke-test.sh release/friday-mobile-*.deb
 
       - uses: actions/upload-artifact@v4
         with:
           name: linux
           path: |
-            release/pocketdesk-*.tar.gz
-            release/pocketdesk-*.deb
+            release/friday-mobile-*.tar.gz
+            release/friday-mobile-*.deb
 
   # The Windows server and the desktop app are self-contained exes importing
   # only system DLLs and the Windows 10+ UCRT. FFmpeg is not bundled (the
@@ -223,20 +223,20 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build release binaries
-        run: cargo build --release --bin pocketdesk --bin pocketdesk-app --bin pocketdesk-tray
+        run: cargo build --release --bin friday-mobile --bin friday-mobile-app --bin friday-mobile-tray
 
       - name: Run tests
-        run: cargo test --workspace --exclude pocketdesk-android-bridge --exclude iroh-spike
+        run: cargo test --workspace --exclude friday-mobile-android-bridge --exclude iroh-spike
 
       - name: Create release archive
         shell: pwsh
         run: |
-          $name = "pocketdesk-${{ needs.version.outputs.name }}-windows-x86_64"
+          $name = "friday-mobile-${{ needs.version.outputs.name }}-windows-x86_64"
           New-Item -ItemType Directory -Force "release/$name" | Out-Null
-          Copy-Item target/release/pocketdesk.exe, target/release/pocketdesk-app.exe, target/release/pocketdesk-tray.exe, config.toml.example, README.md, SECURITY.md, LICENSE-MIT, LICENSE-APACHE "release/$name/"
+          Copy-Item target/release/friday-mobile.exe, target/release/friday-mobile-app.exe, target/release/friday-mobile-tray.exe, config.toml.example, README.md, SECURITY.md, LICENSE-MIT, LICENSE-APACHE "release/$name/"
           Compress-Archive -Path "release/$name" -DestinationPath "release/$name.zip"
 
-      # The installer, setup.exe (BH1): packaging/windows/pocketdesk.iss.
+      # The installer, setup.exe (BH1): packaging/windows/friday-mobile.iss.
       # GitHub's Windows images carry Inno Setup 6; it is installed if not.
       - name: Build the installer
         shell: pwsh
@@ -245,7 +245,7 @@ jobs:
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
           $name = "${{ needs.version.outputs.name }}"
           $numeric = ($name.TrimStart('v') -split '-')[0]
-          & $iscc /Qp packaging\windows\pocketdesk.iss "/DAppVersion=$name" "/DNumericVersion=$numeric"
+          & $iscc /Qp packaging\windows\friday-mobile.iss "/DAppVersion=$name" "/DNumericVersion=$numeric"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-ChildItem release\*-setup.exe
 
@@ -261,8 +261,8 @@ jobs:
         with:
           name: windows
           path: |
-            release/pocketdesk-*.zip
-            release/pocketdesk-*-setup.exe
+            release/friday-mobile-*.zip
+            release/friday-mobile-*-setup.exe
 
   # The phone app. With signing secrets set (ANDROID_KEYSTORE_BASE64,
   # ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD) it is a
@@ -372,7 +372,7 @@ jobs:
 
       - name: Checksums
         working-directory: dist
-        run: sha256sum pocketdesk-* > SHA256SUMS && cat SHA256SUMS
+        run: sha256sum friday-mobile-* > SHA256SUMS && cat SHA256SUMS
 
       # A dry run stops here: the files are in the workflow's artifacts.
       - uses: actions/upload-artifact@v4
@@ -385,10 +385,11 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          name: Pocketdesk ${{ needs.version.outputs.name }}
+          name: FRIDAY Mobile ${{ needs.version.outputs.name }}
           body_path: .github/release-notes.md
           generate_release_notes: true
           prerelease: ${{ needs.version.outputs.prerelease }}
           files: |
+            dist/friday-mobile-*
             dist/pocketdesk-*
             dist/SHA256SUMS

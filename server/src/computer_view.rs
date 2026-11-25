@@ -36,17 +36,17 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::cast::{TOKEN_LEN, token_hex, token_matches};
-use pocketdesk_core::local::computers::{self, FitSize, PeerComputer};
-use pocketdesk_core::local::view::{
+use friday_mobile_core::local::cast::{TOKEN_LEN, token_hex, token_matches};
+use friday_mobile_core::local::computers::{self, FitSize, PeerComputer};
+use friday_mobile_core::local::view::{
     self as wire, Message, Phase, ViewFile, ViewFit, ViewPrivacy, ViewStatus,
 };
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::streaming::cast::CastChain;
-use pocketdesk_core::streaming::transport::{
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::streaming::cast::CastChain;
+use friday_mobile_core::streaming::transport::{
     CertManager, StreamClient, StreamTransportConfig, peer_label_for_address,
 };
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::{
     AudioPacket, EncodedPacket, InputPacket, QuinnConnection, SessionMode, SharedConnection,
     StreamingClient,
 };
@@ -113,7 +113,7 @@ const STATS_EVERY: Duration = Duration::from_secs(1);
 /// the pointer out of its picture where it can and sends the pointer apart;
 /// a host before it ignores the bit and keeps the pointer in the picture.
 pub fn codec_caps(asked: bool, wanted: bool, quiet: bool, pointer: bool) -> u8 {
-    use pocketdesk_core::streaming::client::{
+    use friday_mobile_core::streaming::client::{
         CODEC_CAP_HEVC, CODEC_CAP_LOCAL_CURSOR, CODEC_CAP_NO_IDLE_REPEATS,
     };
     let hevc = if asked && wanted { CODEC_CAP_HEVC } else { 0 };
@@ -206,7 +206,7 @@ pub fn stream_shape(data: &[u8]) -> Option<Shape> {
             .collect();
         return Some(Shape::Hevc(sets));
     }
-    pocketdesk_core::streaming::h264_sps::picture_size(data).map(|(w, h)| Shape::H264(w, h))
+    friday_mobile_core::streaming::h264_sps::picture_size(data).map(|(w, h)| Shape::H264(w, h))
 }
 
 /// The window's privacy ask waits this long for the other computer's
@@ -498,7 +498,7 @@ async fn dial_internet(
     if !bound {
         return Err("internet: its endpoint is not the key it paired with".to_string());
     }
-    pocketdesk_core::streaming::iroh_connection::dial_stream_from(
+    friday_mobile_core::streaming::iroh_connection::dial_stream_from(
         &wan,
         &target.endpoint_id,
         &target.relay_urls,
@@ -671,7 +671,7 @@ pub async fn race<T: Send + 'static>(
 enum Event {
     Status(ViewStatus),
     /// What the other computer says of its pointer (local cursor).
-    Cursor(pocketdesk_core::protocol::cursor::CursorMessage),
+    Cursor(friday_mobile_core::protocol::cursor::CursorMessage),
     /// The stream's codec and size, as the window is told it.
     Config(Message),
     Frame {
@@ -740,7 +740,7 @@ impl FrameCounts {
         // (PR #551 review M6).
         let new_run = self.arrived == 0 || (seq == 0 && self.highest >= Self::NEW_RUN);
         if new_run {
-            self.lost_before += pocketdesk_core::streaming::client::missed_frames_in_window(
+            self.lost_before += friday_mobile_core::streaming::client::missed_frames_in_window(
                 self.lowest,
                 self.highest,
                 self.arrived,
@@ -765,7 +765,7 @@ impl FrameCounts {
     /// Frames that never came since the session started.
     pub fn lost(&self) -> u64 {
         self.lost_before
-            + pocketdesk_core::streaming::client::missed_frames_in_window(
+            + friday_mobile_core::streaming::client::missed_frames_in_window(
                 self.lowest,
                 self.highest,
                 self.arrived,
@@ -812,7 +812,7 @@ pub fn is_release(packet: &InputPacket) -> bool {
 /// Whether a frame of `len` bytes fits in one relay message, its header
 /// and all.
 pub fn fits(len: usize) -> bool {
-    len.saturating_add(16) <= pocketdesk_core::local::cast::MAX_MESSAGE
+    len.saturating_add(16) <= friday_mobile_core::local::cast::MAX_MESSAGE
 }
 
 /// The reasons a computer closes a session with when it ends or refuses it
@@ -1290,7 +1290,7 @@ async fn session_run(
         // message.
         if cursor {
             say.say(Event::Cursor(
-                pocketdesk_core::protocol::cursor::CursorMessage::Mode { separate: false },
+                friday_mobile_core::protocol::cursor::CursorMessage::Mode { separate: false },
             ))
             .await;
         }
@@ -1494,7 +1494,7 @@ pub struct MicLink {
     sending: tokio::sync::Mutex<()>,
     /// Which view sends each computer the window's mic (PC11): one a
     /// computer, shared by the relay's views, as that computer has one
-    /// "Pocketdesk Mic".
+    /// "FRIDAY Mobile Mic".
     holders: MicHolders,
 }
 
@@ -1758,7 +1758,7 @@ async fn attempt(
                 let (fps, kbps) = counts.second(second.elapsed());
                 second = Instant::now();
                 let link = conn.as_ref().map(|c| c.stats());
-                status.stats = Some(pocketdesk_core::local::view::ViewStats {
+                status.stats = Some(friday_mobile_core::local::view::ViewStats {
                     fps,
                     kbps,
                     rtt_ms: link.as_ref().filter(|l| !l.rtt.is_zero()).map(|l| millis(l.rtt)),
@@ -1778,22 +1778,22 @@ async fn attempt(
             .screen_features
             .load(std::sync::atomic::Ordering::Acquire);
         let mut next = status.clone();
-        if let Some(control) = pocketdesk_core::streaming::screen_takes_input(features) {
+        if let Some(control) = friday_mobile_core::streaming::screen_takes_input(features) {
             admitted = true;
             next.control = Some(control);
         }
         // Which system it runs, for the window's Send keys menu (PC4).
-        if let Some(windows) = pocketdesk_core::streaming::screen_runs_windows(features) {
+        if let Some(windows) = friday_mobile_core::streaming::screen_runs_windows(features) {
             next.windows = Some(windows);
         }
         // Whether its clicks land on the screen this window shows (PC11),
         // so another window of it may take control.
-        if let Some(per_screen) = pocketdesk_core::streaming::screen_input_per_screen(features) {
+        if let Some(per_screen) = friday_mobile_core::streaming::screen_input_per_screen(features) {
             next.per_screen = Some(per_screen);
         }
         // Whether it plays this computer's mic, so the window says why
         // nothing is heard (PC10 review).
-        if let Some(mic) = pocketdesk_core::streaming::screen_takes_mic(features) {
+        if let Some(mic) = friday_mobile_core::streaming::screen_takes_mic(features) {
             next.mic = Some(mic);
         }
         if admitted {
@@ -2291,7 +2291,7 @@ struct View {
     /// The other computer's pointer as last told (local cursor), for a
     /// window that joins, and whether the window was too slow for a message
     /// of it (the state is then sent whole, with the next frame).
-    cursor: pocketdesk_core::protocol::cursor::CursorState,
+    cursor: friday_mobile_core::protocol::cursor::CursorState,
     cursor_lost: bool,
     /// The window asked for the pointer (`Command::Start`'s `cursor`): only
     /// then does it know the messages about it.
@@ -2305,8 +2305,11 @@ impl View {
     /// of `false` when the computer keeps the pointer in the picture, which
     /// drops what it holds; a window that is only joining holds nothing.
     /// Nothing to a window that did not ask.
-    fn cursor_catch_up(&self, held: bool) -> Vec<pocketdesk_core::protocol::cursor::CursorMessage> {
-        use pocketdesk_core::protocol::cursor::CursorMessage;
+    fn cursor_catch_up(
+        &self,
+        held: bool,
+    ) -> Vec<friday_mobile_core::protocol::cursor::CursorMessage> {
+        use friday_mobile_core::protocol::cursor::CursorMessage;
         if !self.cursor_asked {
             return Vec::new();
         }
@@ -3217,7 +3220,7 @@ pub const POINTER_LEASE: Duration = Duration::from_secs(3);
 /// [`InputPacket::Mic`] frames go on. Its stop goes to the other computer
 /// as the window says off, as the reader ends with it on, and, as a last
 /// word, as the reader is dropped or aborted with it on (a window
-/// replaced, or the view ending), so that computer's "Pocketdesk Mic" never
+/// replaced, or the view ending), so that computer's "FRIDAY Mobile Mic" never
 /// outlives the window that fed it.
 struct WindowMic {
     on: bool,
@@ -3610,7 +3613,7 @@ mod tests {
 
     async fn loopback_endpoint() -> iroh::Endpoint {
         iroh::Endpoint::builder(iroh::endpoint::presets::Minimal)
-            .alpns(vec![pocketdesk_core::protocol::ALPN_CONTROL.to_vec()])
+            .alpns(vec![friday_mobile_core::protocol::ALPN_CONTROL.to_vec()])
             .relay_mode(iroh::RelayMode::Disabled)
             .bind_addr(std::net::SocketAddr::from(([127, 0, 0, 1], 0)))
             .unwrap()
@@ -3713,7 +3716,7 @@ mod tests {
     /// before PC5 never asks.
     #[test]
     fn hevc_is_offered_only_when_the_app_asks_and_the_setting_lets_it() {
-        use pocketdesk_core::streaming::client::{CODEC_CAP_HEVC, CODEC_CAP_NO_IDLE_REPEATS};
+        use friday_mobile_core::streaming::client::{CODEC_CAP_HEVC, CODEC_CAP_NO_IDLE_REPEATS};
         let (hevc, still) = (CODEC_CAP_HEVC, CODEC_CAP_NO_IDLE_REPEATS);
         assert_eq!(codec_caps(true, true, true, false), hevc | still);
         assert_eq!(
@@ -3726,11 +3729,11 @@ mod tests {
             still,
             "the app did not ask"
         );
-        let older: pocketdesk_core::local::computers::ComputerRequest = serde_json::from_str(
+        let older: friday_mobile_core::local::computers::ComputerRequest = serde_json::from_str(
             r#"{"id":"a","ask":"view","device_id":"desk","monitor":0,"created_unix":1}"#,
         )
         .unwrap();
-        let pocketdesk_core::local::computers::ComputerAsk::View { hevc: asked, .. } = older.ask
+        let friday_mobile_core::local::computers::ComputerAsk::View { hevc: asked, .. } = older.ask
         else {
             panic!("a view");
         };
@@ -3747,7 +3750,7 @@ mod tests {
     /// clear for every view and the codecs are unchanged.
     #[test]
     fn a_view_says_it_needs_no_idle_repeats_only_while_the_setting_is_on() {
-        use pocketdesk_core::streaming::client::{CODEC_CAP_HEVC, CODEC_CAP_NO_IDLE_REPEATS};
+        use friday_mobile_core::streaming::client::{CODEC_CAP_HEVC, CODEC_CAP_NO_IDLE_REPEATS};
         for asked in [false, true] {
             for wanted in [false, true] {
                 let on = codec_caps(asked, wanted, true, false);
@@ -3765,7 +3768,7 @@ mod tests {
     /// (whose ask has no field) never sets it.
     #[test]
     fn a_view_says_it_draws_the_other_pointer_only_when_asked_and_allowed() {
-        use pocketdesk_core::streaming::client::{
+        use friday_mobile_core::streaming::client::{
             CODEC_CAP_HEVC, CODEC_CAP_LOCAL_CURSOR, CODEC_CAP_NO_IDLE_REPEATS,
         };
         for asked in [false, true] {
@@ -3783,11 +3786,12 @@ mod tests {
                 }
             }
         }
-        let older: pocketdesk_core::local::computers::ComputerRequest = serde_json::from_str(
+        let older: friday_mobile_core::local::computers::ComputerRequest = serde_json::from_str(
             r#"{"id":"a","ask":"view","device_id":"desk","monitor":0,"created_unix":1}"#,
         )
         .unwrap();
-        let pocketdesk_core::local::computers::ComputerAsk::View { cursor, .. } = older.ask else {
+        let friday_mobile_core::local::computers::ComputerAsk::View { cursor, .. } = older.ask
+        else {
             panic!("a view");
         };
         assert!(!cursor, "an app before the local cursor never asks");
@@ -4613,12 +4617,12 @@ mod tests {
     struct Slow(Kept, Duration);
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::streaming::Connection for Slow {
+    impl friday_mobile_core::streaming::Connection for Slow {
         async fn open_uni(
             &self,
         ) -> Result<
-            Box<dyn pocketdesk_core::streaming::OutStream>,
-            pocketdesk_core::streaming::ConnectionError,
+            Box<dyn friday_mobile_core::streaming::OutStream>,
+            friday_mobile_core::streaming::ConnectionError,
         > {
             tokio::time::sleep(self.1).await;
             self.0.open_uni().await
@@ -4626,18 +4630,18 @@ mod tests {
         async fn accept_uni(
             &self,
         ) -> Result<
-            Box<dyn pocketdesk_core::streaming::InStream>,
-            pocketdesk_core::streaming::ConnectionError,
+            Box<dyn friday_mobile_core::streaming::InStream>,
+            friday_mobile_core::streaming::ConnectionError,
         > {
             self.0.accept_uni().await
         }
         fn remote_address(&self) -> SocketAddr {
             self.0.remote_address()
         }
-        fn stats(&self) -> pocketdesk_core::streaming::ConnectionStats {
+        fn stats(&self) -> friday_mobile_core::streaming::ConnectionStats {
             self.0.stats()
         }
-        fn transport_family(&self) -> pocketdesk_core::streaming::TransportFamily {
+        fn transport_family(&self) -> friday_mobile_core::streaming::TransportFamily {
             self.0.transport_family()
         }
         fn close(&self, code: u32, reason: &[u8]) {
@@ -5344,7 +5348,7 @@ mod tests {
 
     #[test]
     fn a_frame_fits_the_relay_or_is_too_large() {
-        let max = pocketdesk_core::local::cast::MAX_MESSAGE;
+        let max = friday_mobile_core::local::cast::MAX_MESSAGE;
         assert!(fits(0));
         assert!(fits(max - 16));
         assert!(!fits(max - 15));
@@ -5656,15 +5660,15 @@ mod tests {
     struct KeptStream(Arc<std::sync::Mutex<Vec<InputPacket>>>, Vec<u8>);
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::streaming::OutStream for KeptStream {
+    impl friday_mobile_core::streaming::OutStream for KeptStream {
         async fn write_all(
             &mut self,
             data: &[u8],
-        ) -> Result<(), pocketdesk_core::streaming::ConnectionError> {
+        ) -> Result<(), friday_mobile_core::streaming::ConnectionError> {
             self.1.extend_from_slice(data);
             Ok(())
         }
-        fn finish(&mut self) -> Result<(), pocketdesk_core::streaming::ConnectionError> {
+        fn finish(&mut self) -> Result<(), friday_mobile_core::streaming::ConnectionError> {
             let packet = InputPacket::decode(&self.1).expect("an input packet");
             self.0.lock().unwrap().push(packet);
             Ok(())
@@ -5672,31 +5676,31 @@ mod tests {
     }
 
     #[async_trait::async_trait]
-    impl pocketdesk_core::streaming::Connection for Kept {
+    impl friday_mobile_core::streaming::Connection for Kept {
         async fn open_uni(
             &self,
         ) -> Result<
-            Box<dyn pocketdesk_core::streaming::OutStream>,
-            pocketdesk_core::streaming::ConnectionError,
+            Box<dyn friday_mobile_core::streaming::OutStream>,
+            friday_mobile_core::streaming::ConnectionError,
         > {
             Ok(Box::new(KeptStream(self.0.clone(), Vec::new())))
         }
         async fn accept_uni(
             &self,
         ) -> Result<
-            Box<dyn pocketdesk_core::streaming::InStream>,
-            pocketdesk_core::streaming::ConnectionError,
+            Box<dyn friday_mobile_core::streaming::InStream>,
+            friday_mobile_core::streaming::ConnectionError,
         > {
-            Err(pocketdesk_core::streaming::ConnectionError::Closed)
+            Err(friday_mobile_core::streaming::ConnectionError::Closed)
         }
         fn remote_address(&self) -> SocketAddr {
             "192.0.2.10:4716".parse().unwrap()
         }
-        fn stats(&self) -> pocketdesk_core::streaming::ConnectionStats {
-            pocketdesk_core::streaming::ConnectionStats::default()
+        fn stats(&self) -> friday_mobile_core::streaming::ConnectionStats {
+            friday_mobile_core::streaming::ConnectionStats::default()
         }
-        fn transport_family(&self) -> pocketdesk_core::streaming::TransportFamily {
-            pocketdesk_core::streaming::TransportFamily::Quinn
+        fn transport_family(&self) -> friday_mobile_core::streaming::TransportFamily {
+            friday_mobile_core::streaming::TransportFamily::Quinn
         }
         fn close(&self, _code: u32, _reason: &[u8]) {}
     }

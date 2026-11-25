@@ -35,12 +35,12 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::input::wlr_input::WlrInput;
-use pocketdesk_core::local::computers::{self, PeerComputer};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_server::hyprland::{HyprMonitor, HyprWindow, HyprlandIpc};
-use pocketdesk_server::{lend_window, sway_tree, virtual_screen};
+use friday_mobile_core::input::wlr_input::WlrInput;
+use friday_mobile_core::local::computers::{self, PeerComputer};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_server::hyprland::{HyprMonitor, HyprWindow, HyprlandIpc};
+use friday_mobile_server::{lend_window, sway_tree, virtual_screen};
 use serde_json::{Value, json};
 
 /// A computer paired both ways.
@@ -423,7 +423,7 @@ fn a_window_is_lent_to_a_screen_of_its_size_and_returned() {
     // where the list is shorter than the compositor's outputs, the output's
     // place among them.)
     let index = lent["index"].as_u64().unwrap() as usize;
-    let origins = pocketdesk_server::plugins::monitors::origins();
+    let origins = friday_mobile_server::plugins::monitors::origins();
     let expected = origins
         .iter()
         .position(|&o| o == (screen.x, screen.y))

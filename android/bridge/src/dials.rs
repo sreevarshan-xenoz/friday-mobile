@@ -5,7 +5,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::dial::clean_number;
+use friday_mobile_core::protocol::dial::clean_number;
 
 /// How many numbers wait for the app at most.
 const MAX_WAITING: usize = 8;

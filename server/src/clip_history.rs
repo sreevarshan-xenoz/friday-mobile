@@ -8,8 +8,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::local::clip_history::{self, ClipEntry, SendRequest};
-use pocketdesk_core::protocol::kdeconnect::DeviceSender;
+use friday_mobile_core::local::clip_history::{self, ClipEntry, SendRequest};
+use friday_mobile_core::protocol::kdeconnect::DeviceSender;
 
 /// How many texts may wait for the writer; more are dropped (D3 review: a
 /// phone sending many could otherwise pile up threads and disk writes).
@@ -39,7 +39,7 @@ fn writer() -> Option<&'static std::sync::mpsc::SyncSender<ClipEntry>> {
 /// Keep one text, as the setting allows, read at each text so a change
 /// applies at once.
 fn write_one(dir: &std::path::Path, entry: ClipEntry) {
-    let Ok(config) = pocketdesk_core::local::config::Config::load() else {
+    let Ok(config) = friday_mobile_core::local::config::Config::load() else {
         return;
     };
     let limit = config.clipboard_history;
@@ -69,7 +69,7 @@ pub(crate) fn note(text: &str, from: Option<&str>) {
     if cfg!(test) || crate::plugins::clipboard::is_pairing_link(text) {
         return;
     }
-    let entry = ClipEntry::new(text, from, pocketdesk_core::local::pin::now_unix());
+    let entry = ClipEntry::new(text, from, friday_mobile_core::local::pin::now_unix());
     if let Some(writer) = writer()
         && writer.try_send(entry).is_err()
     {
@@ -84,18 +84,18 @@ pub async fn run_sends() {
         tracing::warn!("No state directory: sending the clipboard's history is off");
         return;
     };
-    if let Ok(config) = pocketdesk_core::local::config::Config::load()
+    if let Ok(config) = friday_mobile_core::local::config::Config::load()
         && let Err(e) = clip_history::hold_to(&dir, config.clipboard_history)
     {
         tracing::warn!("Could not hold the clipboard's history to its setting: {e}");
     }
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::CLIPBOARD_OUT_DIR,
+            friday_mobile_core::local::paths::CLIPBOARD_OUT_DIR,
             Duration::from_millis(250),
         )
         .await;
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         for request in clip_history::take_sends(&dir, now) {
             // P7: files copied in Explorer go as files, as Send file… sends;
             // with Files off it falls back to the text, if any (P7 review).
@@ -105,7 +105,8 @@ pub async fn run_sends() {
                     "kdeconnect.pocketdesk.file_fetch",
                 )
                 && let Ok(Some(copied)) =
-                    tokio::task::spawn_blocking(pocketdesk_core::local::clipboard_files::read).await
+                    tokio::task::spawn_blocking(friday_mobile_core::local::clipboard_files::read)
+                        .await
             {
                 // Said now, not only in the sent list (P7 review: from the
                 // tray nothing seemed to happen).
@@ -188,8 +189,12 @@ fn send_files(
     }
     let mut queued = 0;
     for file in files {
-        match pocketdesk_core::local::outbox::request(dir, device_id, &file.to_string_lossy(), now)
-        {
+        match friday_mobile_core::local::outbox::request(
+            dir,
+            device_id,
+            &file.to_string_lossy(),
+            now,
+        ) {
             Ok(_) => queued += 1,
             Err(e) => tracing::warn!("A copied file was not queued: {e}"),
         }
@@ -265,14 +270,14 @@ mod tests {
             "Files off"
         );
         assert_eq!(send_files(&dir, "phone-a", &[a, b], true, 1_000), Ok(2));
-        let queued = pocketdesk_core::local::outbox::take_all(&dir, 1_000);
+        let queued = friday_mobile_core::local::outbox::take_all(&dir, 1_000);
         assert_eq!(queued.len(), 2);
         assert!(queued.iter().all(|r| r.device_id == "phone-a"));
         let _ = std::fs::remove_dir_all(&dir);
     }
     use super::*;
-    use pocketdesk_core::error::Result;
-    use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+    use friday_mobile_core::error::Result;
+    use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
     use std::sync::Mutex;
 
     struct Phone {

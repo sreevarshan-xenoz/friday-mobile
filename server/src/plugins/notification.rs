@@ -6,15 +6,15 @@
 //! one phone are shown, the rest dropped. `phone_notifications = false` shows
 //! none (a phone's cancels still close what is shown).
 
-use pocketdesk_core::local::answers;
-use pocketdesk_core::local::phone_notes::{self, Answer, AnswerRequest, PhoneNote};
-use pocketdesk_core::protocol::notification_action;
+use friday_mobile_core::local::answers;
+use friday_mobile_core::local::phone_notes::{self, Answer, AnswerRequest, PhoneNote};
+use friday_mobile_core::protocol::notification_action;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 
 /// The most notifications shown from one phone in a minute, unless config
 /// says otherwise.
@@ -33,7 +33,7 @@ pub fn configure(show_phones: bool, per_minute: u32) {
     if !cfg!(test)
         && let Ok(dir) = crate::state::state_dir()
     {
-        pocketdesk_core::local::phone_live::clear(&dir);
+        friday_mobile_core::local::phone_live::clear(&dir);
     }
 }
 
@@ -299,7 +299,7 @@ pub(crate) fn cleared_here(tag: &str) {
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
-    if let Err(e) = pocketdesk_core::local::note_clears::request(&dir, &phone, &id, unix_now()) {
+    if let Err(e) = friday_mobile_core::local::note_clears::request(&dir, &phone, &id, unix_now()) {
         tracing::warn!("A notification closed here was not cleared on the phone: {e}");
     }
 }
@@ -410,7 +410,7 @@ fn listen_for_answers() {
 #[cfg(target_os = "linux")]
 async fn answer_signals() -> Result<()> {
     use futures_lite::StreamExt;
-    let failed = |e: zbus::Error| pocketdesk_core::error::PocketdeskError::Other {
+    let failed = |e: zbus::Error| friday_mobile_core::error::PocketdeskError::Other {
         detail: format!("D-Bus signals failed: {e}"),
     };
     let proxy = notifications_proxy().await?;
@@ -697,8 +697,8 @@ pub(crate) async fn show_from_kde(device_id: &str, body: &serde_json::Value) {
 
 /// The most base64 a picture or icon may come as: [`MAX_BYTES`]'s worth.
 ///
-/// [`MAX_BYTES`]: pocketdesk_core::local::notification_icons::MAX_BYTES
-const MAX_BASE64: usize = pocketdesk_core::local::notification_icons::MAX_BYTES / 3 * 4 + 4;
+/// [`MAX_BYTES`]: friday_mobile_core::local::notification_icons::MAX_BYTES
+const MAX_BASE64: usize = friday_mobile_core::local::notification_icons::MAX_BYTES / 3 * 4 + 4;
 
 /// `body`'s `field` decoded from base64, if it is there and not too long.
 fn decoded(body: &serde_json::Value, field: &str) -> Option<Vec<u8>> {
@@ -719,7 +719,8 @@ fn keep_icon(phone: &str, app: &str, body: &serde_json::Value) {
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
-    if let Err(e) = pocketdesk_core::local::notification_icons::keep_icon(&dir, phone, app, &bytes)
+    if let Err(e) =
+        friday_mobile_core::local::notification_icons::keep_icon(&dir, phone, app, &bytes)
     {
         tracing::info!("A phone notification's icon was not kept: {e}");
     }
@@ -734,7 +735,7 @@ fn pictures_for(
     id: &str,
     body: &serde_json::Value,
 ) -> crate::toast_answers::Pictures {
-    use pocketdesk_core::local::notification_icons as icons;
+    use friday_mobile_core::local::notification_icons as icons;
     let Ok(dir) = crate::state::state_dir() else {
         return Default::default();
     };
@@ -777,7 +778,7 @@ fn given_name(body: &serde_json::Value, field: &str) -> bool {
 /// Whether the phone marked it as come while another computer was in use
 /// (N7).
 fn marked_elsewhere(body: &serde_json::Value) -> bool {
-    body.get(pocketdesk_core::protocol::in_use::ELSEWHERE)
+    body.get(friday_mobile_core::protocol::in_use::ELSEWHERE)
         .and_then(|v| v.as_bool())
         == Some(true)
 }
@@ -808,9 +809,9 @@ fn held_by_words(app: &str, body: &serde_json::Value) -> Option<String> {
         return None;
     }
     let field = |key: &str| body.get(key).and_then(|v| v.as_str()).unwrap_or("");
-    let rules = pocketdesk_core::local::hold_words::rules(&lines);
-    pocketdesk_core::local::hold_words::held_by(&rules, app, field("title"), field("text"))
-        .map(pocketdesk_core::local::hold_words::Rule::line)
+    let rules = friday_mobile_core::local::hold_words::rules(&lines);
+    friday_mobile_core::local::hold_words::held_by(&rules, app, field("title"), field("text"))
+        .map(friday_mobile_core::local::hold_words::Rule::line)
 }
 
 /// A notification held by its words says so in its event, and names the
@@ -861,8 +862,8 @@ fn is_call(body: &serde_json::Value) -> bool {
 fn muted_here(app: &str) -> bool {
     crate::state::state_dir()
         .map(|dir| {
-            pocketdesk_core::local::muted_apps::is_muted(
-                &pocketdesk_core::local::muted_apps::read(&dir),
+            friday_mobile_core::local::muted_apps::is_muted(
+                &friday_mobile_core::local::muted_apps::read(&dir),
                 app,
             )
         })
@@ -903,12 +904,12 @@ impl Plugin for NotificationPlugin {
         &[
             "kdeconnect.notification",
             ACK,
-            pocketdesk_core::protocol::notification_action::NOTIFICATION_REPLY,
-            pocketdesk_core::protocol::notification_action::NOTIFICATION_ACTION,
+            friday_mobile_core::protocol::notification_action::NOTIFICATION_REPLY,
+            friday_mobile_core::protocol::notification_action::NOTIFICATION_ACTION,
             // A clear (L1).
-            pocketdesk_core::protocol::notification_action::NOTIFICATION_REQUEST,
+            friday_mobile_core::protocol::notification_action::NOTIFICATION_REQUEST,
             // An open on the phone (N3).
-            pocketdesk_core::protocol::notification_action::NOTIFICATION_OPEN,
+            friday_mobile_core::protocol::notification_action::NOTIFICATION_OPEN,
         ]
     }
 
@@ -942,7 +943,7 @@ impl Plugin for NotificationPlugin {
                         if let Ok(dir) = crate::state::state_dir() {
                             let (phone, tag) = (sender.device_id().to_string(), tag.clone());
                             let _ = tokio::task::spawn_blocking(move || {
-                                pocketdesk_core::local::phone_live::remove(&dir, &phone, &tag)
+                                friday_mobile_core::local::phone_live::remove(&dir, &phone, &tag)
                             })
                             .await;
                         }
@@ -954,7 +955,7 @@ impl Plugin for NotificationPlugin {
                     {
                         // A call's stays, for Call back (M8 review).
                         let _ = phone_notes::end_call(&dir, sender.device_id(), id);
-                        pocketdesk_core::local::notification_icons::forget_picture(
+                        friday_mobile_core::local::notification_icons::forget_picture(
                             &dir,
                             sender.device_id(),
                             id,
@@ -1009,7 +1010,7 @@ impl Plugin for NotificationPlugin {
                 );
                 // N4: an ongoing update is one card, updated in place; only
                 // its first counts against the limit and is an event.
-                let live = pocketdesk_core::protocol::live::Live::from_body(&packet.body);
+                let live = friday_mobile_core::protocol::live::Live::from_body(&packet.body);
                 // A card's notification that comes without live now (a
                 // download done, the switch off) is a card no more (N4
                 // review); with the setting off, none is kept.
@@ -1031,7 +1032,7 @@ impl Plugin for NotificationPlugin {
                     if let Ok(dir) = crate::state::state_dir() {
                         let (phone, tag) = (sender.device_id().to_string(), tag.clone());
                         let _ = tokio::task::spawn_blocking(move || {
-                            pocketdesk_core::local::phone_live::remove(&dir, &phone, &tag)
+                            friday_mobile_core::local::phone_live::remove(&dir, &phone, &tag)
                         })
                         .await;
                     }
@@ -1134,7 +1135,7 @@ impl Plugin for NotificationPlugin {
                     (Some(live), Some(tag)) => {
                         let now_ms = unix_now().saturating_mul(1000);
                         if !muted && let Ok(dir) = crate::state::state_dir() {
-                            let card = pocketdesk_core::local::phone_live::LiveCard {
+                            let card = friday_mobile_core::local::phone_live::LiveCard {
                                 device_id: sender.device_id().to_string(),
                                 tag: tag.clone(),
                                 app: app.clone(),
@@ -1144,7 +1145,7 @@ impl Plugin for NotificationPlugin {
                                 updated_unix: unix_now(),
                             };
                             let _ = tokio::task::spawn_blocking(move || {
-                                pocketdesk_core::local::phone_live::put(&dir, card)
+                                friday_mobile_core::local::phone_live::put(&dir, card)
                             })
                             .await;
                         }
@@ -1177,7 +1178,7 @@ impl Plugin for NotificationPlugin {
                     if !id.is_empty()
                         && let Ok(dir) = crate::state::state_dir()
                     {
-                        pocketdesk_core::local::notification_icons::forget_picture(
+                        friday_mobile_core::local::notification_icons::forget_picture(
                             &dir,
                             sender.device_id(),
                             id,
@@ -1315,7 +1316,7 @@ pub(crate) fn answerable(
         reply,
         open,
         // A chat's recent messages (D4), held to their limits.
-        messages: pocketdesk_core::protocol::conversation::messages(body),
+        messages: friday_mobile_core::protocol::conversation::messages(body),
     })
 }
 
@@ -1418,7 +1419,7 @@ pub async fn run_answers() {
         // second; otherwise only a new answer wakes this.
         if waiting.is_empty() {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::NOTIFICATION_OUT_DIR,
+                friday_mobile_core::local::paths::NOTIFICATION_OUT_DIR,
                 std::time::Duration::from_millis(500),
             )
             .await;
@@ -1475,8 +1476,8 @@ pub async fn run_answers() {
 /// on, as KDE Connect's own `kdeconnect.notification.request {cancel}`.
 /// Runs for the server's life.
 pub async fn run_clears() {
-    use pocketdesk_core::local::note_clears;
-    use pocketdesk_core::protocol::notification_action::{NOTIFICATION_REQUEST, cancel_body};
+    use friday_mobile_core::local::note_clears;
+    use friday_mobile_core::protocol::notification_action::{NOTIFICATION_REQUEST, cancel_body};
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
@@ -1484,7 +1485,7 @@ pub async fn run_clears() {
     loop {
         if waiting.is_empty() {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::NOTIFICATION_CLEARS_DIR,
+                friday_mobile_core::local::paths::NOTIFICATION_CLEARS_DIR,
                 std::time::Duration::from_millis(500),
             )
             .await;
@@ -1510,7 +1511,7 @@ pub async fn run_clears() {
             // Paired now, not only allowed by default (as Ring is).
             if !crate::plugins::pair::allows(
                 &clear.device_id,
-                pocketdesk_core::protocol::permissions::Capability::Notifications,
+                friday_mobile_core::protocol::permissions::Capability::Notifications,
             ) {
                 tracing::info!("A clear was not sent: Notifications is off for the phone");
                 continue;
@@ -1535,7 +1536,7 @@ pub async fn run_clears() {
 #[cfg(target_os = "linux")]
 async fn notifications_proxy() -> Result<zbus::Proxy<'static>> {
     let conn = zbus::Connection::session().await.map_err(|e| {
-        pocketdesk_core::error::PocketdeskError::Other {
+        friday_mobile_core::error::PocketdeskError::Other {
             detail: format!("D-Bus session failed: {e}"),
         }
     })?;
@@ -1546,7 +1547,7 @@ async fn notifications_proxy() -> Result<zbus::Proxy<'static>> {
         "org.freedesktop.Notifications",
     )
     .await
-    .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+    .map_err(|e| friday_mobile_core::error::PocketdeskError::Other {
         detail: format!("D-Bus proxy failed: {e}"),
     })
 }
@@ -1649,7 +1650,7 @@ async fn send_notification_dbus(
         )
         .await
         .map(|id| (id, pressable))
-        .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+        .map_err(|e| friday_mobile_core::error::PocketdeskError::Other {
             detail: format!("D-Bus call failed: {e}"),
         })
 }
@@ -1774,7 +1775,7 @@ async fn close_desktop_notification(tag: &str) {
                 .await?
                 .call::<_, _, ()>("CloseNotification", &(id,))
                 .await
-                .map_err(|e| pocketdesk_core::error::PocketdeskError::Other {
+                .map_err(|e| friday_mobile_core::error::PocketdeskError::Other {
                     detail: format!("D-Bus call failed: {e}"),
                 })
         };
@@ -1839,7 +1840,7 @@ mod tests {
     /// goes only to one that offers it.
     #[test]
     fn an_open_goes_only_where_offered() {
-        use pocketdesk_core::local::phone_notes::{Answer, AnswerRequest};
+        use friday_mobile_core::local::phone_notes::{Answer, AnswerRequest};
         let body = serde_json::json!({
             "id": "0|com.chat|1|null|10", "app": "Chat", "title": "Ann",
             "text": "Hi", "canOpen": true,
@@ -2149,7 +2150,7 @@ mod tests {
         remember_note(&tag, "phone-l1", "0|com.chat|7|null|10");
         cleared_here(&tag);
         cleared_here(&tag_for("phone-l1", "never shown"));
-        let taken: Vec<_> = pocketdesk_core::local::note_clears::take_all(dir, unix_now())
+        let taken: Vec<_> = friday_mobile_core::local::note_clears::take_all(dir, unix_now())
             .into_iter()
             .filter(|c| c.device_id == "phone-l1")
             .map(|c| c.key)
@@ -2198,9 +2199,9 @@ mod tests {
         let dir: &std::path::Path = &_state;
         std::fs::create_dir_all(dir).unwrap();
         assert!(!muted_here("Mail (K2b test)"));
-        pocketdesk_core::local::muted_apps::mute(dir, "Mail (K2b test)", 1).unwrap();
+        friday_mobile_core::local::muted_apps::mute(dir, "Mail (K2b test)", 1).unwrap();
         assert!(muted_here("mail (k2b test)"));
-        pocketdesk_core::local::muted_apps::unmute(dir, "Mail (K2b test)").unwrap();
+        friday_mobile_core::local::muted_apps::unmute(dir, "Mail (K2b test)").unwrap();
         assert!(!muted_here("Mail (K2b test)"));
     }
 

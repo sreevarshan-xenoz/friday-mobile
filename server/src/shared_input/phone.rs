@@ -2,7 +2,7 @@
 //! mouse (BK5).
 //!
 //! A phone whose owner lets it says its screen on its control link
-//! ([`SCREEN`](pocketdesk_core::protocol::phone_screen::SCREEN), kept by
+//! ([`SCREEN`](friday_mobile_core::protocol::phone_screen::SCREEN), kept by
 //! [`heard`] and, as a block, in `shared_screens.json`); the driver places
 //! it and crosses onto it as onto a computer. Whether it may be driven now
 //! is [`standing`]: linked, its own switch and Accessibility service on, and
@@ -17,10 +17,10 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::shared_input::{
+use friday_mobile_core::local::shared_input::{
     PHONE_AWAY, PHONE_NEEDS_SERVICE, PHONE_NOT_ALLOWED, PHONE_OFF, PHONE_READY,
 };
-use pocketdesk_core::protocol::phone_screen::{
+use friday_mobile_core::protocol::phone_screen::{
     PhoneButton, PhoneEvent, PhoneKey, Press, ScreenReport,
 };
 
@@ -110,7 +110,7 @@ pub fn standing_now(device_id: &str) -> &'static str {
     let allowed = report.is_some()
         && crate::plugins::pair::allows(
             device_id,
-            pocketdesk_core::protocol::permissions::Capability::SharedInput,
+            friday_mobile_core::protocol::permissions::Capability::SharedInput,
         );
     standing(report.as_ref(), is_linked(device_id), allowed)
 }
@@ -351,15 +351,15 @@ impl ToPhone {
             }
             Msg::Wheel { dx, dy } => PhoneEvent::Wheel { dx, dy },
             // The phone scrolls by notches: fine turns add up to them.
-            Msg::WheelFine { dx, dy } => match pocketdesk_core::streaming::wheel::add_plain(
+            Msg::WheelFine { dx, dy } => match friday_mobile_core::streaming::wheel::add_plain(
                 &mut self.wheel,
                 i32::from(dx),
                 i32::from(dy),
             ) {
                 (0, 0) => return Vec::new(),
                 (x, y) => PhoneEvent::Wheel {
-                    dx: pocketdesk_core::streaming::wheel::clamp16(x),
-                    dy: pocketdesk_core::streaming::wheel::clamp16(y),
+                    dx: friday_mobile_core::streaming::wheel::clamp16(x),
+                    dy: friday_mobile_core::streaming::wheel::clamp16(y),
                 },
             },
             Msg::Ping { t_us } => PhoneEvent::Ping { t: t_us },
@@ -482,11 +482,11 @@ impl PhoneChannel {
 
 /// Send what comes in `taken` to the phone `device_id`: the first event at
 /// once, then what came meanwhile after [`PACE`], as batches
-/// ([`batches`](pocketdesk_core::protocol::phone_screen::batches)). Ends with the phone's link, or when the
+/// ([`batches`](friday_mobile_core::protocol::phone_screen::batches)). Ends with the phone's link, or when the
 /// channel is dropped and what it held is sent.
 async fn pump(device_id: String, mut taken: tokio::sync::mpsc::UnboundedReceiver<PhoneEvent>) {
-    use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-    use pocketdesk_core::protocol::phone_screen::{INPUT, batches, body};
+    use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+    use friday_mobile_core::protocol::phone_screen::{INPUT, batches, body};
     let mut sent_at: Option<tokio::time::Instant> = None;
     while let Some(first) = taken.recv().await {
         if let Some(at) = sent_at {
@@ -515,7 +515,7 @@ async fn pump(device_id: String, mut taken: tokio::sync::mpsc::UnboundedReceiver
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_screen::PhoneScreen;
+    use friday_mobile_core::protocol::phone_screen::PhoneScreen;
 
     fn report(allows: bool, service: bool) -> ScreenReport {
         ScreenReport {

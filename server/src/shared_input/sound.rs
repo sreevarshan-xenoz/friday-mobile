@@ -32,8 +32,8 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
-use pocketdesk_core::streaming::audio_capture::{self, PcmBuffer};
-use pocketdesk_core::streaming::{AudioConfig, AudioEncoder};
+use friday_mobile_core::streaming::audio_capture::{self, PcmBuffer};
+use friday_mobile_core::streaming::{AudioConfig, AudioEncoder};
 
 use super::link;
 use super::wire::{self, Msg};

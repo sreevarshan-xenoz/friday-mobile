@@ -13,16 +13,16 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
-use pocketdesk_core::protocol::partials::{Limits, Record, Store};
-use pocketdesk_core::protocol::transfer::{self, Have, Pace, Partial, TransferError};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
+use friday_mobile_core::protocol::partials::{Limits, Record, Store};
+use friday_mobile_core::protocol::transfer::{self, Have, Pace, Partial, TransferError};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::{Mutex, broadcast};
 
 use crate::api::{TRANSFER_SENT, TRANSFER_TOTAL, client_identity};
 use crate::{CONTROL_PEER, CONTROL_WRITER};
-use pocketdesk_core::protocol::clipboard::{CLIPBOARD_IMAGE_FETCH, MAX_CLIPBOARD_IMAGE};
-use pocketdesk_core::protocol::peek::{MAX_PEEK, PEEK};
+use friday_mobile_core::protocol::clipboard::{CLIPBOARD_IMAGE_FETCH, MAX_CLIPBOARD_IMAGE};
+use friday_mobile_core::protocol::peek::{MAX_PEEK, PEEK};
 
 /// Ask the desktop for a file (F7b): `{path | offer, port, key}`.
 const FETCH: &str = "kdeconnect.pocketdesk.file_fetch";
@@ -594,9 +594,9 @@ mod tests {
         folder_answer, folder_fetch_packet, receive_into, refusal_for,
     };
     use crate::api::transfer_progress;
-    use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-    use pocketdesk_core::protocol::partials::Store;
-    use pocketdesk_core::protocol::transfer::{self, Memory, Pace, Partial};
+    use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+    use friday_mobile_core::protocol::partials::Store;
+    use friday_mobile_core::protocol::transfer::{self, Memory, Pace, Partial};
     use std::pin::Pin;
     use std::task::{Context, Poll};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -628,12 +628,12 @@ mod tests {
     fn a_peek_asks_for_the_peek_at_its_own_limit() {
         let mut body = serde_json::json!({});
         let (packet_type, limit) = super::FetchTarget::Peek.request(&mut body);
-        assert_eq!(packet_type, pocketdesk_core::protocol::peek::PEEK);
-        assert_eq!(limit, pocketdesk_core::protocol::peek::MAX_PEEK);
+        assert_eq!(packet_type, friday_mobile_core::protocol::peek::PEEK);
+        assert_eq!(limit, friday_mobile_core::protocol::peek::MAX_PEEK);
         assert_eq!(body, serde_json::json!({}), "nothing but the key and port");
     }
 
-    use pocketdesk_core::streaming::transport::CertManager;
+    use friday_mobile_core::streaming::transport::CertManager;
 
     /// This phone, the desktop it pinned, and another computer.
     fn certs() -> &'static (CertManager, CertManager, CertManager) {

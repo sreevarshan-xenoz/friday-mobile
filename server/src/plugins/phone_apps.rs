@@ -8,10 +8,10 @@
 //! permission, as the ask is.
 
 use base64::Engine;
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::phone_action::{
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::phone_action::{
     AppReport, MAX_ICONS_PER_PACKET, PHONE_APP_ICONS, PHONE_APP_OPENED, PHONE_APPS, parse_apps,
     valid_app_id,
 };
@@ -21,9 +21,9 @@ pub struct PhoneAppsPlugin;
 
 /// The longest base64 text an icon may be: [`MAX_ICON_BYTES`] encoded.
 ///
-/// [`MAX_ICON_BYTES`]: pocketdesk_core::local::notification_icons::MAX_ICON_BYTES
+/// [`MAX_ICON_BYTES`]: friday_mobile_core::local::notification_icons::MAX_ICON_BYTES
 const MAX_ICON_BASE64: usize =
-    pocketdesk_core::local::notification_icons::MAX_ICON_BYTES / 3 * 4 + 4;
+    friday_mobile_core::local::notification_icons::MAX_ICON_BYTES / 3 * 4 + 4;
 
 /// One writer at a time to these small files (P2 review: two lists at once
 /// could lose one).
@@ -85,18 +85,21 @@ impl Plugin for PhoneAppsPlugin {
             let apps = parse_apps(&packet.body);
             // Phone apps tier 2: whether the phone opens apps in windows of
             // its own, as it said with this list.
-            let windows = pocketdesk_core::protocol::phone_action::parse_windows_mode(&packet.body);
+            let windows =
+                friday_mobile_core::protocol::phone_action::parse_windows_mode(&packet.body);
             let count = apps.len();
             // Off the runtime: a read and a write of a small file.
             let kept = tokio::task::spawn_blocking(move || {
                 let _one = WRITING.lock().unwrap_or_else(|e| e.into_inner());
                 let versions = apps.iter().map(|a| (a.id.clone(), a.version)).collect();
-                pocketdesk_core::local::phone_app_icons::forget_unlisted(&dir, &device, &versions);
-                pocketdesk_core::local::phone_apps::keep_with_windows(
+                friday_mobile_core::local::phone_app_icons::forget_unlisted(
+                    &dir, &device, &versions,
+                );
+                friday_mobile_core::local::phone_apps::keep_with_windows(
                     &dir,
                     &device,
                     apps,
-                    pocketdesk_core::local::pin::now_unix(),
+                    friday_mobile_core::local::pin::now_unix(),
                     windows,
                     &|id| crate::plugins::pair::is_paired_device(id),
                 )
@@ -117,7 +120,7 @@ impl Plugin for PhoneAppsPlugin {
                 icons
                     .into_iter()
                     .filter(|(id, version, png)| {
-                        pocketdesk_core::local::phone_app_icons::keep(
+                        friday_mobile_core::local::phone_app_icons::keep(
                             &dir, &device, id, *version, png,
                         )
                         .is_ok()
@@ -137,11 +140,11 @@ impl Plugin for PhoneAppsPlugin {
         let result = report.result.as_str();
         let kept = tokio::task::spawn_blocking(move || {
             let _one = WRITING.lock().unwrap_or_else(|e| e.into_inner());
-            pocketdesk_core::local::phone_apps::keep_result(
+            friday_mobile_core::local::phone_apps::keep_result(
                 &dir,
                 &device,
                 report,
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
                 &|id| crate::plugins::pair::is_paired_device(id),
             )
         })

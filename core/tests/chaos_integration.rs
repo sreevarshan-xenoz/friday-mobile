@@ -1,4 +1,4 @@
-use pocketdesk_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy};
+use friday_mobile_core::streaming::chaos::proxy::{ChaosConfig, ChaosProxy};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};

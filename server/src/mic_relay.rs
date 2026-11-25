@@ -5,7 +5,7 @@
 //! the receiving end. Frames carry 20 ms Opus packets (48 kHz mono). The relay
 //! decodes them to float32 PCM and pipes the bytes into a `pw-loopback`
 //! capture client, which registers an `Audio/Source/Virtual` node named
-//! "Pocketdesk Mic" — a normal microphone from the desktop's point of view
+//! "FRIDAY Mobile Mic" — a normal microphone from the desktop's point of view
 //! (meetings, recorders, `pactl set-default-source`).
 //!
 //! Format note (verified against PipeWire 1.6.8 on this box): pw-loopback
@@ -28,11 +28,11 @@ use tokio::process::{Child, ChildStdin, Command};
 use tokio::sync::mpsc::Receiver;
 use tracing::{info, warn};
 
-use pocketdesk_core::streaming::{AudioDecoder, InputPacket};
+use friday_mobile_core::streaming::{AudioDecoder, InputPacket};
 
 /// Defined in `core::streaming::audio` because the phone's encoder has to match
 /// them; re-exported here so the relay reads as one file.
-pub use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
+pub use friday_mobile_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
 
 /// Minimum spacing between node spawn attempts after a failure (the phone
 /// sends a frame every 20 ms — without this a missing pw-loopback would
@@ -40,8 +40,8 @@ pub use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
 const SPAWN_RETRY: Duration = Duration::from_secs(5);
 
 pub fn mic_node_props() -> String {
-    "node.name=pocketdesk_mic node.description=\"Pocketdesk Mic\" \
-     node.nick=\"Pocketdesk Mic\" media.class=Audio/Source/Virtual"
+    "node.name=friday_mobile_mic node.description=\"FRIDAY Mobile Mic\" \
+     node.nick=\"FRIDAY Mobile Mic\" media.class=Audio/Source/Virtual"
         .to_string()
 }
 
@@ -128,7 +128,7 @@ async fn run_mic_relay_with(program: &str, args: &[String], mut rx: Receiver<Inp
         };
         if !enabled {
             if let Some(n) = node.take() {
-                info!("Phone mic off — removing Pocketdesk Mic source");
+                info!("Phone mic off — removing FRIDAY Mobile Mic source");
                 n.stop().await;
             }
             continue;
@@ -137,7 +137,7 @@ async fn run_mic_relay_with(program: &str, args: &[String], mut rx: Receiver<Inp
         if node.is_none() && retry_after.is_none_or(|t| Instant::now() >= t) {
             match MicNode::spawn(program, args).await {
                 Ok(n) => {
-                    info!("Phone mic on — Pocketdesk Mic source live ({program})");
+                    info!("Phone mic on — FRIDAY Mobile Mic source live ({program})");
                     node = Some(n);
                     retry_after = None;
                 }
@@ -164,7 +164,7 @@ async fn run_mic_relay_with(program: &str, args: &[String], mut rx: Receiver<Inp
     }
 
     if let Some(n) = node.take() {
-        info!("Mic session ended — removing Pocketdesk Mic source");
+        info!("Mic session ended — removing FRIDAY Mobile Mic source");
         n.stop().await;
     }
 }
@@ -172,7 +172,7 @@ async fn run_mic_relay_with(program: &str, args: &[String], mut rx: Receiver<Inp
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::{AudioConfig, AudioEncoder};
+    use friday_mobile_core::streaming::{AudioConfig, AudioEncoder};
     use tokio::sync::mpsc;
 
     fn mic_frame(enabled: bool, opus: Vec<u8>) -> InputPacket {
@@ -182,9 +182,9 @@ mod tests {
     #[test]
     fn node_props_declare_a_virtual_mic() {
         let props = mic_node_props();
-        assert!(props.contains("node.name=pocketdesk_mic"));
+        assert!(props.contains("node.name=friday_mobile_mic"));
         assert!(props.contains("media.class=Audio/Source/Virtual"));
-        assert!(props.contains("node.description=\"Pocketdesk Mic\""));
+        assert!(props.contains("node.description=\"FRIDAY Mobile Mic\""));
     }
 
     #[test]

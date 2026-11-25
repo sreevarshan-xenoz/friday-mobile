@@ -15,14 +15,14 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, Pos2, Rect, RichText, Sense, Stroke, StrokeKind, Vec2};
-use pocketdesk_core::local::computers::{self, ComputerAsk, ComputersFile};
-use pocketdesk_core::local::shared_input::{
+use friday_mobile_core::local::computers::{self, ComputerAsk, ComputersFile};
+use friday_mobile_core::local::shared_input::{
     self, Bounds, CAPTURE_FRACTIONAL_SCALE, CAPTURE_NEEDS_PERMISSION, CAPTURE_READY,
     CAPTURE_UNSUPPORTED, LINK_AWAY, LINK_DIRECT, LINK_RELAYED, LayoutFile, PHONE_AWAY,
     PHONE_NEEDS_SERVICE, PHONE_NOT_ALLOWED, PHONE_OFF, PHONE_READY, REFUSED_NOT_ALLOWED,
     REFUSED_SHARING_OFF, Screen, ScreensFile, ShareAsk, StatusFile, bounds,
 };
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::permissions::Capability;
 
 use crate::model::Device;
 
@@ -747,7 +747,7 @@ impl ArrangeView {
                     .clicked()
             {
                 match std::fs::remove_file(
-                    state_dir.join(pocketdesk_core::local::paths::SHARED_LAYOUT_FILE),
+                    state_dir.join(friday_mobile_core::local::paths::SHARED_LAYOUT_FILE),
                 ) {
                     Ok(()) => self.saved = None,
                     Err(e) => {
@@ -1293,7 +1293,7 @@ mod tests {
     /// computers, drawn as a phone; one not paired is not.
     #[test]
     fn a_paired_phone_is_placed_as_a_phone() {
-        use pocketdesk_core::local::shared_input::PhoneScreen;
+        use friday_mobile_core::local::shared_input::PhoneScreen;
         let phone = PhoneScreen {
             width_px: 1080,
             height_px: 2400,

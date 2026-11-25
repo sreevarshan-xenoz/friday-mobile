@@ -6,9 +6,9 @@ use crate::app::{PocketdeskApp, Tab};
 use eframe::egui;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::phone_status::PhoneBattery;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::phone_status::PhoneBattery;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
@@ -31,8 +31,8 @@ fn folders() -> &'static Folders {
         let config = root.join("config");
         // In-process, not the environment (C4 review): no `unsafe` setenv
         // while other tests run on other threads.
-        pocketdesk_core::local::paths::use_state_dir(state.clone());
-        pocketdesk_core::local::paths::use_config_dir(config.clone());
+        friday_mobile_core::local::paths::use_state_dir(state.clone());
+        friday_mobile_core::local::paths::use_config_dir(config.clone());
         Folders { state, config }
     })
 }
@@ -142,7 +142,7 @@ fn pair_opens_from_the_left() {
 /// "Someone else's" makes a code that says so in the PIN file.
 #[test]
 fn pair_asks_whose_phone_it_is_and_someone_elses_code_says_so() {
-    use pocketdesk_core::local::pin;
+    use friday_mobile_core::local::pin;
     let fixture = Fixture::new();
     let mut app = fixture.open(None);
     go_to(&app, Tab::Pair);
@@ -174,7 +174,7 @@ fn pair_asks_whose_phone_it_is_and_someone_elses_code_says_so() {
 /// until ticked; ticked, it makes a code that says so in the PIN file.
 #[test]
 fn pair_ticks_another_of_my_computers_into_a_new_code() {
-    use pocketdesk_core::local::pin;
+    use friday_mobile_core::local::pin;
     let fixture = Fixture::new();
     let mut app = fixture.open(None);
     go_to(&app, Tab::Pair);
@@ -235,15 +235,15 @@ fn devices_show_each_features_sides_and_what_holds_it_back() {
     let mut phones = std::collections::BTreeMap::new();
     phones.insert(
         PHONE.to_string(),
-        pocketdesk_core::local::phone_switches::PhoneSwitches {
-            switches: pocketdesk_core::local::phone_switches::from_body(&serde_json::json!({
+        friday_mobile_core::local::phone_switches::PhoneSwitches {
+            switches: friday_mobile_core::local::phone_switches::from_body(&serde_json::json!({
                 "switches": {"notifications": {"on": true, "android": false}}
             }))
             .expect("a report"),
-            updated_unix: pocketdesk_core::local::pin::now_unix(),
+            updated_unix: friday_mobile_core::local::pin::now_unix(),
         },
     );
-    pocketdesk_core::local::phone_switches::write(fixture.state(), &phones).expect("written");
+    friday_mobile_core::local::phone_switches::write(fixture.state(), &phones).expect("written");
     let mut app = fixture.open(Some(Tab::Devices));
     let advice = "Give Pocketdesk notification access on the phone.";
     assert!(app.query_by_label(advice).is_none(), "closed until opened");
@@ -316,9 +316,9 @@ fn devices_say_the_release_each_runs() {
 fn other_computers_say_the_release_each_runs() {
     let fixture = Fixture::new();
     let id = "00000000-0000-4000-8000-0000000000d4";
-    pocketdesk_core::local::computers::update(fixture.state(), |file| {
+    friday_mobile_core::local::computers::update(fixture.state(), |file| {
         file.computers
-            .push(pocketdesk_core::local::computers::PeerComputer {
+            .push(friday_mobile_core::local::computers::PeerComputer {
                 device_id: id.to_string(),
                 name: "Test Desk".to_string(),
                 addresses: Vec::new(),
@@ -353,9 +353,9 @@ fn other_computers_say_the_release_each_runs() {
 #[test]
 fn unpairing_a_computer_waits_for_the_server() {
     let fixture = Fixture::new();
-    pocketdesk_core::local::computers::update(fixture.state(), |file| {
+    friday_mobile_core::local::computers::update(fixture.state(), |file| {
         file.computers
-            .push(pocketdesk_core::local::computers::PeerComputer {
+            .push(friday_mobile_core::local::computers::PeerComputer {
                 device_id: "00000000-0000-4000-8000-0000000000ba".to_string(),
                 name: "Test Desk".to_string(),
                 addresses: Vec::new(),
@@ -441,14 +441,14 @@ fn pair_computer_starts_with_the_nearby_list() {
 #[test]
 fn a_nearby_computers_ask_shows_over_any_page() {
     let fixture = Fixture::new();
-    pocketdesk_core::local::computers::update(fixture.state(), |file| {
-        file.nearby_in = Some(pocketdesk_core::local::nearby::NearbyRequest {
+    friday_mobile_core::local::computers::update(fixture.state(), |file| {
+        file.nearby_in = Some(friday_mobile_core::local::nearby::NearbyRequest {
             id: "0a1b2c3d4e5f6071".to_string(),
             device_id: "00000000-0000-4000-8000-0000000000e1".to_string(),
             name: "Test Tower".to_string(),
             address: "192.0.2.60".to_string(),
             code: "482913".to_string(),
-            unix: pocketdesk_core::local::pin::now_unix(),
+            unix: friday_mobile_core::local::pin::now_unix(),
         });
     })
     .expect("a computers file");
@@ -462,8 +462,8 @@ fn a_nearby_computers_ask_shows_over_any_page() {
     app.get_by_label("Decline").click();
     app.run_steps(3);
     assert!(app.query_by_label("482 913").is_none());
-    let now = pocketdesk_core::local::pin::now_unix();
-    let asks = pocketdesk_core::local::computers::take_all(fixture.state(), now);
+    let now = friday_mobile_core::local::pin::now_unix();
+    let asks = friday_mobile_core::local::computers::take_all(fixture.state(), now);
     assert_eq!(asks.len(), 1, "one answer");
 }
 
@@ -473,7 +473,7 @@ fn a_nearby_computers_ask_shows_over_any_page() {
 fn other_computers_say_which_is_mine() {
     let fixture = Fixture::new();
     let computer =
-        |id: &str, name: &str, mine: bool| pocketdesk_core::local::computers::PeerComputer {
+        |id: &str, name: &str, mine: bool| friday_mobile_core::local::computers::PeerComputer {
             device_id: id.to_string(),
             name: name.to_string(),
             addresses: Vec::new(),
@@ -490,7 +490,7 @@ fn other_computers_say_which_is_mine() {
             viewed_unix: 0,
             keys_by_position: None,
         };
-    pocketdesk_core::local::computers::update(fixture.state(), |file| {
+    friday_mobile_core::local::computers::update(fixture.state(), |file| {
         file.computers.push(computer(
             "00000000-0000-4000-8000-0000000000e1",
             "Test Tower",
@@ -509,7 +509,7 @@ fn other_computers_say_which_is_mine() {
         "said for the computer paired both ways"
     );
     // One paired one way says nothing of the kind.
-    pocketdesk_core::local::computers::update(fixture.state(), |file| {
+    friday_mobile_core::local::computers::update(fixture.state(), |file| {
         file.computers[0].mine = false;
     })
     .expect("a computers file");
@@ -528,10 +528,10 @@ const DESK: &str = "00000000-0000-4000-8000-0000000000d1";
 const LAPTOP: &str = "00000000-0000-4000-8000-0000000000d2";
 
 fn keyboard_mouse_computers(state: &Path) {
-    use pocketdesk_core::local::shared_input::{self, Screen, StatusFile};
-    pocketdesk_core::local::computers::update(state, |file| {
+    use friday_mobile_core::local::shared_input::{self, Screen, StatusFile};
+    friday_mobile_core::local::computers::update(state, |file| {
         file.computers
-            .push(pocketdesk_core::local::computers::PeerComputer {
+            .push(friday_mobile_core::local::computers::PeerComputer {
                 device_id: LAPTOP.to_string(),
                 name: "Test Laptop".to_string(),
                 addresses: Vec::new(),
@@ -610,8 +610,8 @@ fn the_keyboard_and_mouse_page_lets_either_side_drive() {
     app.run_steps(3);
     // Read after the click: a request made in the next second would be
     // "from the future" to a clock read before it.
-    let now = pocketdesk_core::local::pin::now_unix();
-    let identify = pocketdesk_core::local::shared_input::take_all(fixture.state(), now);
+    let now = friday_mobile_core::local::pin::now_unix();
+    let identify = friday_mobile_core::local::shared_input::take_all(fixture.state(), now);
     assert_eq!(identify.len(), 1, "one Identify asked");
 
     app.get_by_label(crate::arrange_view::SHARE_SWITCH).click();
@@ -627,8 +627,8 @@ fn the_keyboard_and_mouse_page_lets_either_side_drive() {
 /// which the switch there sets in the trust store.
 #[test]
 fn the_keyboard_and_mouse_page_shows_the_phone_as_a_screen() {
-    use pocketdesk_core::local::shared_input::{self, PHONE_OFF, PhoneScreen, StatusFile};
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::local::shared_input::{self, PHONE_OFF, PhoneScreen, StatusFile};
+    use friday_mobile_core::protocol::permissions::Capability;
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
     shared_input::update(fixture.state(), |file| {
@@ -706,12 +706,12 @@ fn escape_cancels_the_unpair_question() {
 /// changes nothing, and Apply gives the phone the profile's permissions.
 #[test]
 fn applying_a_profile_asks_first() {
-    use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
+    use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
     let mut kids = DevicePermissions::default();
     kids.set(Capability::Input, false);
-    pocketdesk_core::local::permission_profiles::save(fixture.state(), "Kids", &kids)
+    friday_mobile_core::local::permission_profiles::save(fixture.state(), "Kids", &kids)
         .expect("saved");
     let input = |state: &Path| {
         TrustStore::read(state.join(TRUST_FILE))
@@ -747,7 +747,8 @@ fn applying_a_profile_asks_first() {
     app.get_by_label("Apply").click();
     app.run_steps(3);
     assert!(!input(fixture.state()), "Apply turns input off");
-    pocketdesk_core::local::permission_profiles::remove(fixture.state(), "Kids").expect("removed");
+    friday_mobile_core::local::permission_profiles::remove(fixture.state(), "Kids")
+        .expect("removed");
 }
 
 /// I3: Ctrl+Page Down opens the next page down the left.
@@ -784,7 +785,7 @@ fn the_overview_shows_a_phone_with_its_battery_and_actions() {
     )]
     .into_iter()
     .collect();
-    pocketdesk_core::local::phone_status::write(fixture.state(), &batteries).expect("battery");
+    friday_mobile_core::local::phone_status::write(fixture.state(), &batteries).expect("battery");
     let app = fixture.open(None);
     // UX 3: phones and computers under one heading.
     assert!(app.query_by_label(crate::app::YOUR_DEVICES).is_some());
@@ -897,9 +898,9 @@ fn files_lists_the_kept_folders_with_their_problems() {
     let fixture = Fixture::new();
     let full = format!(
         "{}: 9.0 GB of the 10 GB cap",
-        pocketdesk_core::protocol::kept::FULL
+        friday_mobile_core::protocol::kept::FULL
     );
-    let folder = pocketdesk_core::local::kept_folders::KeptFolder {
+    let folder = friday_mobile_core::local::kept_folders::KeptFolder {
         device_id: "kept-phone".to_string(),
         folder_id: "0".repeat(32),
         phone: "Test Phone".to_string(),
@@ -909,18 +910,18 @@ fn files_lists_the_kept_folders_with_their_problems() {
         folder_dir: "Notes".to_string(),
         files: 12,
         bytes: 2_100_000,
-        last_unix: pocketdesk_core::local::pin::now_unix(),
+        last_unix: friday_mobile_core::local::pin::now_unix(),
         last_sent: 12,
         last_failed: 0,
         deleted: 0,
         deletes_skipped: 0,
         mirror: false,
-        errors: vec![pocketdesk_core::local::kept_folders::KeptError {
-            at_unix: pocketdesk_core::local::pin::now_unix(),
+        errors: vec![friday_mobile_core::local::kept_folders::KeptError {
+            at_unix: friday_mobile_core::local::pin::now_unix(),
             message: full.clone(),
         }],
     };
-    pocketdesk_core::local::kept_folders::write(fixture.state(), &[folder]).unwrap();
+    friday_mobile_core::local::kept_folders::write(fixture.state(), &[folder]).unwrap();
     let mut app = fixture.open(Some(Tab::Files));
     app.run_steps(3);
     assert!(app.query_by_label("Kept folders").is_some());
@@ -1045,10 +1046,12 @@ mod snapshots {
 #[test]
 fn the_logs_page_shows_the_newest_lines() {
     let fixture = Fixture::new();
-    let logs = fixture.state().join(pocketdesk_core::local::paths::LOG_DIR);
+    let logs = fixture
+        .state()
+        .join(friday_mobile_core::local::paths::LOG_DIR);
     std::fs::create_dir_all(&logs).expect("logs");
     std::fs::write(
-        logs.join("pocketdesk.2026-10-20.log"),
+        logs.join("friday-mobile.2026-10-20.log"),
         "2026-10-20T06:00:00Z  INFO pocketdesk: server starting\n2026-10-20T06:00:01Z  WARN pocketdesk: a refusal\n",
     )
     .expect("log");
@@ -1075,9 +1078,11 @@ fn the_logs_page_shows_the_newest_lines() {
 #[test]
 fn an_empty_log_is_a_log() {
     let fixture = Fixture::new();
-    let logs = fixture.state().join(pocketdesk_core::local::paths::LOG_DIR);
+    let logs = fixture
+        .state()
+        .join(friday_mobile_core::local::paths::LOG_DIR);
     std::fs::create_dir_all(&logs).expect("logs");
-    std::fs::write(logs.join("pocketdesk.2026-10-21.log"), "").expect("log");
+    std::fs::write(logs.join("friday-mobile.2026-10-21.log"), "").expect("log");
     let app = fixture.open(Some(Tab::Logs));
     assert!(app.query_by_label("Open log folder").is_some());
     assert!(app.query_by_label("0 of the last 0 lines").is_some());
@@ -1250,7 +1255,7 @@ fn recent_sessions(state: &Path) {
         now - 120,
     );
     std::fs::write(
-        state.join(pocketdesk_core::local::paths::SESSIONS_FILE),
+        state.join(friday_mobile_core::local::paths::SESSIONS_FILE),
         log,
     )
     .expect("log");
@@ -1284,7 +1289,7 @@ fn the_sessions_page_lists_the_recent_sessions() {
 /// under a kind chip says the chip narrows too.
 #[test]
 fn the_activity_page_searches_its_events() {
-    use pocketdesk_core::local::events::{Event, EventsDetail, append};
+    use friday_mobile_core::local::events::{Event, EventsDetail, append};
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
     let now = std::time::SystemTime::now()
@@ -1342,7 +1347,7 @@ fn the_clipboard_page_searches_its_texts() {
         "clipboard_history = 20\n",
     )
     .expect("config");
-    use pocketdesk_core::local::clip_history::{ClipEntry, record};
+    use friday_mobile_core::local::clip_history::{ClipEntry, record};
     record(
         fixture.state(),
         ClipEntry::new("12 Main Street", Some(PHONE), 100),
@@ -1430,7 +1435,7 @@ fn a_drop_with_nothing_to_take_it_says_so() {
 /// and Settings lists it with Unmute.
 #[test]
 fn an_app_is_muted_from_activity_and_unmuted_in_settings() {
-    use pocketdesk_core::local::events::{Event, EventsDetail, append};
+    use friday_mobile_core::local::events::{Event, EventsDetail, append};
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
     let now = std::time::SystemTime::now()
@@ -1452,8 +1457,8 @@ fn an_app_is_muted_from_activity_and_unmuted_in_settings() {
     app.run_steps(3);
     assert!(app.query_by_label("muted here").is_some());
     assert!(app.query_by_label("Not from this app").is_none());
-    assert!(pocketdesk_core::local::muted_apps::is_muted(
-        &pocketdesk_core::local::muted_apps::read(fixture.state()),
+    assert!(friday_mobile_core::local::muted_apps::is_muted(
+        &friday_mobile_core::local::muted_apps::read(fixture.state()),
         "gmail"
     ));
 
@@ -1465,7 +1470,7 @@ fn an_app_is_muted_from_activity_and_unmuted_in_settings() {
     assert!(app.query_by_label("Gmail").is_some(), "listed");
     app.get_by_label("Unmute").click();
     app.run_steps(3);
-    assert!(pocketdesk_core::local::muted_apps::read(fixture.state()).is_empty());
+    assert!(friday_mobile_core::local::muted_apps::read(fixture.state()).is_empty());
 }
 
 /// K2b review: Settings says when the muted list cannot be read.
@@ -1475,7 +1480,7 @@ fn a_broken_muted_list_is_said_in_settings() {
     std::fs::write(
         fixture
             .state()
-            .join(pocketdesk_core::local::paths::MUTED_APPS_FILE),
+            .join(friday_mobile_core::local::paths::MUTED_APPS_FILE),
         "not json",
     )
     .expect("file");
@@ -1501,11 +1506,11 @@ fn the_overview_pauses_and_resumes() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("clock")
         .as_secs();
-    assert!(pocketdesk_core::local::pause::current(fixture.state(), now).is_some());
+    assert!(friday_mobile_core::local::pause::current(fixture.state(), now).is_some());
     app.get_by_label("Resume").click();
     app.run_steps(3);
     assert!(app.query_by_label("Pause notifications").is_some());
-    assert!(pocketdesk_core::local::pause::current(fixture.state(), now).is_none());
+    assert!(friday_mobile_core::local::pause::current(fixture.state(), now).is_none());
 }
 
 /// K2a review: a pause that cannot be read is said so on the Overview,
@@ -1516,7 +1521,7 @@ fn the_overview_says_a_broken_pause() {
     std::fs::write(
         fixture
             .state()
-            .join(pocketdesk_core::local::paths::PAUSE_FILE),
+            .join(friday_mobile_core::local::paths::PAUSE_FILE),
         "x",
     )
     .expect("pause");
@@ -1531,9 +1536,9 @@ fn the_overview_says_a_broken_pause() {
 fn a_notification_shows_its_app_s_icon() {
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
-    pocketdesk_core::local::phone_notes::keep(
+    friday_mobile_core::local::phone_notes::keep(
         fixture.state(),
-        pocketdesk_core::local::phone_notes::PhoneNote {
+        friday_mobile_core::local::phone_notes::PhoneNote {
             device_id: PHONE.to_string(),
             key: "0|chat|1".to_string(),
             app: "Chat".to_string(),
@@ -1551,7 +1556,7 @@ fn a_notification_shows_its_app_s_icon() {
     image::RgbaImage::from_pixel(8, 8, image::Rgba([0, 128, 255, 255]))
         .write_to(&mut png, image::ImageFormat::Png)
         .expect("png");
-    pocketdesk_core::local::notification_icons::keep_icon(
+    friday_mobile_core::local::notification_icons::keep_icon(
         fixture.state(),
         PHONE,
         "Chat",
@@ -1567,9 +1572,9 @@ fn a_notification_shows_its_app_s_icon() {
 fn the_notifications_page_clears_on_the_phone() {
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
-    pocketdesk_core::local::phone_notes::keep(
+    friday_mobile_core::local::phone_notes::keep(
         fixture.state(),
-        pocketdesk_core::local::phone_notes::PhoneNote {
+        friday_mobile_core::local::phone_notes::PhoneNote {
             device_id: PHONE.to_string(),
             key: "0|com.chat|9|null|10".to_string(),
             app: "Chat".to_string(),
@@ -1590,7 +1595,7 @@ fn the_notifications_page_clears_on_the_phone() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("clock")
         .as_secs();
-    let cleared: Vec<_> = pocketdesk_core::local::note_clears::take_all(fixture.state(), now)
+    let cleared: Vec<_> = friday_mobile_core::local::note_clears::take_all(fixture.state(), now)
         .into_iter()
         .map(|c| (c.device_id, c.key))
         .collect();
@@ -1606,7 +1611,7 @@ fn the_notifications_page_clears_on_the_phone() {
 fn the_notifications_page_opens_on_the_phone() {
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
-    let note = |key: &str, open: bool| pocketdesk_core::local::phone_notes::PhoneNote {
+    let note = |key: &str, open: bool| friday_mobile_core::local::phone_notes::PhoneNote {
         device_id: PHONE.to_string(),
         key: key.to_string(),
         app: "Chat".to_string(),
@@ -1618,10 +1623,16 @@ fn the_notifications_page_opens_on_the_phone() {
         open,
         messages: Vec::new(),
     };
-    pocketdesk_core::local::phone_notes::keep(fixture.state(), note("0|com.chat|8|null|10", true))
-        .expect("note");
-    pocketdesk_core::local::phone_notes::keep(fixture.state(), note("0|com.chat|7|null|10", false))
-        .expect("note");
+    friday_mobile_core::local::phone_notes::keep(
+        fixture.state(),
+        note("0|com.chat|8|null|10", true),
+    )
+    .expect("note");
+    friday_mobile_core::local::phone_notes::keep(
+        fixture.state(),
+        note("0|com.chat|7|null|10", false),
+    )
+    .expect("note");
     let mut app = fixture.open(Some(Tab::Notifications));
     assert_eq!(
         app.query_all_by_label("Open on the phone").count(),
@@ -1635,7 +1646,7 @@ fn the_notifications_page_opens_on_the_phone() {
         .expect("clock")
         .as_secs()
         + 2;
-    let asked: Vec<_> = pocketdesk_core::local::phone_notes::take_all(fixture.state(), now)
+    let asked: Vec<_> = friday_mobile_core::local::phone_notes::take_all(fixture.state(), now)
         .into_iter()
         .map(|a| (a.key, a.answer))
         .collect();
@@ -1643,7 +1654,7 @@ fn the_notifications_page_opens_on_the_phone() {
         asked,
         vec![(
             "0|com.chat|8|null|10".to_string(),
-            pocketdesk_core::local::phone_notes::Answer::Open
+            friday_mobile_core::local::phone_notes::Answer::Open
         )]
     );
 }
@@ -1663,7 +1674,7 @@ fn the_overview_asks_which_phone_calls_a_link() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("clock")
         .as_secs();
-    pocketdesk_core::local::tel_ask::put(fixture.state(), "+15550100", now).expect("asked");
+    friday_mobile_core::local::tel_ask::put(fixture.state(), "+15550100", now).expect("asked");
     let mut app = fixture.open(Some(Tab::Status));
     assert!(app.query_by_label("Call +15550100 on:").is_some());
     app.get_by_role_and_label(egui::accesskit::Role::Button, "Test Phone")
@@ -1671,13 +1682,13 @@ fn the_overview_asks_which_phone_calls_a_link() {
     app.run_steps(3);
     // Read after the click: the request carries the clock's second then.
     let now = now + 2;
-    let dialled: Vec<_> = pocketdesk_core::local::dials::take_all(fixture.state(), now)
+    let dialled: Vec<_> = friday_mobile_core::local::dials::take_all(fixture.state(), now)
         .into_iter()
         .map(|d| (d.device_id, d.number))
         .collect();
     assert_eq!(dialled, vec![(PHONE.to_string(), "+15550100".to_string())]);
     assert_eq!(
-        pocketdesk_core::local::tel_ask::read(fixture.state(), now),
+        friday_mobile_core::local::tel_ask::read(fixture.state(), now),
         None,
         "answered"
     );
@@ -1689,9 +1700,9 @@ fn the_overview_asks_which_phone_calls_a_link() {
 fn the_notifications_page_calls_back() {
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
-    pocketdesk_core::local::phone_notes::keep(
+    friday_mobile_core::local::phone_notes::keep(
         fixture.state(),
-        pocketdesk_core::local::phone_notes::PhoneNote {
+        friday_mobile_core::local::phone_notes::PhoneNote {
             device_id: PHONE.to_string(),
             key: "pocketdesk:call:3".to_string(),
             app: "Pocketdesk".to_string(),
@@ -1712,7 +1723,7 @@ fn the_notifications_page_calls_back() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("clock")
         .as_secs();
-    let dialled: Vec<_> = pocketdesk_core::local::dials::take_all(fixture.state(), now)
+    let dialled: Vec<_> = friday_mobile_core::local::dials::take_all(fixture.state(), now)
         .into_iter()
         .map(|d| (d.device_id, d.number))
         .collect();
@@ -1724,14 +1735,14 @@ fn the_notifications_page_calls_back() {
 fn the_messages_page_calls_a_number() {
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
-    pocketdesk_core::local::sms::record(
+    friday_mobile_core::local::sms::record(
         fixture.state(),
-        pocketdesk_core::local::sms::Message {
+        friday_mobile_core::local::sms::Message {
             device_id: PHONE.to_string(),
             address: "+15550100100".to_string(),
             body: "call me".to_string(),
             at_unix: 1,
-            direction: pocketdesk_core::local::sms::Direction::Received,
+            direction: friday_mobile_core::local::sms::Direction::Received,
             reply: None,
             name: None,
         },
@@ -1747,7 +1758,7 @@ fn the_messages_page_calls_a_number() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("clock")
         .as_secs();
-    let calls: Vec<_> = pocketdesk_core::local::dials::take_all(fixture.state(), now)
+    let calls: Vec<_> = friday_mobile_core::local::dials::take_all(fixture.state(), now)
         .into_iter()
         .map(|c| (c.device_id, c.number))
         .collect();
@@ -1772,7 +1783,7 @@ fn the_clipboard_page_lists_what_crossed() {
         "clipboard_history = 20\n",
     )
     .expect("config");
-    use pocketdesk_core::local::clip_history::{ClipEntry, record};
+    use friday_mobile_core::local::clip_history::{ClipEntry, record};
     record(
         fixture.state(),
         ClipEntry::new("from the phone", Some(PHONE), 100),
@@ -1847,11 +1858,11 @@ fn ticked(app: &Harness<'static, PocketdeskApp>, label: &str) -> bool {
 }
 
 /// The config the fixture's app saves.
-fn load_config(fixture: &Fixture) -> pocketdesk_core::local::config::Config {
-    pocketdesk_core::local::config::Config::load_from(
+fn load_config(fixture: &Fixture) -> friday_mobile_core::local::config::Config {
+    friday_mobile_core::local::config::Config::load_from(
         &fixture
             .config()
-            .join(pocketdesk_core::local::paths::CONFIG_FILE),
+            .join(friday_mobile_core::local::paths::CONFIG_FILE),
     )
     .expect("the config")
 }
@@ -2024,9 +2035,9 @@ fn diagnostics_say_nothing_of_fonts_still_looked_for() {
 
 /// A computer this one paired with, as the computers file keeps it.
 fn add_computer(state: &Path, name: &str) {
-    pocketdesk_core::local::computers::update(state, |file| {
+    friday_mobile_core::local::computers::update(state, |file| {
         file.computers
-            .push(pocketdesk_core::local::computers::PeerComputer {
+            .push(friday_mobile_core::local::computers::PeerComputer {
                 device_id: "00000000-0000-4000-8000-0000000000ba".to_string(),
                 name: name.to_string(),
                 addresses: Vec::new(),
@@ -2146,7 +2157,7 @@ fn the_first_run_steps_hide() {
 #[test]
 fn each_permission_group_switch_saves_its_permissions() {
     use egui_kittest::kittest::NodeT;
-    use pocketdesk_core::protocol::permissions::{Capability as C, DevicePermissions};
+    use friday_mobile_core::protocol::permissions::{Capability as C, DevicePermissions};
     // AwayLock can be set on Windows and Linux, where these tests run.
     let groups: [(&str, Vec<C>); 5] = [
         ("Control", vec![C::Input, C::SharedInput, C::Power, C::Peek]),
@@ -2341,7 +2352,7 @@ fn the_clipboard_says_why_it_is_empty_or_cannot_send() {
             .is_none()
     );
 
-    use pocketdesk_core::local::clip_history::{ClipEntry, record};
+    use friday_mobile_core::local::clip_history::{ClipEntry, record};
     record(
         fixture.state(),
         ClipEntry::new("the meeting link", None, 200),
@@ -2439,8 +2450,8 @@ fn a_computers_drive_box_line_asks_to_start_the_server() {
 #[test]
 fn files_lists_sent_and_received_cards_and_why_send_again_is_off() {
     use egui_kittest::kittest::NodeT;
-    use pocketdesk_core::local::received::{self, ReceivedFile};
-    use pocketdesk_core::local::sent::{self, SentFile, SentState};
+    use friday_mobile_core::local::received::{self, ReceivedFile};
+    use friday_mobile_core::local::sent::{self, SentFile, SentState};
     let fixture = Fixture::new();
     pair_phone(fixture.state(), PHONE, "Test Phone");
     for (id, name, state) in [
@@ -2513,7 +2524,7 @@ fn files_lists_sent_and_received_cards_and_why_send_again_is_off() {
 /// thread: frames are stepped, up to a bound, with no sleeps.
 #[test]
 fn pair_fits_the_smallest_window() {
-    use pocketdesk_core::local::pin;
+    use friday_mobile_core::local::pin;
     let fixture = Fixture::new();
     let smallest = egui::vec2(640.0, 440.0);
     let state = fixture.state().to_path_buf();

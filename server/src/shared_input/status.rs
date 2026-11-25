@@ -11,11 +11,11 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use pocketdesk_core::local::shared_input::{
+use friday_mobile_core::local::shared_input::{
     self, LINK_AWAY, LINK_DIRECT, LINK_RELAYED, REFUSED_NOT_ALLOWED, REFUSED_SHARING_OFF,
     StatusFile,
 };
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
 
 use super::link;
 use super::wire::{REFUSE_RELAYED, REFUSE_SHARING_OFF};
@@ -191,7 +191,7 @@ pub fn paired_computers(state_dir: &Path) -> Option<BTreeSet<String>> {
 /// [`paired_computers`] with the trust store at `trust` (`None`: it could
 /// not even be found).
 pub fn paired_at(state_dir: &Path, trust: Option<&Path>) -> Option<BTreeSet<String>> {
-    let computers = pocketdesk_core::local::computers::try_read(state_dir)
+    let computers = friday_mobile_core::local::computers::try_read(state_dir)
         .inspect_err(|e| tracing::debug!("Shared input: the computers did not read: {e}"))
         .ok()?;
     let store = TrustStore::read(trust?)
@@ -223,15 +223,16 @@ pub fn paired_names(state_dir: &Path) -> HashMap<String, String> {
 
 /// [`paired_names`] with the trust store at `trust`.
 pub fn paired_names_at(state_dir: &Path, trust: Option<&Path>) -> HashMap<String, String> {
-    let mut names: HashMap<String, String> = pocketdesk_core::local::computers::try_read(state_dir)
-        .map(|file| {
-            file.computers
-                .into_iter()
-                .filter(|c| !c.name.trim().is_empty())
-                .map(|c| (c.device_id, c.name))
-                .collect()
-        })
-        .unwrap_or_default();
+    let mut names: HashMap<String, String> =
+        friday_mobile_core::local::computers::try_read(state_dir)
+            .map(|file| {
+                file.computers
+                    .into_iter()
+                    .filter(|c| !c.name.trim().is_empty())
+                    .map(|c| (c.device_id, c.name))
+                    .collect()
+            })
+            .unwrap_or_default();
     if let Some(store) = trust.and_then(|trust| TrustStore::read(trust).ok()) {
         for id in store.paired_devices() {
             if store.is_computer(&id)
@@ -299,7 +300,7 @@ pub fn write_if_changed(
     match paired {
         Some(paired) => {
             let there = state_dir
-                .join(pocketdesk_core::local::paths::SHARED_SCREENS_FILE)
+                .join(friday_mobile_core::local::paths::SHARED_SCREENS_FILE)
                 .exists();
             if sharing_on
                 && there
@@ -428,7 +429,7 @@ mod tests {
     /// computer, and a phone unpaired since, have none.
     #[test]
     fn each_paired_phone_said_as_a_screen_has_its_standing() {
-        use pocketdesk_core::local::shared_input::{
+        use friday_mobile_core::local::shared_input::{
             PHONE_OFF, PHONE_READY, PhoneScreen, Screen, ScreensFile,
         };
         let phone = PhoneScreen {
@@ -471,7 +472,7 @@ mod tests {
         let dir = temp("names");
         let trust = dir.join("trusted_devices.json");
         assert!(paired_names_at(&dir, Some(&trust)).is_empty(), "no files");
-        let computer = |id: &str, name: &str| pocketdesk_core::local::computers::PeerComputer {
+        let computer = |id: &str, name: &str| friday_mobile_core::local::computers::PeerComputer {
             device_id: id.to_string(),
             name: name.to_string(),
             addresses: vec!["192.0.2.10".to_string()],
@@ -488,7 +489,7 @@ mod tests {
             viewed_unix: 0,
             keys_by_position: None,
         };
-        pocketdesk_core::local::computers::update(&dir, |file| {
+        friday_mobile_core::local::computers::update(&dir, |file| {
             file.computers.push(computer("dialed", "Arch laptop"));
             file.computers.push(computer("both", "Linked as"));
         })
@@ -523,8 +524,8 @@ mod tests {
 
     #[test]
     fn a_failed_read_prunes_nothing() {
-        use pocketdesk_core::local::paths::{COMPUTERS_FILE, SHARED_SCREENS_FILE};
-        use pocketdesk_core::local::shared_input::Screen;
+        use friday_mobile_core::local::paths::{COMPUTERS_FILE, SHARED_SCREENS_FILE};
+        use friday_mobile_core::local::shared_input::Screen;
         let dir = temp("read");
         let trust = dir.join("trusted_devices.json");
         let screen = Screen {
@@ -654,7 +655,7 @@ mod tests {
     #[test]
     fn the_input_captures_standing_is_in_the_status() {
         use super::super::portal_glue::Standing;
-        use pocketdesk_core::local::shared_input::{
+        use friday_mobile_core::local::shared_input::{
             CAPTURE_FRACTIONAL_SCALE, CAPTURE_NEEDS_PERMISSION, CAPTURE_READY, CAPTURE_UNSUPPORTED,
         };
         for (standing, word) in [

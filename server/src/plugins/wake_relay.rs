@@ -1,5 +1,5 @@
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 
 /// Wake-on-LAN relay (Tier-2 #12).
 ///
@@ -56,9 +56,9 @@ impl Plugin for WakeRelayPlugin {
         // Enumerating adapters can take a while on Windows: off the runtime.
         let allowed = match broadcast.parse::<std::net::Ipv4Addr>() {
             Ok(ip) => tokio::task::spawn_blocking(move || {
-                pocketdesk_core::local::wake::may_relay_to(
+                friday_mobile_core::local::wake::may_relay_to(
                     ip,
-                    &pocketdesk_core::local::wake::adapters(),
+                    &friday_mobile_core::local::wake::adapters(),
                 )
             })
             .await
@@ -78,7 +78,7 @@ impl Plugin for WakeRelayPlugin {
         let mac_owned = mac.to_string();
         let broadcast_owned = broadcast.to_string();
         let outcome = tokio::task::spawn_blocking(move || {
-            pocketdesk_core::tailscale::wol::send_wol(&mac_owned, &broadcast_owned)
+            friday_mobile_core::tailscale::wol::send_wol(&mac_owned, &broadcast_owned)
                 .map_err(|e| e.to_string())
         })
         .await;

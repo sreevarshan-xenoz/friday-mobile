@@ -2,8 +2,8 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::protocol::note::{NOTE, NOTE_SAVED, clean_note, saved_of};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::note::{NOTE, NOTE_SAVED, clean_note, saved_of};
 
 /// How long the computer has to say it kept the note.
 const ANSWER_WITHIN: Duration = Duration::from_secs(10);

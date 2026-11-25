@@ -18,7 +18,7 @@ use crate::protocol::phone_media::{PhoneMedia, is_command};
 /// The app id Pocketdesk's own entry in Windows' media controls goes by
 /// (K7: the tray shows a phone's music there), which the server's reading
 /// of the computer's music must skip (N5): one name for both.
-pub const MEDIA_CONTROLS_APP_ID: &str = "Pocketdesk.Server";
+pub const MEDIA_CONTROLS_APP_ID: &str = "FRIDAYMobile.Server";
 
 /// How long a press waits for the server before it is dropped: a press is
 /// for now, not for whenever the phone comes back.

@@ -8,11 +8,11 @@ use std::net::SocketAddr;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-use pocketdesk_core::streaming::cast::{self, CastEvent};
-use pocketdesk_core::streaming::client::REMOTE_FEATURE_PHONE_SOUND;
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::streaming::cast::{self, CastEvent};
+use friday_mobile_core::streaming::client::REMOTE_FEATURE_PHONE_SOUND;
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     QuinnConnection, SessionMode, StreamingClient, StreamingConfig, StreamingServer,
 };
 use tokio::sync::mpsc;

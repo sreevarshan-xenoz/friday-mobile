@@ -2,7 +2,7 @@
 # `scripts/fuzz.sh`; docs/development-setup.md). Not part of the workspace:
 # it needs nightly, and its own lock file is the workspace's, copied in.
 [package]
-name = "pocketdesk-fuzz"
+name = "friday-mobile-fuzz"
 version = "0.0.0"
 edition = "2024"
 publish = false
@@ -12,8 +12,8 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-pocketdesk-core = { path = "../core", features = ["local"] }
-pocketdesk-server = { path = "../server" }
+friday-mobile-core = { path = "../core", features = ["local"] }
+friday-mobile-server = { path = "../server" }
 serde_json = "1"
 
 # Its own workspace, so the repository's never takes it in.

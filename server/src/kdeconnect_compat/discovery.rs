@@ -8,7 +8,7 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::local::kdeconnect;
+use friday_mobile_core::local::kdeconnect;
 
 /// KDE Connect's discovery port.
 pub const UDP_PORT: u16 = 1716;
@@ -27,7 +27,7 @@ static LAST_CONNECTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU
 /// A device completed the handshake now.
 pub fn connected() {
     LAST_CONNECTED.store(
-        pocketdesk_core::local::pin::now_unix(),
+        friday_mobile_core::local::pin::now_unix(),
         std::sync::atomic::Ordering::Relaxed,
     );
 }
@@ -55,7 +55,7 @@ pub async fn run(control_port: u16, announce_changes: bool) {
         if !super::enabled() {
             continue;
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let asked = kdeconnect::find_until(&dir, now);
         let new_ask = asked.is_some() && asked != last_ask;
         last_ask = asked;
@@ -95,7 +95,7 @@ pub async fn run(control_port: u16, announce_changes: bool) {
 /// off the runtime, as it asks the system for its interfaces.
 async fn local_addresses() -> Vec<std::net::Ipv4Addr> {
     tokio::task::spawn_blocking(|| {
-        let mut found: Vec<std::net::Ipv4Addr> = pocketdesk_core::local::network::local_ips()
+        let mut found: Vec<std::net::Ipv4Addr> = friday_mobile_core::local::network::local_ips()
             .iter()
             .filter_map(|ip| ip.parse().ok())
             .collect();

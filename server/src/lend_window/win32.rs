@@ -7,7 +7,7 @@
 use std::io;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::window_target;
+use friday_mobile_core::streaming::window_target;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MONITORINFO, MonitorFromWindow,

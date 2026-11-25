@@ -20,14 +20,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use friday_mobile_core::local::config::DhtPublish;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::streaming::transport::{CertManager, StreamTransportConfig};
+use friday_mobile_core::streaming::{IrohConnection, SessionInput, StreamingConfig};
 use iroh::address_lookup::{AddrFilter, AddressLookup as _};
 use iroh::endpoint::presets::Minimal;
 use iroh::{Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey, TransportAddr};
 use iroh_mainline_address_lookup::DhtAddressLookup;
-use pocketdesk_core::local::config::DhtPublish;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
-use pocketdesk_core::streaming::transport::{CertManager, StreamTransportConfig};
-use pocketdesk_core::streaming::{IrohConnection, SessionInput, StreamingConfig};
 use tokio::sync::broadcast;
 
 /// Packet type carrying the server's WAN identity to registered clients.
@@ -37,7 +37,7 @@ pub const ENDPOINT_PACKET: &str = "kdeconnect.pocketdesk.endpoint";
 const KEY_FILE: &str = "iroh_secret.key";
 
 pub fn key_path() -> Result<PathBuf> {
-    Ok(pocketdesk_core::local::paths::config_dir()
+    Ok(friday_mobile_core::local::paths::config_dir()
         .context("unable to determine config directory")?
         .join(KEY_FILE))
 }
@@ -81,7 +81,7 @@ pub fn load_or_create_secret_key(path: &Path) -> Result<SecretKey> {
             #[cfg(windows)]
             {
                 drop(file);
-                pocketdesk_core::secure_fs::restrict_to_owner(path)
+                friday_mobile_core::secure_fs::restrict_to_owner(path)
                     .with_context(|| format!("failed restricting {}", path.display()))?;
             }
             Ok(key)
@@ -233,7 +233,7 @@ type DhtCheckState = Arc<std::sync::Mutex<Option<DhtCheck>>>;
 fn dht_lookup(
     mode: DhtPublish,
     key: &SecretKey,
-    dht: pocketdesk_core::streaming::dht::DhtBuilder,
+    dht: friday_mobile_core::streaming::dht::DhtBuilder,
 ) -> Result<DhtAddressLookup> {
     let with_ips = mode == DhtPublish::Addresses;
     let filter = AddrFilter::new(move |addrs| Cow::Owned(publishable(addrs, with_ips)));
@@ -249,12 +249,13 @@ fn dht_lookup(
 /// nodes do not resolve (no DNS yet) or the node cannot start.
 async fn join_dht(endpoint: &Endpoint, mode: DhtPublish) -> Option<DhtAddressLookup> {
     let nodes =
-        pocketdesk_core::streaming::dht::bootstrap_nodes(std::time::Duration::from_secs(10)).await;
+        friday_mobile_core::streaming::dht::bootstrap_nodes(std::time::Duration::from_secs(10))
+            .await;
     if nodes.is_empty() {
         tracing::debug!("WAN: the DHT's bootstrap nodes do not resolve yet");
         return None;
     }
-    let dht = pocketdesk_core::streaming::dht::dht_builder(&nodes);
+    let dht = friday_mobile_core::streaming::dht::dht_builder(&nodes);
     dht_lookup(mode, endpoint.secret_key(), dht)
         .map_err(|e| tracing::warn!("WAN: {e:#}"))
         .ok()
@@ -420,7 +421,7 @@ pub fn record_endpoint_in(
     if last.as_ref() == Some(&body) {
         return false;
     }
-    match pocketdesk_core::local::identity::write_endpoint(state_dir, &body) {
+    match friday_mobile_core::local::identity::write_endpoint(state_dir, &body) {
         Ok(()) => {
             *last = Some(body);
             true
@@ -440,7 +441,7 @@ pub fn relay_mode(relay_urls: &[String]) -> Result<RelayMode> {
     let urls = relay_urls
         .iter()
         .map(|url| {
-            if let Some(problem) = pocketdesk_core::local::config::relay_url_problem(url) {
+            if let Some(problem) = friday_mobile_core::local::config::relay_url_problem(url) {
                 anyhow::bail!("relay_urls: {problem}");
             }
             url.trim()
@@ -457,8 +458,8 @@ pub fn relay_mode(relay_urls: &[String]) -> Result<RelayMode> {
 pub fn wan_status_from(
     report: &iroh::unstable_net_report::NetReport,
     unix_secs: u64,
-) -> pocketdesk_core::local::diagnostics::WanStatus {
-    pocketdesk_core::local::diagnostics::WanStatus {
+) -> friday_mobile_core::local::diagnostics::WanStatus {
+    friday_mobile_core::local::diagnostics::WanStatus {
         unix_secs,
         udp: report.has_udp(),
         // The NAT verdict is IPv4's: an IPv6 address that rotates is not a
@@ -508,7 +509,7 @@ fn spawn_endpoint_recorder(endpoint: Endpoint, dht_mode: DhtPublish, dht_check: 
                     // about half a second for another program's handle.
                     let at = dir.clone();
                     let written = tokio::task::spawn_blocking(move || {
-                        pocketdesk_core::local::diagnostics::write_wan_status(&at, &status)
+                        friday_mobile_core::local::diagnostics::write_wan_status(&at, &status)
                     })
                     .await
                     .unwrap_or_else(|e| Err(std::io::Error::other(e)));
@@ -537,10 +538,10 @@ pub struct WanSettings {
     pub slow_link_frame_rate: bool,
     /// Whether a remote is offered the laser dot (G4).
     pub laser: bool,
-    pub capture_backend: pocketdesk_core::streaming::CaptureBackend,
+    pub capture_backend: friday_mobile_core::streaming::CaptureBackend,
     pub mic_relay_device: Option<String>,
     /// Where phones' casts go (T10k); `None` refuses them.
-    pub cast: Option<tokio::sync::mpsc::Sender<pocketdesk_core::streaming::cast::CastEvent>>,
+    pub cast: Option<tokio::sync::mpsc::Sender<friday_mobile_core::streaming::cast::CastEvent>>,
     /// Your own relays (N2); empty uses n0's.
     pub relay_urls: Vec<String>,
     /// What the Mainline DHT record holds (N3).
@@ -564,8 +565,8 @@ pub type ControlHandoff = (
 pub fn forget_last_run() {
     if let Ok(dir) = crate::state::state_dir() {
         for stale in [
-            pocketdesk_core::local::paths::WAN_STATUS_FILE,
-            pocketdesk_core::local::paths::ENDPOINT_FILE,
+            friday_mobile_core::local::paths::WAN_STATUS_FILE,
+            friday_mobile_core::local::paths::ENDPOINT_FILE,
         ] {
             let _ = std::fs::remove_file(dir.join(stale));
         }
@@ -609,9 +610,9 @@ pub async fn spawn_wan_endpoint(
     // and the congestion controller that paces the video sent from here.
     // Relays (n0 defaults) are for hole punching only — dialing rides the
     // EndpointAddr announced over the control channel.
-    let transport = pocketdesk_core::streaming::iroh_connection::iroh_transport();
+    let transport = friday_mobile_core::streaming::iroh_connection::iroh_transport();
     let endpoint = Endpoint::builder(Minimal)
-        .dns_resolver(pocketdesk_core::streaming::iroh_connection::dns_resolver())
+        .dns_resolver(friday_mobile_core::streaming::iroh_connection::dns_resolver())
         .alpns(alpns(control.is_some()))
         .relay_mode(relay_mode(&relay_urls)?)
         .secret_key(secret_key)
@@ -645,7 +646,7 @@ pub async fn spawn_wan_endpoint(
     // Another computer's link, on its own congestion controller (BK11),
     // when there is a control loop to take it.
     let computer_link = control.is_some().then(|| {
-        pocketdesk_core::streaming::iroh_connection::computer_link_server_config(&endpoint)
+        friday_mobile_core::streaming::iroh_connection::computer_link_server_config(&endpoint)
     });
     // The WAN listener holds no more connections than the LAN one does in
     // all: each runs a session before the gate has judged it, and any iroh
@@ -671,7 +672,7 @@ pub async fn spawn_wan_endpoint(
             let control = control.clone();
             let computer_link = computer_link.clone();
             tokio::spawn(async move {
-                let conn = match pocketdesk_core::streaming::iroh_connection::accept_incoming(
+                let conn = match friday_mobile_core::streaming::iroh_connection::accept_incoming(
                     incoming,
                     computer_link.as_ref(),
                 ) {
@@ -689,7 +690,7 @@ pub async fn spawn_wan_endpoint(
                 };
                 // A computer's link on its own ALPN (BK11) is the control
                 // channel too, and meets the same gates there.
-                if pocketdesk_core::protocol::is_control_alpn(conn.alpn()) {
+                if friday_mobile_core::protocol::is_control_alpn(conn.alpn()) {
                     if let Some(control) = control {
                         let _ = control.send((conn, slot)).await;
                     }
@@ -728,8 +729,8 @@ pub async fn spawn_wan_endpoint(
 fn alpns(control: bool) -> Vec<Vec<u8>> {
     let mut alpns = vec![StreamTransportConfig::default().alpn];
     if control {
-        alpns.push(pocketdesk_core::protocol::ALPN_CONTROL.to_vec());
-        alpns.push(pocketdesk_core::protocol::ALPN_COMPUTER.to_vec());
+        alpns.push(friday_mobile_core::protocol::ALPN_CONTROL.to_vec());
+        alpns.push(friday_mobile_core::protocol::ALPN_COMPUTER.to_vec());
     }
     alpns
 }
@@ -737,8 +738,8 @@ fn alpns(control: bool) -> Vec<Vec<u8>> {
 #[cfg(test)]
 mod alpn_tests {
     use super::alpns;
-    use pocketdesk_core::protocol::{ALPN_COMPUTER, ALPN_CONTROL};
-    use pocketdesk_core::streaming::transport::StreamTransportConfig;
+    use friday_mobile_core::protocol::{ALPN_COMPUTER, ALPN_CONTROL};
+    use friday_mobile_core::streaming::transport::StreamTransportConfig;
 
     /// BK11: with a control loop, the WAN endpoint takes the control
     /// channel's ALPN before the computer link's, so a link accepted
@@ -845,10 +846,10 @@ mod dht_tests {
     #[tokio::test]
     async fn only_publishable_addresses_reach_the_dht() {
         use super::dht_lookup;
+        use friday_mobile_core::local::config::DhtPublish;
+        use friday_mobile_core::streaming::dht::{DhtAddressLookup, dht_builder};
         use futures_lite::StreamExt as _;
         use iroh::address_lookup::{AddressLookup as _, EndpointData};
-        use pocketdesk_core::local::config::DhtPublish;
-        use pocketdesk_core::streaming::dht::{DhtAddressLookup, dht_builder};
         use std::collections::BTreeSet;
 
         let testnet = n0_mainline::Testnet::new(5).await.expect("testnet");
@@ -915,7 +916,7 @@ mod dht_tests {
     #[test]
     fn the_wan_status_says_what_the_record_holds_and_if_it_was_read_back() {
         use super::{DhtCheck, dht_fields};
-        use pocketdesk_core::local::config::DhtPublish;
+        use friday_mobile_core::local::config::DhtPublish;
         let s = |v: &str| Some(v.to_string());
         assert_eq!(dht_fields(DhtPublish::Relay, None), (s("relay"), None));
         assert_eq!(
@@ -1054,7 +1055,7 @@ mod tests {
         let mut last = None;
         assert!(record_endpoint_in(&dir, &addr, id, true, &mut last));
         assert_eq!(
-            pocketdesk_core::local::identity::read_endpoint(&dir),
+            friday_mobile_core::local::identity::read_endpoint(&dir),
             Some(endpoint_packet(&addr, id, true).body)
         );
         assert!(

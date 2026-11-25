@@ -4,9 +4,9 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{Instrument, debug, info, info_span, trace, warn};
 
-use pocketdesk_core::error::PocketdeskError;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, PluginRegistry};
-use pocketdesk_core::protocol::v2::{
+use friday_mobile_core::error::PocketdeskError;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, PluginRegistry};
+use friday_mobile_core::protocol::v2::{
     ChannelKind, IdentityPacketV2, perform_v2_handshake, read_framed_json, write_framed_json,
 };
 
@@ -18,7 +18,7 @@ use crate::state;
 /// printable line of at most 40 characters, as a phone now sends (U3
 /// review: the id's 128 bytes refused a long name in a 4-byte script).
 fn usable_identity(identity: &IdentityPacketV2) -> bool {
-    use pocketdesk_core::protocol::kdeconnect::{clean_device_name, valid_device_id};
+    use friday_mobile_core::protocol::kdeconnect::{clean_device_name, valid_device_id};
     valid_device_id(&identity.device_id)
         && clean_device_name(&identity.device_name).as_deref()
             == Some(identity.device_name.as_str())
@@ -70,10 +70,10 @@ pub async fn handle_v2_session(
         // client certificate is the proof, held to the one bound to that
         // device.
         let peer_key = {
-            use pocketdesk_core::streaming::Connection as _;
-            pocketdesk_core::streaming::QuinnConnection::new(conn.clone()).peer_key()
+            use friday_mobile_core::streaming::Connection as _;
+            friday_mobile_core::streaming::QuinnConnection::new(conn.clone()).peer_key()
         };
-        let claim = pocketdesk_core::streaming::SessionClaim {
+        let claim = friday_mobile_core::streaming::SessionClaim {
             device_id: Some(peer_identity.device_id.clone()),
             peer: peer_addr,
             peer_key: peer_key.clone(),
@@ -335,7 +335,7 @@ async fn handle_persistent_stream(mut recv: RecvStream, name: &'static str) -> a
 struct QuicDeviceSender {
     send: Arc<Mutex<SendStream>>,
     device_id: String,
-    peer_key: Option<pocketdesk_core::streaming::PeerKey>,
+    peer_key: Option<friday_mobile_core::streaming::PeerKey>,
     connection_id: String,
     /// The address the session came from (V1 review: the away lock tells a
     /// phone at home by it).
@@ -346,7 +346,7 @@ impl QuicDeviceSender {
     fn new(
         send: SendStream,
         device_id: String,
-        peer_key: Option<pocketdesk_core::streaming::PeerKey>,
+        peer_key: Option<friday_mobile_core::streaming::PeerKey>,
         connection_id: String,
         peer: Option<std::net::SocketAddr>,
     ) -> Self {
@@ -375,7 +375,7 @@ impl DeviceSender for QuicDeviceSender {
         &self.connection_id
     }
 
-    fn peer_key(&self) -> Option<pocketdesk_core::streaming::PeerKey> {
+    fn peer_key(&self) -> Option<friday_mobile_core::streaming::PeerKey> {
         self.peer_key.clone()
     }
 
@@ -390,7 +390,7 @@ impl DeviceSender for QuicDeviceSender {
 }
 
 /// Whether a v2 session came without a key to hold its device to.
-fn keyless(key: Option<&pocketdesk_core::streaming::PeerKey>) -> bool {
+fn keyless(key: Option<&friday_mobile_core::streaming::PeerKey>) -> bool {
     key.is_none()
 }
 
@@ -413,7 +413,7 @@ mod tests {
         // AY1 review: v2 never binds a key, so a session must bring one.
         assert!(super::keyless(None));
         assert!(!super::keyless(Some(
-            &pocketdesk_core::streaming::PeerKey::Tls([1; 32])
+            &friday_mobile_core::streaming::PeerKey::Tls([1; 32])
         )));
     }
 

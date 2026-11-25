@@ -4,7 +4,7 @@
 use std::sync::LazyLock;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 const DECK: &str = "kdeconnect.pocketdesk.deck";
 const DECK_PRESS: &str = "kdeconnect.pocketdesk.deck_press";

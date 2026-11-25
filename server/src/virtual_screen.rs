@@ -37,8 +37,8 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde::{Deserialize, Serialize};
 
 pub const PACKET: &str = "kdeconnect.pocketdesk.virtual_screen";
@@ -55,8 +55,8 @@ const MAX_SCREENS: usize = 4;
 const STATE_FILE: &str = "virtual_screens.json";
 
 /// Screens one computer may ask for, one for each of its windows
-/// ([`pocketdesk_core::local::view::MAX_VIEWS`]).
-const MAX_SLOTS: u64 = pocketdesk_core::local::view::MAX_VIEWS as u64;
+/// ([`friday_mobile_core::local::view::MAX_VIEWS`]).
+const MAX_SLOTS: u64 = friday_mobile_core::local::view::MAX_VIEWS as u64;
 
 /// The record's key for the screen of `device`'s window `slot`: the
 /// device's own id for a phone and a computer's first window, and `id#slot`
@@ -678,9 +678,9 @@ fn save(made: &Made) {
         instance: this_instance(),
     };
     if let Ok(json) = serde_json::to_string(&made) {
-        let tmp = pocketdesk_core::atomic_file::temp_beside(&dir.join(STATE_FILE));
-        if pocketdesk_core::secure_fs::write_private(&tmp, json.as_bytes()).is_ok() {
-            let _ = pocketdesk_core::atomic_file::replace(&tmp, dir.join(STATE_FILE));
+        let tmp = friday_mobile_core::atomic_file::temp_beside(&dir.join(STATE_FILE));
+        if friday_mobile_core::secure_fs::write_private(&tmp, json.as_bytes()).is_ok() {
+            let _ = friday_mobile_core::atomic_file::replace(&tmp, dir.join(STATE_FILE));
         }
     }
 }
@@ -786,7 +786,7 @@ async fn wait_at_most(limit: std::time::Duration, work: impl FnOnce() + Send + '
 /// session or a control link (a session switching to the new screen, waiting
 /// at the approval gate or reconnecting has its link the whole time).
 pub(crate) async fn live_devices() -> Vec<String> {
-    let mut live: Vec<String> = pocketdesk_core::streaming::sessions::list()
+    let mut live: Vec<String> = friday_mobile_core::streaming::sessions::list()
         .into_iter()
         .filter_map(|s| s.device_id)
         .collect();
@@ -977,7 +977,7 @@ fn own_slot(slot: u8, computer: bool) -> u8 {
 fn is_computer(device: &str) -> bool {
     crate::state::trust_store_path()
         .ok()
-        .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok())
+        .and_then(|path| friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok())
         .is_some_and(|store| store.is_computer(device))
 }
 
@@ -1275,12 +1275,16 @@ mod tests {
 
     #[test]
     fn a_hyprland_screen_is_named_with_the_servers_tag() {
-        let tag = hypr_tag(std::path::Path::new("/home/user/.local/state/pocketdesk"));
+        let tag = hypr_tag(std::path::Path::new(
+            "/home/user/.local/state/friday-mobile",
+        ));
         assert_eq!(tag.len(), 8);
         assert!(tag.bytes().all(|b| b.is_ascii_hexdigit()));
         assert_eq!(
             tag,
-            hypr_tag(std::path::Path::new("/home/user/.local/state/pocketdesk")),
+            hypr_tag(std::path::Path::new(
+                "/home/user/.local/state/friday-mobile"
+            )),
             "the same folder, the same tag"
         );
         assert_ne!(
@@ -1657,7 +1661,7 @@ mod tests {
     #[test]
     #[ignore = "adds and removes an output on the live Hyprland session"]
     fn live_hyprland_screen_is_added_captured_and_removed() {
-        use pocketdesk_core::streaming::capture_screencopy::start_screencopy_capture;
+        use friday_mobile_core::streaming::capture_screencopy::start_screencopy_capture;
         use std::sync::Arc;
         use std::sync::atomic::AtomicBool;
 
@@ -1679,10 +1683,10 @@ mod tests {
             );
             let index = reply["index"].as_u64().unwrap() as u32;
 
-            let (tx, mut rx) = pocketdesk_core::streaming::latest_frame::channel::<
-                pocketdesk_core::streaming::VideoFrame,
+            let (tx, mut rx) = friday_mobile_core::streaming::latest_frame::channel::<
+                friday_mobile_core::streaming::VideoFrame,
             >();
-            let config = pocketdesk_core::streaming::StreamingConfig {
+            let config = friday_mobile_core::streaming::StreamingConfig {
                 monitor_index: index,
                 ..Default::default()
             };

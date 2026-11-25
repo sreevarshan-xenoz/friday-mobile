@@ -8,7 +8,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::phone_files::{
+use friday_mobile_core::protocol::phone_files::{
     FETCH, LIST, MAX_DEPTH, MAX_PUT_BYTES, MKDIR, PUT, addable_name, valid_offer_id, valid_path,
 };
 

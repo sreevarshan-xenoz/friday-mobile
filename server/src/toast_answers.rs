@@ -6,8 +6,8 @@
 //! `phone_notes::request`, held by the server's answer loop to what the
 //! notification still offers.
 
-use pocketdesk_core::local::phone_notes::{Answer, PhoneNote};
-use pocketdesk_core::protocol::notification_action::MAX_REPLY_CHARS;
+use friday_mobile_core::local::phone_notes::{Answer, PhoneNote};
+use friday_mobile_core::protocol::notification_action::MAX_REPLY_CHARS;
 
 /// Windows shows at most five actions on a toast.
 const MAX_TOAST_ACTIONS: usize = 5;
@@ -324,10 +324,10 @@ pub fn mute(app: &str) {
     let muted = crate::state::state_dir()
         .map_err(std::io::Error::other)
         .and_then(|dir| {
-            pocketdesk_core::local::muted_apps::mute(
+            friday_mobile_core::local::muted_apps::mute(
                 &dir,
                 app,
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             )
         });
     // Said, not only logged (K2b review): a toast pops up under the
@@ -382,7 +382,7 @@ pub fn send(answers: &Answerable, answer: Answer) {
     let written = crate::state::state_dir()
         .map_err(|e| e.to_string())
         .and_then(|dir| {
-            pocketdesk_core::local::phone_notes::request(
+            friday_mobile_core::local::phone_notes::request(
                 &dir,
                 &answers.device_id,
                 &answers.key,

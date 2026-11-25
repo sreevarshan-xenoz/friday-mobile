@@ -52,22 +52,22 @@ use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{
+use friday_mobile_core::local::computers::{
     self, ComputersFile, Introduced, OWED_FOR, OWED_RESEND, OwedRemoval, PENDING_INTRODUCTION_FOR,
     PeerComputer, PendingIntroduction,
 };
-use pocketdesk_core::local::device_keys::{self, Slot, Verdict};
-use pocketdesk_core::local::pair_link::{PairLink, order_addresses};
-use pocketdesk_core::protocol::introductions::{
+use friday_mobile_core::local::device_keys::{self, Slot, Verdict};
+use friday_mobile_core::local::pair_link::{PairLink, order_addresses};
+use friday_mobile_core::protocol::introductions::{
     self as wire, ComputerAnswer, INTRODUCE, INTRODUCE_ANSWER, INTRODUCE_PHONE,
     INTRODUCE_PHONE_ANSWER, INTRODUCTIONS_PER_WINDOW, IntroducedPhone, Introduction,
     LISTS_PER_MINUTE, Offer, PACE_WINDOW_SECS, PIN_FOR_SECS, PINS_WAITING, PhoneAsk, PhoneRequest,
     Refusal,
 };
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
-use pocketdesk_core::protocol::remote_devices::{self as revoke, Ask};
-use pocketdesk_core::streaming::PeerKey;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::protocol::remote_devices::{self as revoke, Ask};
+use friday_mobile_core::streaming::PeerKey;
 use serde_json::Value;
 
 /// How long this computer waits for the other's answer to an
@@ -116,7 +116,7 @@ pub(crate) fn shown(store: &TrustStore, file: &ComputersFile, device_id: &str) -
             file.computers
                 .iter()
                 .find(|c| c.device_id == device_id)
-                .and_then(|c| pocketdesk_core::protocol::kdeconnect::clean_device_name(&c.name))
+                .and_then(|c| friday_mobile_core::protocol::kdeconnect::clean_device_name(&c.name))
         })
         .or_else(|| store.name(device_id).map(str::to_string))
         .unwrap_or_else(|| device_id.chars().take(8).collect())
@@ -419,7 +419,7 @@ pub(crate) fn record_pending_in(
     computer: &str,
     request: &str,
 ) -> Result<(), Refusal> {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let mut outcome = Err(Refusal::Failed);
     let saved = computers::update(dir, |file| {
         outcome = match TrustStore::read(trust) {
@@ -539,7 +539,7 @@ pub(crate) fn heard(from: &str, body: &Value) {
     if let ComputerAnswer::Paired { device_id } = answer {
         if let Ok(dir) = crate::state::state_dir() {
             let from = from.to_string();
-            let now = pocketdesk_core::local::pin::now_unix();
+            let now = friday_mobile_core::local::pin::now_unix();
             let confirm = move || {
                 let saved = computers::update(&dir, |file| {
                     if !confirm_in(file, &from, &request, &device_id, now) {
@@ -677,7 +677,7 @@ pub(crate) fn mint(from: &str, introduction: Introduction) -> Result<String, Ref
         return Err(Refusal::Busy);
     }
     let pin = loop {
-        let pin = pocketdesk_core::local::pin::mint_value();
+        let pin = friday_mobile_core::local::pin::mint_value();
         if !pins.iter().any(|p| p.pin == pin) {
             break pin;
         }
@@ -870,7 +870,7 @@ pub(crate) fn admit_in(
 ) -> Result<Admitted, Refusal> {
     // With no computers file no computer is paired both ways here.
     if !dir
-        .join(pocketdesk_core::local::paths::COMPUTERS_FILE)
+        .join(friday_mobile_core::local::paths::COMPUTERS_FILE)
         .exists()
     {
         return Err(Refusal::NotMine);
@@ -959,7 +959,7 @@ pub(crate) async fn pair_introduced(
     let enabled = crate::events::current_config().computer_introductions;
     let own_id = crate::plugins::pair::host_device_id();
     let introducer = intro.introducer.clone();
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let admitted =
         tokio::task::spawn_blocking(move || admit_in(&dir, &trust, &intro, enabled, &own_id, now))
             .await
@@ -1132,7 +1132,7 @@ pub(crate) fn owe_removals(dir: &Path, trust: &Path) {
     if !due {
         return;
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     if let Err(e) = computers::update(dir, |file| {
         owe_in(file, &paired, now);
     }) {
@@ -1229,7 +1229,7 @@ where
     if !owes {
         return Vec::new();
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let worked = {
         let dir = dir.to_path_buf();
         tokio::task::spawn_blocking(move || {
@@ -1467,7 +1467,7 @@ impl Plugin for IntroductionsPlugin {
         &self,
         packet: &NetworkPacket,
         sender: &dyn DeviceSender,
-    ) -> pocketdesk_core::error::Result<()> {
+    ) -> friday_mobile_core::error::Result<()> {
         if packet.packet_type == INTRODUCE {
             // A pairing ask waits up to ANSWER_WAIT for the other computer:
             // off this connection's packet loop, answered on the same

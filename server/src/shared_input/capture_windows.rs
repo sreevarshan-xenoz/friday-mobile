@@ -37,7 +37,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::hotkey::{Hotkey, MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN};
+use friday_mobile_core::local::hotkey::{Hotkey, MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN};
 use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, POINT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::RemoteDesktop::{
@@ -1620,7 +1620,7 @@ async fn send_dropped(to: String, name: String, items: Vec<PathBuf>, left_out: u
         tokio::time::sleep(DROP_WATCH_EVERY).await;
         let rows = {
             let dir = dir.clone();
-            tokio::task::spawn_blocking(move || pocketdesk_core::local::sent::read(&dir))
+            tokio::task::spawn_blocking(move || friday_mobile_core::local::sent::read(&dir))
                 .await
                 .unwrap_or_default()
         };
@@ -1646,7 +1646,7 @@ struct Queued {
 
 /// Queue each of `items` for the computer `to` in the outbox.
 fn queue_dropped(dir: &std::path::Path, to: &str, items: &[PathBuf]) -> Queued {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let mut queued = Queued {
         ids: Vec::new(),
         files: 0,
@@ -1655,7 +1655,7 @@ fn queue_dropped(dir: &std::path::Path, to: &str, items: &[PathBuf]) -> Queued {
     };
     for item in items {
         let meta = std::fs::metadata(item).ok();
-        match pocketdesk_core::local::outbox::request(dir, to, &item.to_string_lossy(), now) {
+        match friday_mobile_core::local::outbox::request(dir, to, &item.to_string_lossy(), now) {
             Ok(request) => queued.ids.push(request.id),
             Err(e) => {
                 tracing::warn!("Shared input: a file dragged across was not queued: {e}");
@@ -1744,7 +1744,7 @@ fn drive(stop: Arc<AtomicBool>, runtime: tokio::runtime::Handle) {
     let _driving = Raised::raise(&DRIVING);
     let _runtime = runtime.enter();
     let config = crate::events::current_config();
-    let hotkey = pocketdesk_core::local::hotkey::parse(&config.shared_input_hotkey);
+    let hotkey = friday_mobile_core::local::hotkey::parse(&config.shared_input_hotkey);
     if hotkey.is_none() && !config.shared_input_hotkey.trim().is_empty() {
         tracing::warn!(
             key = config.shared_input_hotkey,
@@ -2234,7 +2234,7 @@ pub async fn supervise() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::hotkey::{MOD_NOREPEAT, parse};
+    use friday_mobile_core::local::hotkey::{MOD_NOREPEAT, parse};
     use std::sync::atomic::AtomicUsize;
 
     static RESTORED: AtomicUsize = AtomicUsize::new(0);

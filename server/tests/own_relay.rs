@@ -19,7 +19,7 @@ async fn endpoint(relay: &RelayUrl) -> Endpoint {
 
 /// A relay on loopback admitting what `allow` admits (`None`: everyone).
 async fn relay(
-    allow: Option<pocketdesk_server::relay::Allowlist>,
+    allow: Option<friday_mobile_server::relay::Allowlist>,
 ) -> (iroh_relay::server::Server, RelayUrl) {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let mut relay = iroh_relay::server::RelayConfig::new(SocketAddr::from(([127, 0, 0, 1], 0)));
@@ -66,11 +66,11 @@ async fn two_endpoints_connect_through_a_relay_we_run() {
 async fn an_endpoint_that_is_not_on_the_list_cannot_use_the_relay() {
     // The desktop is listed and binds its home relay; a stranger is not.
     let desktop_key = iroh::SecretKey::generate();
-    let opts = pocketdesk_server::relay::RelayOptions {
+    let opts = friday_mobile_server::relay::RelayOptions {
         allow: vec![desktop_key.public().to_string()],
         ..Default::default()
     };
-    let allow = pocketdesk_server::relay::Allowlist::from_options(&opts, None, None).unwrap();
+    let allow = friday_mobile_server::relay::Allowlist::from_options(&opts, None, None).unwrap();
     let (_relay, url) = relay(Some(allow)).await;
     let desktop = Endpoint::builder(Minimal)
         .relay_mode(RelayMode::Custom(url.clone().into()))

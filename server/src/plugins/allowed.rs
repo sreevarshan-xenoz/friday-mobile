@@ -5,10 +5,10 @@
 //! ([`phone_switches::allowed_body`]). It tells a phone only about itself,
 //! so the ask needs no permission; a device not paired gets nothing.
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::phone_switches::{self, ALLOWED};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::phone_switches::{self, ALLOWED};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
 use serde_json::json;
 
 use crate::state;
@@ -65,7 +65,7 @@ impl Plugin for AllowedPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::protocol::permissions::Capability;
 
     #[test]
     fn a_paired_phone_hears_what_it_is_allowed_and_another_device_nothing() {

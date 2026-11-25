@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::approve::PhoneKey;
-use pocketdesk_core::protocol::approve::{HELPER_PATH, PAM_SERVICES, PIN_DIR, pam_line};
+use friday_mobile_core::local::approve::PhoneKey;
+use friday_mobile_core::protocol::approve::{HELPER_PATH, PAM_SERVICES, PIN_DIR, pam_line};
 
 /// What the section keeps between frames.
 #[derive(Default)]
@@ -32,7 +32,7 @@ fn helper() -> Option<PathBuf> {
     let beside = std::env::current_exe()
         .ok()?
         .parent()?
-        .join("pocketdesk-pam-ask");
+        .join("friday-mobile-pam-ask");
     beside.is_file().then_some(beside)
 }
 

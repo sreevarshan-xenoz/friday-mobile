@@ -1,4 +1,4 @@
-//! `pocketdesk install` / `uninstall` on Windows.
+//! `friday-mobile install` / `uninstall` on Windows.
 //!
 //! The server must run inside the user's interactive session (Session 0, where
 //! Windows services live, has no desktop to capture or inject into), so it is
@@ -43,10 +43,10 @@ use windows::Win32::UI::WindowsAndMessaging::SW_HIDE;
 use windows::core::{BSTR, GUID, HSTRING, PCWSTR, w};
 
 /// The Scheduled Task's name.
-pub const TASK_NAME: &str = "Pocketdesk";
+pub const TASK_NAME: &str = "FRIDAY Mobile";
 
 /// The firewall rule group; removal deletes the whole group.
-const RULE_GROUP: &str = "Pocketdesk";
+const RULE_GROUP: &str = "FRIDAY Mobile";
 
 /// What the task and the rule group were called before the rename. An old
 /// install's task would otherwise start a second server at every logon next
@@ -64,7 +64,7 @@ const PORTS: [(&str, u16, u16, &str); 3] = [
     (
         "TCP",
         1716,
-        1716 + pocketdesk_core::local::listening::TRIES - 1,
+        1716 + friday_mobile_core::local::listening::TRIES - 1,
         "control",
     ),
     ("UDP", 4716, 4716, "media"),
@@ -113,7 +113,7 @@ pub fn task_xml(exe: &Path, user: &str, elevated: bool) -> String {
         r#"<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>Pocketdesk desktop server: lets your paired phone view and control this PC.</Description>
+    <Description>FRIDAY Mobile desktop server: lets your paired phone view and control this PC.</Description>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>
@@ -174,7 +174,7 @@ pub fn firewall_add_script(exe: &Path) -> String {
     );
     for (protocol, first, last, what) in PORTS {
         let port = port_range(first, last);
-        let name = ps_quote(&format!("Pocketdesk {what} ({protocol} {port})"));
+        let name = ps_quote(&format!("FRIDAY Mobile {what} ({protocol} {port})"));
         script.push_str(&format!(
             "New-NetFirewallRule -Group {group} -DisplayName {name} -Direction Inbound -Action Allow \
              -Protocol {protocol} -LocalPort {port} -Program {program} -Profile Private,Domain \
@@ -187,7 +187,9 @@ pub fn firewall_add_script(exe: &Path) -> String {
     ));
     for (protocol, first, last, what) in PORTS {
         let port = port_range(first, last);
-        let name = ps_quote(&format!("Pocketdesk {what} ({protocol} {port}) (tailnet)"));
+        let name = ps_quote(&format!(
+            "FRIDAY Mobile {what} ({protocol} {port}) (tailnet)"
+        ));
         script.push_str(&format!(
             "  New-NetFirewallRule -Group {group} -DisplayName {name} -Direction Inbound -Action Allow \
              -Protocol {protocol} -LocalPort {port} -Program {program} -Profile Any \
@@ -318,7 +320,7 @@ pub fn install(elevated: bool, firewall: bool) -> Result<()> {
         }
         if !in_program_files(&exe) {
             bail!(
-                "`install --elevated` needs pocketdesk.exe under Program Files: an elevated task \
+                "`install --elevated` needs friday-mobile.exe under Program Files: an elevated task \
                  that starts a file the user can replace ({}) is a privilege escalation",
                 exe.display()
             );
@@ -354,7 +356,7 @@ pub fn install(elevated: bool, firewall: bool) -> Result<()> {
             )
         }
         Some(Ok(code)) => println!(
-            "Firewall rules were not added (helper exited {code}); add them from an administrator terminal with `pocketdesk firewall-add`"
+            "Firewall rules were not added (helper exited {code}); add them from an administrator terminal with `friday-mobile firewall-add`"
         ),
         Some(Err(e)) => {
             println!("Firewall rules were not added ({e:#}); the phone may not reach this PC")
@@ -362,7 +364,7 @@ pub fn install(elevated: bool, firewall: bool) -> Result<()> {
     }
 
     // "Send to phone" in Explorer's Send To menu (T10e).
-    use pocketdesk_core::local::send_menu;
+    use friday_mobile_core::local::send_menu;
     match send_menu::data_dir().and_then(|data| send_menu::install_in(&data, &exe)) {
         Ok(()) => println!("Added \"{}\" to Explorer's Send To menu", send_menu::LABEL),
         Err(e) => println!("\"{}\" was not added to Send To ({e})", send_menu::LABEL),
@@ -371,14 +373,14 @@ pub fn install(elevated: bool, firewall: bool) -> Result<()> {
     // The browser extension's host (ecosystem 1d).
     match crate::browser_host::install() {
         Ok(done) => println!(
-            "The browser extension can reach Pocketdesk from {}",
+            "The browser extension can reach FRIDAY Mobile from {}",
             done.join(", ")
         ),
         Err(e) => println!("The browser extension's host was not registered ({e:#})"),
     }
 
     match unsafe { task.Run(&none) } {
-        Ok(_) => println!("Started Pocketdesk; it will start again at every logon"),
+        Ok(_) => println!("Started FRIDAY Mobile; it will start again at every logon"),
         Err(e) => {
             println!("Registered, but could not start it now ({e}); it will start at next logon")
         }
@@ -404,7 +406,7 @@ pub fn uninstall() -> Result<()> {
     let removed = delete_task(TASK_NAME);
     match removed {
         Ok(()) => println!(
-            "Removed the \"{TASK_NAME}\" logon task (a running server keeps running until `pocketdesk stop`)"
+            "Removed the \"{TASK_NAME}\" logon task (a running server keeps running until `friday-mobile stop`)"
         ),
         Err(e) => println!("No logon task removed ({e})"),
     }
@@ -413,7 +415,7 @@ pub fn uninstall() -> Result<()> {
         Ok(code) => println!("Firewall rules were not removed (helper exited {code})"),
         Err(e) => println!("Firewall rules were not removed ({e:#})"),
     }
-    use pocketdesk_core::local::send_menu;
+    use friday_mobile_core::local::send_menu;
     if send_menu::data_dir()
         .and_then(|data| send_menu::remove_in(&data))
         .is_ok()
@@ -430,7 +432,7 @@ pub fn uninstall() -> Result<()> {
     if crate::tel_handler::run_tel_handler(true).is_err() {
         println!("Phone numbers' links were not removed");
     }
-    let subkey = HSTRING::from(r"Software\Classes\AppUserModelId\Pocketdesk.Server");
+    let subkey = HSTRING::from(r"Software\Classes\AppUserModelId\FRIDAY.Mobile.Server");
     let _ = unsafe { RegDeleteTreeW(HKEY_CURRENT_USER, &subkey) };
     Ok(())
 }
@@ -442,7 +444,7 @@ mod tests {
     #[test]
     fn the_task_runs_the_server_in_the_background_at_logon() {
         let xml = task_xml(
-            Path::new(r"C:\Apps\Linux & Link\pocketdesk.exe"),
+            Path::new(r"C:\Apps\Linux & Link\friday-mobile.exe"),
             r"PC\me",
             false,
         );
@@ -450,7 +452,7 @@ mod tests {
         assert!(xml.contains("<LogonType>InteractiveToken</LogonType>"));
         assert!(xml.contains("<RunLevel>LeastPrivilege</RunLevel>"));
         assert!(xml.contains("<Arguments>start --background</Arguments>"));
-        assert!(xml.contains(r"<Command>C:\Apps\Linux &amp; Link\pocketdesk.exe</Command>"));
+        assert!(xml.contains(r"<Command>C:\Apps\Linux &amp; Link\friday-mobile.exe</Command>"));
         assert!(xml.contains("<RestartOnFailure>"));
         assert!(xml.contains("<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>"));
         assert!(task_xml(Path::new("x.exe"), "me", true).contains("HighestAvailable"));
@@ -481,14 +483,16 @@ mod tests {
 
     #[test]
     fn lan_rules_are_local_subnet_and_tailnet_rules_are_bound_to_its_adapter() {
-        let script = firewall_add_script(Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe"));
+        let script = firewall_add_script(Path::new(
+            r"C:\Program Files\FRIDAY Mobile\friday-mobile.exe",
+        ));
         let rules: Vec<&str> = script
             .lines()
             .filter(|l| l.contains("New-NetFirewallRule"))
             .collect();
         assert_eq!(rules.len(), PORTS.len() * 2);
         for rule in &rules {
-            assert!(rule.contains(r"-Program 'C:\Program Files\Pocketdesk\pocketdesk.exe'"));
+            assert!(rule.contains(r"-Program 'C:\Program Files\FRIDAY Mobile\friday-mobile.exe'"));
             assert!(rule.contains("-Direction Inbound"));
             if rule.contains("(tailnet)") {
                 assert!(rule.contains("-InterfaceAlias 'Tailscale'"), "{rule}");
@@ -505,14 +509,14 @@ mod tests {
         assert!(script.contains("if (Get-NetAdapter -Name 'Tailscale'"));
         // Re-running install replaces the group instead of duplicating it.
         assert!(script.starts_with(
-            "$ErrorActionPreference = 'Stop'\nGet-NetFirewallRule -Group 'Pocketdesk'"
+            "$ErrorActionPreference = 'Stop'\nGet-NetFirewallRule -Group 'FRIDAY Mobile'"
         ));
     }
 
     #[test]
     fn uninstall_removes_the_group_install_creates() {
-        assert!(firewall_remove_script().contains("-Group 'Pocketdesk'"));
-        assert!(firewall_add_script(Path::new("x.exe")).contains("-Group 'Pocketdesk'"));
+        assert!(firewall_remove_script().contains("-Group 'FRIDAY Mobile'"));
+        assert!(firewall_add_script(Path::new("x.exe")).contains("-Group 'FRIDAY Mobile'"));
     }
 
     #[test]
@@ -528,26 +532,28 @@ mod tests {
         assert!(
             add.lines()
                 .filter(|l| l.contains("New-NetFirewallRule"))
-                .all(|l| l.contains("-Group 'Pocketdesk'"))
+                .all(|l| l.contains("-Group 'FRIDAY Mobile'"))
         );
     }
 
     #[test]
     fn powershell_strings_cannot_be_broken_out_of() {
         assert_eq!(ps_quote("it's"), "'it''s'");
-        let script = firewall_add_script(Path::new(r"C:\a'b\pocketdesk.exe"));
-        assert!(script.contains(r"-Program 'C:\a''b\pocketdesk.exe'"));
+        let script = firewall_add_script(Path::new(r"C:\a'b\friday-mobile.exe"));
+        assert!(script.contains(r"-Program 'C:\a''b\friday-mobile.exe'"));
     }
 
     #[test]
     fn only_program_files_counts_as_admin_owned_and_env_cannot_move_it() {
         let pf = known_folder(&FOLDERID_ProgramFiles).expect("Program Files exists");
-        assert!(in_program_files(&pf.join(r"Pocketdesk\pocketdesk.exe")));
+        assert!(in_program_files(
+            &pf.join(r"FRIDAY Mobile\friday-mobile.exe")
+        ));
         assert!(!in_program_files(Path::new(
-            r"C:\Users\me\Downloads\pocketdesk.exe"
+            r"C:\Users\me\Downloads\friday-mobile.exe"
         )));
         assert!(!in_program_files(Path::new(
-            r"E:\Linux-Link\target\debug\pocketdesk.exe"
+            r"E:\Linux-Link\target\debug\friday-mobile.exe"
         )));
     }
 

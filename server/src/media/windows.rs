@@ -32,7 +32,7 @@ fn within<T: windows::core::RuntimeType + 'static>(
 
 /// The name Pocketdesk's own entry in the media controls goes by: the
 /// tray shows a phone's music there (K7), never the computer's own.
-const OWN: &str = pocketdesk_core::local::phone_media::MEDIA_CONTROLS_APP_ID;
+const OWN: &str = friday_mobile_core::local::phone_media::MEDIA_CONTROLS_APP_ID;
 
 /// Which of `sessions` (each app's name and whether it plays) is the
 /// computer's music: the `wanted` one while it is there (O6), else the

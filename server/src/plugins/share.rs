@@ -1,9 +1,9 @@
-use pocketdesk_core::error::{PocketdeskError, Result};
-use pocketdesk_core::protocol::kdeconnect::{
+use friday_mobile_core::error::{PocketdeskError, Result};
+use friday_mobile_core::protocol::kdeconnect::{
     DeviceSender, NetworkPacket, OpenLinkStream, Plugin, TransferIo,
 };
-use pocketdesk_core::protocol::partials::{Record, Store};
-use pocketdesk_core::protocol::transfer::{self, Have, Pace, TransferError};
+use friday_mobile_core::protocol::partials::{Record, Store};
+use friday_mobile_core::protocol::transfer::{self, Have, Pace, TransferError};
 use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -30,9 +30,9 @@ pub fn configure(keep_hours: u32) {
     KEEP_HOURS.store(keep_hours, std::sync::atomic::Ordering::Relaxed);
 }
 
-fn partial_limits() -> pocketdesk_core::protocol::partials::Limits {
+fn partial_limits() -> friday_mobile_core::protocol::partials::Limits {
     let hours = KEEP_HOURS.load(std::sync::atomic::Ordering::Relaxed);
-    pocketdesk_core::protocol::partials::Limits {
+    friday_mobile_core::protocol::partials::Limits {
         max_age_secs: u64::from(hours) * 3600,
         per_device: PARTIALS_PER_PHONE,
         total_bytes: PARTIALS_TOTAL_BYTES,
@@ -88,8 +88,11 @@ fn in_use(location: &str) -> bool {
 
 /// Drop unfinished files past `limits`, with their bytes, and any bytes
 /// whose record is gone; never one a receive is using now.
-pub(crate) fn sweep_partials(store: &Store, limits: pocketdesk_core::protocol::partials::Limits) {
-    let now = pocketdesk_core::local::pin::now_unix();
+pub(crate) fn sweep_partials(
+    store: &Store,
+    limits: friday_mobile_core::protocol::partials::Limits,
+) {
+    let now = friday_mobile_core::local::pin::now_unix();
     for record in store.sweep(now, limits, |r| in_use(&r.location)) {
         let _ = std::fs::remove_file(store.dir().join(&record.location));
     }
@@ -269,10 +272,10 @@ impl FolderTops {
         if !is_transfer_key(folder_id) {
             return Err("no usable folder id".to_string());
         }
-        if let Some(problem) = pocketdesk_core::protocol::relpath::component_problem(folder) {
+        if let Some(problem) = friday_mobile_core::protocol::relpath::component_problem(folder) {
             return Err(format!("the folder's name: {problem}"));
         }
-        if let Some(problem) = pocketdesk_core::protocol::relpath::path_problem(path) {
+        if let Some(problem) = friday_mobile_core::protocol::relpath::path_problem(path) {
             return Err(format!("the file's place in the folder: {problem}"));
         }
         let (name, within) = path.split_last().ok_or("no file name")?;
@@ -431,7 +434,7 @@ pub(crate) fn download_dir() -> Option<PathBuf> {
     // The owner's folder (C2), read at each file so a change applies at once;
     // a config that cannot be read now keeps the last one read (C2 review).
     static LAST: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
-    let chosen = match pocketdesk_core::local::config::Config::load() {
+    let chosen = match friday_mobile_core::local::config::Config::load() {
         Ok(config) => {
             *LAST.lock().unwrap_or_else(|e| e.into_inner()) = Some(config.downloads_folder.clone());
             config.downloads_folder
@@ -491,8 +494,8 @@ pub(crate) fn chosen_folder_for(chosen: &str) -> Option<PathBuf> {
 /// The server's own folders, which received files never go into.
 fn protected_dirs() -> Vec<PathBuf> {
     [
-        pocketdesk_core::local::paths::state_dir(),
-        pocketdesk_core::local::paths::config_dir(),
+        friday_mobile_core::local::paths::state_dir(),
+        friday_mobile_core::local::paths::config_dir(),
     ]
     .into_iter()
     .flatten()
@@ -535,7 +538,7 @@ impl Plugin for SharePlugin {
             FETCH,
             FOLDER_FETCH,
             crate::offers::DECLINE,
-            pocketdesk_core::protocol::kept::KEEP_RUN,
+            friday_mobile_core::protocol::kept::KEEP_RUN,
         ]
     }
 
@@ -557,7 +560,7 @@ impl Plugin for SharePlugin {
             handle_folder_fetch(packet, sender).await;
             return Ok(());
         }
-        if packet.packet_type == pocketdesk_core::protocol::kept::KEEP_RUN {
+        if packet.packet_type == friday_mobile_core::protocol::kept::KEEP_RUN {
             // A run's deletions and end (a phone's kept folder): disk work,
             // off the reactor.
             let device = sender.device_id().to_string();
@@ -677,7 +680,7 @@ impl Plugin for SharePlugin {
                 let source = body
                     .get("sourceId")
                     .and_then(|v| v.as_str())
-                    .filter(|s| pocketdesk_core::protocol::partials::valid_source(s))
+                    .filter(|s| friday_mobile_core::protocol::partials::valid_source(s))
                     .map(str::to_string);
                 let from = sender.device_id().to_string();
                 // A retry of this file replaces an attempt still running for
@@ -702,7 +705,7 @@ impl Plugin for SharePlugin {
                 // A file of a folder a phone keeps here (never one the drive
                 // asked for) goes where the kept folder says, replacing its
                 // older copy; every check is made before anything is made.
-                let kept = match pocketdesk_core::protocol::kept::kept_file(body) {
+                let kept = match friday_mobile_core::protocol::kept::kept_file(body) {
                     None => None,
                     Some(_) if drive.is_some() => {
                         return refused("a kept folder is not a drive fetch".into()).await;
@@ -746,7 +749,7 @@ impl Plugin for SharePlugin {
                 };
                 let tracker = crate::transfers::track(crate::transfers::Shown {
                     key: running_key.clone(),
-                    direction: pocketdesk_core::local::transfers::Direction::FromPhone,
+                    direction: friday_mobile_core::local::transfers::Direction::FromPhone,
                     device_id: from.clone(),
                     name: name.clone(),
                     folder: folder_name,
@@ -911,7 +914,7 @@ async fn handle_fetch(packet: &NetworkPacket, sender: &dyn DeviceSender) {
             tracing::info!("Sending {} to {}", fetch.path.display(), fetch.route);
             let tracker = crate::transfers::track(crate::transfers::Shown {
                 key: running_key.clone(),
-                direction: pocketdesk_core::local::transfers::Direction::ToPhone,
+                direction: friday_mobile_core::local::transfers::Direction::ToPhone,
                 device_id: phone_of(sender),
                 name: fetch
                     .path
@@ -1177,19 +1180,19 @@ fn files_reach_with(sender: &dyn DeviceSender, internet_files: bool) -> bool {
 /// [`TRANSFER_MAX`], and a slow radio link is for a note or a photo. The
 /// phone shows it.
 ///
-/// [`TRANSFER_MAX`]: pocketdesk_core::protocol::bluetooth::TRANSFER_MAX
+/// [`TRANSFER_MAX`]: friday_mobile_core::protocol::bluetooth::TRANSFER_MAX
 pub(crate) const WAITS_FOR_WIFI: &str = "over 8 MiB over Bluetooth: the file waits for Wi-Fi";
 
 /// Whether a transfer of `size` bytes may go on `sender`'s road: at most
 /// [`TRANSFER_MAX`] on the Bluetooth road (the link that proves the phone
 /// near by radio), any size on the others.
 ///
-/// [`TRANSFER_MAX`]: pocketdesk_core::protocol::bluetooth::TRANSFER_MAX
+/// [`TRANSFER_MAX`]: friday_mobile_core::protocol::bluetooth::TRANSFER_MAX
 pub(crate) fn fits_the_road(
     sender: &dyn DeviceSender,
     size: u64,
 ) -> std::result::Result<(), String> {
-    if sender.nearby_by_radio() && size > pocketdesk_core::protocol::bluetooth::TRANSFER_MAX {
+    if sender.nearby_by_radio() && size > friday_mobile_core::protocol::bluetooth::TRANSFER_MAX {
         return Err(WAITS_FOR_WIFI.to_string());
     }
     Ok(())
@@ -1239,7 +1242,7 @@ pub(crate) fn route(reach: Reach, sender: &dyn DeviceSender) -> std::result::Res
 pub(crate) fn transfer_tls(
     sender: &dyn DeviceSender,
 ) -> std::result::Result<std::sync::Arc<tokio_rustls::rustls::ClientConfig>, String> {
-    let Some(key @ pocketdesk_core::streaming::PeerKey::Tls(phone)) = sender.peer_key() else {
+    let Some(key @ friday_mobile_core::streaming::PeerKey::Tls(phone)) = sender.peer_key() else {
         return Err("the phone's connection proved no key".to_string());
     };
     crate::plugins::pair::may_transfer(sender.device_id(), &key)?;
@@ -1248,9 +1251,11 @@ pub(crate) fn transfer_tls(
 
 /// This desktop's identity, read once: the one its control channel and
 /// stream present (loaded at start by the service from the same folder).
-pub(crate) fn desktop_certs()
--> std::result::Result<std::sync::Arc<pocketdesk_core::streaming::transport::CertManager>, String> {
-    use pocketdesk_core::streaming::transport::CertManager;
+pub(crate) fn desktop_certs() -> std::result::Result<
+    std::sync::Arc<friday_mobile_core::streaming::transport::CertManager>,
+    String,
+> {
+    use friday_mobile_core::streaming::transport::CertManager;
     static CERTS: std::sync::Mutex<Option<std::sync::Arc<CertManager>>> =
         std::sync::Mutex::new(None);
     let mut cached = CERTS.lock().unwrap_or_else(|e| e.into_inner());
@@ -1301,7 +1306,7 @@ where
     .await
     .map_err(|_| io_error("tls", "timed out"))?
     .map_err(|e| io_error("tls", e))?;
-    if stream.get_ref().1.alpn_protocol() != Some(pocketdesk_core::protocol::ALPN_TRANSFER) {
+    if stream.get_ref().1.alpn_protocol() != Some(friday_mobile_core::protocol::ALPN_TRANSFER) {
         return Err(io_error(
             "tls",
             "the phone does not speak the transfer protocol",
@@ -1489,7 +1494,7 @@ fn received_in(
     from: &str,
     top: Option<&Path>,
 ) -> Option<(&'static str, String)> {
-    use pocketdesk_core::local::received::{self, ReceivedFile};
+    use friday_mobile_core::local::received::{self, ReceivedFile};
     let name_of = |p: &Path| {
         p.file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -1511,7 +1516,7 @@ fn received_in(
     // Transfers run concurrently; the list is read, changed and replaced.
     static LIST: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let _guard = LIST.lock().unwrap_or_else(|e| e.into_inner());
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     match top {
         None => {
             let name = name_of(path);
@@ -1639,7 +1644,7 @@ pub fn safe_file_name(raw: &str) -> String {
         .chars()
         .filter(|c| {
             !c.is_control()
-                && !pocketdesk_core::protocol::kdeconnect::is_invisible_format(*c)
+                && !friday_mobile_core::protocol::kdeconnect::is_invisible_format(*c)
                 && !matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*')
         })
         .collect();
@@ -1764,7 +1769,7 @@ struct Incoming<'a> {
     source: Option<&'a str>,
     store: &'a Store,
     /// How much unfinished work is kept; an age of 0 keeps none.
-    limits: pocketdesk_core::protocol::partials::Limits,
+    limits: friday_mobile_core::protocol::partials::Limits,
     /// Told how much of the file this end has as it arrives (C1).
     progress: Box<dyn FnMut(u64) + Send>,
     /// Told where the file went once it is in place (the notification and
@@ -1825,7 +1830,7 @@ async fn receive_file(route: Route, key: &str, incoming: Incoming<'_>) -> Result
     });
     let created_unix = record
         .as_ref()
-        .map_or_else(pocketdesk_core::local::pin::now_unix, |r| r.created_unix);
+        .map_or_else(friday_mobile_core::local::pin::now_unix, |r| r.created_unix);
     let mut file = tokio::fs::OpenOptions::new()
         .read(true)
         .write(true)
@@ -1949,7 +1954,7 @@ pub(crate) async fn receive_offered(
     let source = offer
         .get("source")
         .and_then(|v| v.as_str())
-        .filter(|s| pocketdesk_core::protocol::partials::valid_source(s))
+        .filter(|s| friday_mobile_core::protocol::partials::valid_source(s))
         .map(str::to_string);
     let dir = download_dir().ok_or_else(|| io_error("receive", "no downloads or home folder"))?;
     let store =
@@ -2003,7 +2008,7 @@ fn received_date_when(
     keep: bool,
     now: std::time::SystemTime,
 ) -> Option<std::time::SystemTime> {
-    keep.then(|| pocketdesk_core::protocol::file_time::from_body(body, now))
+    keep.then(|| friday_mobile_core::protocol::file_time::from_body(body, now))
         .flatten()
 }
 
@@ -2497,7 +2502,7 @@ mod tests {
         let store = Store::new(temp_dir("sweep-in-use"));
         let part = store.dir().join("busy.part");
         std::fs::write(&part, b"half").unwrap();
-        let nothing_kept = pocketdesk_core::protocol::partials::Limits {
+        let nothing_kept = friday_mobile_core::protocol::partials::Limits {
             max_age_secs: 0,
             per_device: 0,
             total_bytes: 0,
@@ -2647,7 +2652,7 @@ mod tests {
 
     const KEY: &str = "0123456789abcdef0123456789abcdef";
 
-    use pocketdesk_core::streaming::transport::CertManager;
+    use friday_mobile_core::streaming::transport::CertManager;
 
     /// This desktop, the phone that asks, and another device.
     fn certs() -> &'static (CertManager, CertManager, CertManager) {
@@ -2732,8 +2737,8 @@ mod tests {
 
     const SOURCE: &str = "00112233445566778899aabbccddeeff";
 
-    const LIMITS: pocketdesk_core::protocol::partials::Limits =
-        pocketdesk_core::protocol::partials::Limits {
+    const LIMITS: friday_mobile_core::protocol::partials::Limits =
+        friday_mobile_core::protocol::partials::Limits {
             max_age_secs: 3600,
             per_device: 4,
             total_bytes: 1 << 40,
@@ -2767,7 +2772,7 @@ mod tests {
         let path = state.join("photo.jpg");
         let toast = received_in(&state, &path, 2_100_000, "192.0.2.7", None);
         assert!(toast.is_some(), "a plain file is announced");
-        let files = pocketdesk_core::local::received::read(&state);
+        let files = friday_mobile_core::local::received::read(&state);
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].name, "photo.jpg");
         assert_eq!(files[0].size, 2_100_000);
@@ -2791,7 +2796,7 @@ mod tests {
         let (_, body) = first.expect("the folder's first file is announced");
         assert!(body.contains("Trip"), "{body}");
         assert!(second.is_none(), "its later files are not");
-        let files = pocketdesk_core::local::received::read(&state);
+        let files = friday_mobile_core::local::received::read(&state);
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].name, "Trip/");
         assert_eq!(files[0].path, top.display().to_string());
@@ -3064,12 +3069,12 @@ mod tests {
     #[test]
     fn the_road_decides_how_a_request_is_answered() {
         let (link, _streams) = fake_link();
-        let internet = pocketdesk_core::protocol::kdeconnect::TcpDeviceSender::new(
+        let internet = friday_mobile_core::protocol::kdeconnect::TcpDeviceSender::new(
             tokio::io::sink(),
             "phone".into(),
         )
         .with_link_streams(Some(link));
-        let home = pocketdesk_core::protocol::kdeconnect::TcpDeviceSender::new(
+        let home = friday_mobile_core::protocol::kdeconnect::TcpDeviceSender::new(
             tokio::io::sink(),
             "phone".into(),
         )
@@ -3162,7 +3167,7 @@ mod tests {
     /// internet roads take any size.
     #[test]
     fn a_file_over_eight_mebibytes_waits_for_wifi_on_bluetooth_only() {
-        use pocketdesk_core::protocol::bluetooth::TRANSFER_MAX;
+        use friday_mobile_core::protocol::bluetooth::TRANSFER_MAX;
         let bluetooth = LinkPhone::on(true);
         assert_eq!(fits_the_road(&bluetooth, TRANSFER_MAX), Ok(()));
         assert!(
@@ -3182,7 +3187,7 @@ mod tests {
     /// refused, and the phone is told it waits for Wi-Fi.
     #[tokio::test]
     async fn a_big_share_over_bluetooth_is_told_it_waits_for_wifi() {
-        use pocketdesk_core::protocol::bluetooth::TRANSFER_MAX;
+        use friday_mobile_core::protocol::bluetooth::TRANSFER_MAX;
         let _state = crate::state::use_test_dirs();
         let plugin = SharePlugin::with_download_dir(temp_dir("bt-share"));
         let phone = LinkPhone::on(true);
@@ -3201,7 +3206,7 @@ mod tests {
     /// bigger one goes.
     #[tokio::test]
     async fn a_download_over_bluetooth_is_held_to_eight_mebibytes() {
-        use pocketdesk_core::protocol::bluetooth::TRANSFER_MAX;
+        use friday_mobile_core::protocol::bluetooth::TRANSFER_MAX;
         let _state = crate::state::use_test_dirs();
         let dir = temp_dir("bt-fetch");
         let fits = dir.join("fits.bin");
@@ -3444,11 +3449,11 @@ mod tests {
         fn peer_addr(&self) -> Option<SocketAddr> {
             Some(self.peer)
         }
-        fn peer_key(&self) -> Option<pocketdesk_core::streaming::PeerKey> {
+        fn peer_key(&self) -> Option<friday_mobile_core::streaming::PeerKey> {
             if self.keyless {
                 return None;
             }
-            Some(pocketdesk_core::streaming::PeerKey::Tls(
+            Some(friday_mobile_core::streaming::PeerKey::Tls(
                 certs().1.cert_fingerprint(),
             ))
         }
@@ -3779,8 +3784,8 @@ mod tests {
         fn connection_id(&self) -> &str {
             "conn"
         }
-        fn peer_key(&self) -> Option<pocketdesk_core::streaming::PeerKey> {
-            Some(pocketdesk_core::streaming::PeerKey::Tls(
+        fn peer_key(&self) -> Option<friday_mobile_core::streaming::PeerKey> {
+            Some(friday_mobile_core::streaming::PeerKey::Tls(
                 certs().1.cert_fingerprint(),
             ))
         }
@@ -3858,9 +3863,9 @@ mod tests {
         let root = temp_dir("kept-live-root");
         // The config the server reads: the folders go under this test's own
         // root, never the owner's Documents.
-        let config_file = pocketdesk_core::local::paths::config_dir()
+        let config_file = friday_mobile_core::local::paths::config_dir()
             .unwrap()
-            .join(pocketdesk_core::local::paths::CONFIG_FILE);
+            .join(friday_mobile_core::local::paths::CONFIG_FILE);
         std::fs::create_dir_all(config_file.parent().unwrap()).unwrap();
         std::fs::write(
             &config_file,
@@ -3872,7 +3877,7 @@ mod tests {
 
         // The owner's phone, paired as one with its key bound.
         let id = "kept-live-phone";
-        pocketdesk_core::protocol::kdeconnect::TrustStore::update(
+        friday_mobile_core::protocol::kdeconnect::TrustStore::update(
             crate::state::trust_store_path().unwrap(),
             |s| s.trust_phone(id, true),
         )
@@ -3883,7 +3888,7 @@ mod tests {
             .iter()
             .map(|b| format!("{b:02x}"))
             .collect();
-        pocketdesk_core::local::device_keys::bind_first(&state, id, &key).unwrap();
+        friday_mobile_core::local::device_keys::bind_first(&state, id, &key).unwrap();
 
         let folder = "c".repeat(32);
         let plugin = SharePlugin::new();
@@ -3901,7 +3906,7 @@ mod tests {
         }
         // The run's end: the computer counts the folder again.
         let end = |sent: u64| {
-            NetworkPacket::new(pocketdesk_core::protocol::kept::KEEP_RUN).with_body(
+            NetworkPacket::new(friday_mobile_core::protocol::kept::KEEP_RUN).with_body(
                 serde_json::json!({
                     "folderId": folder, "folder": "Notes", "mirror": false,
                     "done": true, "sent": sent, "failed": 0,
@@ -3909,7 +3914,7 @@ mod tests {
             )
         };
         plugin.handle_packet(&end(5), &phone).await.unwrap();
-        let kept = pocketdesk_core::local::kept_folders::read(&state)
+        let kept = friday_mobile_core::local::kept_folders::read(&state)
             .into_iter()
             .find(|f| f.device_id == id)
             .expect("the folder is recorded");
@@ -3945,7 +3950,7 @@ mod tests {
         .await;
         let _ = send_kept(&plugin, &phone, streams, &folder, &["six.bin"], &added).await;
         plugin.handle_packet(&end(2), &phone).await.unwrap();
-        let after = pocketdesk_core::local::kept_folders::read(&state)
+        let after = friday_mobile_core::local::kept_folders::read(&state)
             .into_iter()
             .find(|f| f.device_id == id)
             .unwrap();
@@ -3963,7 +3968,7 @@ mod tests {
 
         // With deletions not allowed here, a phone that mirrors them deletes
         // nothing: the file stays and the folder says one was kept.
-        let gone = NetworkPacket::new(pocketdesk_core::protocol::kept::KEEP_RUN).with_body(
+        let gone = NetworkPacket::new(friday_mobile_core::protocol::kept::KEEP_RUN).with_body(
             serde_json::json!({
                 "folderId": folder, "folder": "Notes", "mirror": true,
                 "gone": [["six.bin"]],
@@ -3971,7 +3976,7 @@ mod tests {
         );
         plugin.handle_packet(&gone, &phone).await.unwrap();
         assert!(top.join("six.bin").exists(), "kept: deletions are off here");
-        let skipped = pocketdesk_core::local::kept_folders::read(&state)
+        let skipped = friday_mobile_core::local::kept_folders::read(&state)
             .into_iter()
             .find(|f| f.device_id == id)
             .unwrap();
@@ -4016,10 +4021,10 @@ mod tests {
         });
         assert_eq!(
             said.as_deref(),
-            Some(pocketdesk_core::protocol::kept::NOT_OWNER)
+            Some(friday_mobile_core::protocol::kept::NOT_OWNER)
         );
         assert!(
-            pocketdesk_core::local::kept_folders::read(&state)
+            friday_mobile_core::local::kept_folders::read(&state)
                 .iter()
                 .all(|f| f.device_id != "kept-live-stranger")
         );

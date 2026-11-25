@@ -19,13 +19,13 @@ use evdev::{
     UinputAbsSetup,
 };
 #[cfg(target_os = "linux")]
-use pocketdesk_core::streaming::portal_input::PortalEvent;
+use friday_mobile_core::streaming::portal_input::PortalEvent;
 // Off Linux the wire's evdev codes still need names; the core shim has the
 // same `KeyCode::KEY_*.0` shape as the evdev crate.
 #[cfg(not(target_os = "linux"))]
-use pocketdesk_core::input::evdev_codes::KeyCode;
-use pocketdesk_core::streaming::PenSample;
-use pocketdesk_core::streaming::input_packet::InputPacket;
+use friday_mobile_core::input::evdev_codes::KeyCode;
+use friday_mobile_core::streaming::PenSample;
+use friday_mobile_core::streaming::input_packet::InputPacket;
 #[cfg(target_os = "linux")]
 use std::path::Path;
 use std::sync::Mutex;
@@ -211,7 +211,7 @@ enum InputBackend {
     /// wlroots' virtual pointer and keyboard, where uinput cannot be opened
     /// (T10f)
     #[cfg(target_os = "linux")]
-    Wlr(pocketdesk_core::input::wlr_input::WlrInput),
+    Wlr(friday_mobile_core::input::wlr_input::WlrInput),
     /// GNOME's and KDE's RemoteDesktop portal, where uinput cannot be opened
     /// (N8): through the capture's portal session, while one runs.
     #[cfg(target_os = "linux")]
@@ -264,9 +264,9 @@ fn note_absolute_kind(backend: &InputBackend) {
 /// remote, which captures nothing) the input goes nowhere: said once, not
 /// for every packet.
 #[cfg(target_os = "linux")]
-fn portal(event: pocketdesk_core::streaming::portal_input::PortalEvent) -> Result<()> {
+fn portal(event: friday_mobile_core::streaming::portal_input::PortalEvent) -> Result<()> {
     static SAID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-    if !pocketdesk_core::streaming::portal_input::send(event)
+    if !friday_mobile_core::streaming::portal_input::send(event)
         && !SAID.swap(true, std::sync::atomic::Ordering::Relaxed)
     {
         warn!(
@@ -324,7 +324,7 @@ pub struct InputInjector {
     gamepad_buttons: u16,
     /// Fine wheel turns not yet a whole notch, for the backends that also
     /// need notches (uinput's `REL_WHEEL`, enigo).
-    wheel_rest: pocketdesk_core::streaming::wheel::Notches,
+    wheel_rest: friday_mobile_core::streaming::wheel::Notches,
     /// The phone's pen (E3).
     pen: PenState,
     /// The phone's gamepad as a game controller (T7), made at its first
@@ -429,7 +429,7 @@ enum WindowsPenState {
 #[cfg(target_os = "linux")]
 enum VkState {
     Untried,
-    Ready(pocketdesk_core::input::vkeyboard::VirtualKeyboard),
+    Ready(friday_mobile_core::input::vkeyboard::VirtualKeyboard),
     /// The compositor does not offer one (GNOME, KDE).
     Unsupported,
     /// Connecting or typing failed: tried again after this.
@@ -446,8 +446,8 @@ impl VkState {
     }
 
     /// The keyboard, connecting first when it is time to.
-    fn ready(&mut self) -> Option<&mut pocketdesk_core::input::vkeyboard::VirtualKeyboard> {
-        use pocketdesk_core::input::vkeyboard::{ConnectError, VirtualKeyboard};
+    fn ready(&mut self) -> Option<&mut friday_mobile_core::input::vkeyboard::VirtualKeyboard> {
+        use friday_mobile_core::input::vkeyboard::{ConnectError, VirtualKeyboard};
         let due = match self {
             VkState::Untried => true,
             VkState::RetryAfter(at) => std::time::Instant::now() >= *at,
@@ -682,7 +682,7 @@ impl InputInjector {
                 Err(e) => {
                     // wlroots compositors take input from any client of the
                     // session (T10f): no uinput rights needed.
-                    match pocketdesk_core::input::wlr_input::WlrInput::connect() {
+                    match friday_mobile_core::input::wlr_input::WlrInput::connect() {
                         Ok(wlr) => {
                             info!(
                                 "Input injector: using the compositor's virtual pointer and keyboard (uinput: {e})"
@@ -706,7 +706,7 @@ impl InputInjector {
                             info!(
                                 "Input injector: using the RemoteDesktop portal (uinput: {e}; no virtual pointer: {wlr:?})"
                             );
-                            pocketdesk_core::streaming::portal_input::want(true);
+                            friday_mobile_core::streaming::portal_input::want(true);
                             return Ok(Self {
                                 backend: InputBackend::Portal,
                                 gamepad_buttons: 0,
@@ -1007,7 +1007,7 @@ impl InputInjector {
             #[cfg(target_os = "linux")]
             InputBackend::Uinput(state) => {
                 let guard = state.get_mut().unwrap();
-                let fine = |n: i32| n.saturating_mul(pocketdesk_core::streaming::wheel::NOTCH);
+                let fine = |n: i32| n.saturating_mul(friday_mobile_core::streaming::wheel::NOTCH);
                 let events = uinput_wheel_events(fine(x), fine(y), x, y);
                 emit_uinput(guard, UinputDevice::Main, &events, "scroll")
             }
@@ -1187,7 +1187,7 @@ impl InputInjector {
             // Any character, as keysyms: the compositor maps them (N8).
             #[cfg(target_os = "linux")]
             InputBackend::Portal => {
-                for event in pocketdesk_core::streaming::portal_input::text_events(text) {
+                for event in friday_mobile_core::streaming::portal_input::text_events(text) {
                     portal(event)?;
                 }
                 Ok(())
@@ -1610,9 +1610,9 @@ enum UinputDevice {
 impl UinputDevice {
     fn label(self) -> &'static str {
         match self {
-            UinputDevice::Main => "Pocketdesk Virtual Input",
-            UinputDevice::Abs => "Pocketdesk Virtual Abs Pointer",
-            UinputDevice::Pen => "Pocketdesk Virtual Pen",
+            UinputDevice::Main => "FRIDAY Mobile Virtual Input",
+            UinputDevice::Abs => "FRIDAY Mobile Virtual Abs Pointer",
+            UinputDevice::Pen => "FRIDAY Mobile Virtual Pen",
         }
     }
 }
@@ -1647,7 +1647,7 @@ fn build_pen_device() -> Result<VirtualDevice> {
     let axis = |code: AbsoluteAxisCode, min: i32, max: i32, resolution: i32| {
         UinputAbsSetup::new(code, AbsInfo::new(0, min, max, 0, 0, resolution))
     };
-    let tilt = i32::from(pocketdesk_core::streaming::input_packet::PEN_MAX_TILT);
+    let tilt = i32::from(friday_mobile_core::streaming::input_packet::PEN_MAX_TILT);
     #[allow(deprecated)]
     let device = VirtualDeviceBuilder::new()
         .context("Failed to create pen builder")?
@@ -1665,7 +1665,7 @@ fn build_pen_device() -> Result<VirtualDevice> {
         .context("Failed to set up the pen's ABS_TILT_X")?
         .with_absolute_axis(&axis(AbsoluteAxisCode::ABS_TILT_Y, -tilt, tilt, 57))
         .context("Failed to set up the pen's ABS_TILT_Y")?
-        .name(b"Pocketdesk Virtual Pen")
+        .name(b"FRIDAY Mobile Virtual Pen")
         .build()
         .context("Failed to build the uinput pen")?;
     Ok(device)
@@ -1804,7 +1804,7 @@ fn build_pad() -> Result<VirtualDevice> {
     #[allow(deprecated)]
     let device = VirtualDeviceBuilder::new()
         .context("Failed to create the game controller's builder")?
-        .name(b"Pocketdesk Gamepad")
+        .name(b"FRIDAY Mobile Gamepad")
         .input_id(evdev::InputId::new(
             evdev::BusType::BUS_USB,
             0x045e,
@@ -1894,7 +1894,7 @@ fn build_main_device() -> Result<VirtualDevice> {
         .context("Failed to set up virtual keys")?
         .with_relative_axes(&rel)
         .context("Failed to set up relative axes")?
-        .name(b"Pocketdesk Virtual Input")
+        .name(b"FRIDAY Mobile Virtual Input")
         .build()
         .context(
             "Failed to build virtual device. \
@@ -1936,7 +1936,7 @@ fn build_abs_device() -> Result<VirtualDevice> {
         .context("Failed to set up ABS_X")?
         .with_absolute_axis(&abs_y)
         .context("Failed to set up ABS_Y")?
-        .name(b"Pocketdesk Virtual Abs Pointer")
+        .name(b"FRIDAY Mobile Virtual Abs Pointer")
         .build()
         .context("Failed to build uinput absolute pointer device")?;
 
@@ -2055,7 +2055,7 @@ fn key_to_evdev(key: Key) -> KeyCode {
 #[cfg(target_os = "linux")]
 fn untyped_rest(text: &str, sent: usize) -> String {
     text.chars()
-        .filter(|&c| pocketdesk_core::input::xkb_keymap::keysym_name(c).is_some())
+        .filter(|&c| friday_mobile_core::input::xkb_keymap::keysym_name(c).is_some())
         .skip(sent)
         .collect()
 }
@@ -2375,7 +2375,7 @@ mod tests {
     /// a phone without /dev/uinput access degrades the same way as one with it.
     #[test]
     fn every_key_the_phone_can_send_has_a_mapping() {
-        for code in pocketdesk_core::input::keys::phone_emittable_codes() {
+        for code in friday_mobile_core::input::keys::phone_emittable_codes() {
             assert!(
                 keycode_to_enigo(code).is_some(),
                 "evdev code {code} is emittable but unmapped"
@@ -2448,7 +2448,7 @@ mod tests {
     #[test]
     fn the_portable_key_code_names_agree_with_the_evdev_crate() {
         use std::str::FromStr;
-        for &(name, code) in pocketdesk_core::input::evdev_codes::ALL_NAMED {
+        for &(name, code) in friday_mobile_core::input::evdev_codes::ALL_NAMED {
             let real =
                 KeyCode::from_str(name).unwrap_or_else(|_| panic!("evdev has no key named {name}"));
             assert_eq!(real.0, code.0, "{name}");
@@ -2661,7 +2661,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn a_pen_sample_is_the_tablet_s_events() {
-        use pocketdesk_core::streaming::{PEN_BARREL, PEN_CONTACT, PEN_IN_RANGE};
+        use friday_mobile_core::streaming::{PEN_BARREL, PEN_CONTACT, PEN_IN_RANGE};
         fn value(events: &[InputEvent], kind: u16, code: u16) -> Option<i32> {
             events
                 .iter()

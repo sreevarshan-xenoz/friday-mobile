@@ -31,9 +31,9 @@ use windows::Win32::System::Com::{
 };
 use windows::core::HSTRING;
 
-use pocketdesk_core::streaming::{AudioDecoder, InputPacket};
+use friday_mobile_core::streaming::{AudioDecoder, InputPacket};
 
-pub use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
+pub use friday_mobile_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
 
 use crate::platform::audio_windows;
 

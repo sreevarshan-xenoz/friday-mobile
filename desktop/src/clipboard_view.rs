@@ -8,7 +8,7 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::clip_history::{self, ClipEntry};
+use friday_mobile_core::local::clip_history::{self, ClipEntry};
 
 use crate::model::Device;
 
@@ -260,7 +260,7 @@ impl ClipboardView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::protocol::permissions::Capability;
 
     fn entry(text: &str) -> ClipEntry {
         ClipEntry::new(text, None, 1)

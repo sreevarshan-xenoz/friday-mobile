@@ -11,9 +11,9 @@
 
 use std::path::Path;
 
-use pocketdesk_core::local::phone_apps::{self as store, AppList};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::phone_action::{AppResult, PhoneAction};
+use friday_mobile_core::local::phone_apps::{self as store, AppList};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::phone_action::{AppResult, PhoneAction};
 
 use crate::apps_view::{Known, Opening, Status, status};
 use crate::model::Device;
@@ -222,7 +222,7 @@ impl OpenWatch {
             Status::OpenRefused(AppResult::NotListed, _) if !p.relisted => {
                 p.relisted = true;
                 p.retry_at = Some(now + RELIST_SECS);
-                let _ = pocketdesk_core::local::phone_actions::request(
+                let _ = friday_mobile_core::local::phone_actions::request(
                     state_dir,
                     &p.phone,
                     PhoneAction::Apps,
@@ -267,8 +267,8 @@ impl OpenWatch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::phone_apps::AppList;
-    use pocketdesk_core::protocol::phone_action::{AppReport, PhoneApp};
+    use friday_mobile_core::local::phone_apps::AppList;
+    use friday_mobile_core::protocol::phone_action::{AppReport, PhoneApp};
 
     fn dir(name: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!("pd-phone-open-{name}-{}", std::process::id()));
@@ -319,8 +319,8 @@ mod tests {
     fn asks(
         dir: &Path,
         now: u64,
-    ) -> Vec<pocketdesk_core::local::phone_actions::PhoneActionRequest> {
-        pocketdesk_core::local::phone_actions::take_all(dir, now)
+    ) -> Vec<friday_mobile_core::local::phone_actions::PhoneActionRequest> {
+        friday_mobile_core::local::phone_actions::take_all(dir, now)
     }
 
     fn device(linked: bool, allowed: bool) -> Device {

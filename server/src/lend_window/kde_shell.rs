@@ -1,6 +1,6 @@
 //! KDE Plasma's window table and screen-sharing portal, over D-Bus: the real
 //! [`Kwin`] (see [`super::kde`] for what is lent and why, and
-//! `pocketdesk_core::streaming::window_kde` for the table and its rules).
+//! `friday_mobile_core::streaming::window_kde` for the table and its rules).
 //!
 //! **The script.** One resident KWin script ([`super::kde::script`]) is loaded
 //! the first time a window is listed or lent and unloaded when none is lent
@@ -39,7 +39,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::window_kde::{self, Refusal, Snapshot};
+use friday_mobile_core::streaming::window_kde::{self, Refusal, Snapshot};
 use zbus::Connection;
 
 use super::kde::{Kwin, OBJECT_PATH, PLUGIN, POKE_SHORTCUT, Portal, Session, script};
@@ -111,7 +111,7 @@ static STATE: tokio::sync::Mutex<State> = tokio::sync::Mutex::const_new(State {
 struct Sink;
 
 // The interface name is `super::kde::INTERFACE`.
-#[zbus::interface(name = "dev.pocketdesk.Windows")]
+#[zbus::interface(name = "dev.friday_mobile.Windows")]
 impl Sink {
     /// The script's report; the reply names the windows to raise.
     async fn update(
@@ -268,8 +268,8 @@ fn script_path() -> Result<PathBuf, Failure> {
         .ok_or(Failure::Say(
             "there is no runtime folder to put the KWin script in",
         ))?;
-    let dir = runtime.join("pocketdesk");
-    pocketdesk_core::secure_fs::create_private_dir(&dir)
+    let dir = runtime.join("friday-mobile");
+    friday_mobile_core::secure_fs::create_private_dir(&dir)
         .map_err(|_| Failure::Say("the KWin script could not be written"))?;
     Ok(dir.join("kde-windows.js"))
 }
@@ -341,7 +341,7 @@ async fn load(state: &mut State) -> Result<(), Failure> {
     window_kde::clear();
     let path = script_path()?;
     let text = script::source(&dest).ok_or(Failure::Say("the KWin script could not be made"))?;
-    pocketdesk_core::secure_fs::write_private(&path, text.as_bytes())
+    friday_mobile_core::secure_fs::write_private(&path, text.as_bytes())
         .map_err(|_| Failure::Say("the KWin script could not be written"))?;
     let path_text = path
         .to_str()
@@ -483,7 +483,7 @@ fn prune_grants(table: &Snapshot) {
         .iter()
         .filter_map(|w| window_kde::grant_name(&w.uuid))
         .collect();
-    pocketdesk_core::portal_grant::prune_named(&dir, |name| keep.contains(name));
+    friday_mobile_core::portal_grant::prune_named(&dir, |name| keep.contains(name));
 }
 
 /// Unload a script nobody has lent from once it has been idle for a minute.

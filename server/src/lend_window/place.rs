@@ -47,7 +47,7 @@ use std::collections::BTreeMap;
 use std::io;
 use std::sync::Mutex;
 
-use pocketdesk_core::streaming::window_target::{self, Lease, RegisterError};
+use friday_mobile_core::streaming::window_target::{self, Lease, RegisterError};
 use serde_json::{Value, json};
 
 use super::{Env, Lent, Seen, error};
@@ -134,7 +134,8 @@ pub fn output_name(index: u32) -> String {
 /// Whether `app` is this program's own: the app and the server never lend
 /// their own windows (the viewing windows would show themselves).
 pub fn is_own_program(app: &str) -> bool {
-    app.to_ascii_lowercase().contains("pocketdesk")
+    let lower = app.to_ascii_lowercase();
+    lower.contains("friday") || lower.contains("pocketdesk")
 }
 
 /// Whether a window is one to list: shown, with a size, not this program's own
@@ -567,6 +568,9 @@ mod tests {
     fn a_window_is_listed_when_shown_sized_and_not_this_programs_own() {
         assert!(keep_listed(&window(5, "org.gnome.Nautilus", 800, 600)));
         for own in [
+            "friday-mobile",
+            "friday-mobile-app",
+            "dev.friday.Mobile",
             "pocketdesk-desktop",
             "dev.pocketdesk.Pocketdesk",
             "PocketDesk",

@@ -11,7 +11,7 @@ pub struct TrayClaim {
 }
 
 #[cfg(windows)]
-const MUTEX_NAME: &str = "Local\\PocketdeskTray";
+const MUTEX_NAME: &str = "Local\\FRIDAYMobileTray";
 
 #[cfg(windows)]
 fn wide(text: &str) -> Vec<u16> {
@@ -61,7 +61,7 @@ fn socket_path() -> std::path::PathBuf {
     let dir = std::env::var_os("XDG_RUNTIME_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(std::env::temp_dir);
-    dir.join("pocketdesk-tray.sock")
+    dir.join("friday-mobile-tray.sock")
 }
 
 /// Claim the tray; `None` when another tray program holds it. Binding
@@ -111,9 +111,9 @@ pub fn start(program: &std::path::Path) -> std::io::Result<()> {
 /// The tray program beside `exe` (the window's own path), if installed.
 pub fn program_beside(exe: &std::path::Path) -> Option<std::path::PathBuf> {
     let name = if cfg!(windows) {
-        "pocketdesk-tray.exe"
+        "friday-mobile-tray.exe"
     } else {
-        "pocketdesk-tray"
+        "friday-mobile-tray"
     };
     let program = exe.with_file_name(name);
     program.is_file().then_some(program)
@@ -129,15 +129,15 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let window = dir.join(if cfg!(windows) {
-            "pocketdesk-app.exe"
+            "friday-mobile-app.exe"
         } else {
-            "pocketdesk-app"
+            "friday-mobile-app"
         });
         assert_eq!(program_beside(&window), None);
         let tray = dir.join(if cfg!(windows) {
-            "pocketdesk-tray.exe"
+            "friday-mobile-tray.exe"
         } else {
-            "pocketdesk-tray"
+            "friday-mobile-tray"
         });
         std::fs::write(&tray, b"").unwrap();
         assert_eq!(program_beside(&window), Some(tray));

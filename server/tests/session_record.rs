@@ -20,8 +20,8 @@ use std::net::SocketAddr;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     QuinnConnection, SAMPLE_DECODE, SAMPLE_RENDER, SampleBatch, SessionReport, StreamingClient,
     StreamingConfig, StreamingServer, report_samples, set_session_telemetry_callback,
 };
@@ -83,7 +83,7 @@ async fn a_live_session_records_every_measured_stage() {
         Some("loopback-test"),
         None,
         None,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )
     .await
     .expect("client connect");

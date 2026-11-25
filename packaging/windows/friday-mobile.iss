@@ -1,13 +1,13 @@
-; The Pocketdesk installer for Windows (Inno Setup 6).
+; The FRIDAY Mobile installer for Windows (Inno Setup 6).
 ;
 ; Build it from the repository root after `cargo build --release`:
-;   ISCC packaging\windows\pocketdesk.iss /DAppVersion=v0.7.0 /DNumericVersion=0.7.0
+;   ISCC packaging\windows\friday-mobile.iss /DAppVersion=v0.7.0 /DNumericVersion=0.7.0
 ; /DSourceDir=<folder> picks the executables from elsewhere (default
 ; target\release), /DOutputDir=<folder> where setup.exe goes (default release).
 ;
-; It installs to Program Files, adds Pocketdesk to the Start menu and to
+; It installs to Program Files, adds FRIDAY Mobile to the Start menu and to
 ; Apps & features, and can start it at sign-in (the logon task and the
-; firewall rules `pocketdesk install` makes), put `pocketdesk` on PATH and
+; firewall rules `friday-mobile install` makes), put `friday-mobile` on PATH and
 ; install FFmpeg with winget. The uninstaller stops it, removes all of that,
 ; and asks before deleting the pairings and settings.
 
@@ -27,16 +27,16 @@
 
 [Setup]
 AppId={{8D3F6C2E-5B1A-4E7C-9A2F-3C6D1E8B4A70}
-AppName=Pocketdesk
+AppName=FRIDAY Mobile
 AppVersion={#AppVersion}
-AppVerName=Pocketdesk {#AppVersion}
-AppPublisher=Pocketdesk
+AppVerName=FRIDAY Mobile {#AppVersion}
+AppPublisher=FRIDAY Mobile
 AppPublisherURL=https://github.com/sreevarshan-xenoz/Pocketdesk
 AppSupportURL=https://github.com/sreevarshan-xenoz/Pocketdesk/issues
 AppUpdatesURL=https://github.com/sreevarshan-xenoz/Pocketdesk/releases
 VersionInfoVersion={#NumericVersion}
-DefaultDirName={autopf}\Pocketdesk
-DefaultGroupName=Pocketdesk
+DefaultDirName={autopf}\FRIDAY Mobile
+DefaultGroupName=FRIDAY Mobile
 DisableProgramGroupPage=yes
 ; Program Files (so an elevated logon task stays possible) and the firewall
 ; both need an administrator.
@@ -45,16 +45,16 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 WizardStyle=modern
-; What Pocketdesk sends to whom, and how to turn it off, before anything is
+; What FRIDAY Mobile sends to whom, and how to turn it off, before anything is
 ; installed (SignPath Foundation's terms ask for it): docs/privacy.md in short.
 InfoBeforeFile=privacy.txt
 WizardImageFile=wizard-large.bmp,wizard-large-200.bmp
 WizardSmallImageFile=wizard-small.bmp,wizard-small-200.bmp
 SetupIconFile={#RepoRoot}\assets\brand\pocketdesk.ico
 UninstallDisplayIcon={app}\pocketdesk.ico
-UninstallDisplayName=Pocketdesk
+UninstallDisplayName=FRIDAY Mobile
 OutputDir={#OutputDir}
-OutputBaseFilename=pocketdesk-{#AppVersion}-windows-x86_64-setup
+OutputBaseFilename=friday-mobile-{#AppVersion}-windows-x86_64-setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 ChangesEnvironment=yes
@@ -66,19 +66,19 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
 StartupGroup=Start-up:
-AutostartTask=Start Pocketdesk when I sign in, and let phones on my network reach it (firewall)
+AutostartTask=Start FRIDAY Mobile when I sign in, and let phones on my network reach it (firewall)
 CommandLineGroup=Command line:
-PathTask=Add the pocketdesk command to PATH
+PathTask=Add the friday-mobile command to PATH
 VideoGroup=Video:
 FFmpegTask=Install FFmpeg with winget (hardware video encoding needs it)
-OpenApp=Open Pocketdesk
-FirewallStatus=Opening Pocketdesk's firewall ports...
-AutostartStatus=Registering Pocketdesk to start at sign-in...
+OpenApp=Open FRIDAY Mobile
+FirewallStatus=Opening FRIDAY Mobile's firewall ports...
+AutostartStatus=Registering FRIDAY Mobile to start at sign-in...
 FFmpegStatus=Installing FFmpeg with winget (this can take a minute)...
-FirewallFailed=Pocketdesk's firewall ports could not be opened, so phones on your network may not reach it.%n%nOpen them later from an administrator terminal: pocketdesk firewall-add
-AutostartFailed=Pocketdesk could not be set to start at sign-in.%n%nTry again later from a terminal: pocketdesk install
+FirewallFailed=FRIDAY Mobile's firewall ports could not be opened, so phones on your network may not reach it.%n%nOpen them later from an administrator terminal: friday-mobile firewall-add
+AutostartFailed=FRIDAY Mobile could not be set to start at sign-in.%n%nTry again later from a terminal: friday-mobile install
 FFmpegFailed=FFmpeg could not be installed with winget. Hardware video encoding needs it.%n%nInstall it later: winget install Gyan.FFmpeg
-RemoveData=Also delete your pairings, keys and settings?%n%nKeep them to pair nothing again when you reinstall Pocketdesk.
+RemoveData=Also delete your pairings, keys and settings?%n%nKeep them to pair nothing again when you reinstall FRIDAY Mobile.
 
 [Tasks]
 Name: "autostart"; Description: "{cm:AutostartTask}"; GroupDescription: "{cm:StartupGroup}"
@@ -87,9 +87,9 @@ Name: "ffmpeg"; Description: "{cm:FFmpegTask}"; GroupDescription: "{cm:VideoGrou
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#SourceDir}\pocketdesk.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourceDir}\pocketdesk-app.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourceDir}\pocketdesk-tray.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceDir}\friday-mobile.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceDir}\friday-mobile-app.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceDir}\friday-mobile-tray.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\assets\brand\pocketdesk.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\config.toml.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -98,30 +98,30 @@ Source: "{#RepoRoot}\LICENSE-MIT"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\LICENSE-APACHE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\Pocketdesk"; Filename: "{app}\pocketdesk-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Comment: "Your desktop, on your phone"
-Name: "{autodesktop}\Pocketdesk"; Filename: "{app}\pocketdesk-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Tasks: desktopicon
+Name: "{autoprograms}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Comment: "Your desktop, on your phone"
+Name: "{autodesktop}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\pocketdesk.ico"; Tasks: desktopicon
 
 [Registry]
-; The system PATH, so `pocketdesk` works in any terminal. The uninstaller
+; The system PATH, so `friday-mobile` works in any terminal. The uninstaller
 ; takes it out again (RemoveFromPath).
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NotOnPath(ExpandConstant('{app}'))
 
 [Run]
 ; FFmpeg, the firewall and the logon task run from [Code] (ssPostInstall),
 ; where a failure is told rather than lost.
-Filename: "{app}\pocketdesk-app.exe"; Description: "{cm:OpenApp}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\friday-mobile-app.exe"; Description: "{cm:OpenApp}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
 ; As before an upgrade: the logon task off first, so its restart-on-failure
 ; cannot start a killed server again; then a stop, and a kill for a server
 ; that has not exited by then (`stop` waits 10 s), since a running server
-; holds pocketdesk.exe and the uninstaller could not delete it.
-Filename: "{sys}\schtasks.exe"; Parameters: "/Change /TN ""Pocketdesk"" /DISABLE"; Flags: runhidden waituntilterminated; RunOnceId: "DisableTask"
-Filename: "{app}\pocketdesk.exe"; Parameters: "stop"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "StopServer"
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM pocketdesk.exe"; Flags: runhidden waituntilterminated; RunOnceId: "KillServer"
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM pocketdesk-tray.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopTray"
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM pocketdesk-app.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopApp"
-Filename: "{app}\pocketdesk.exe"; Parameters: "uninstall"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "Unregister"
+; holds friday-mobile.exe and the uninstaller could not delete it.
+Filename: "{sys}\schtasks.exe"; Parameters: "/Change /TN ""FRIDAY Mobile"" /DISABLE"; Flags: runhidden waituntilterminated; RunOnceId: "DisableTask"
+Filename: "{app}\friday-mobile.exe"; Parameters: "stop"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "StopServer"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM friday-mobile.exe"; Flags: runhidden waituntilterminated; RunOnceId: "KillServer"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM friday-mobile-tray.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopTray"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM friday-mobile-app.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopApp"
+Filename: "{app}\friday-mobile.exe"; Parameters: "uninstall"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "Unregister"
 
 [Code]
 const
@@ -174,15 +174,15 @@ var
   Code: Integer;
 begin
   Result := '';
-  if FileExists(ExpandConstant('{app}\pocketdesk.exe')) then
+  if FileExists(ExpandConstant('{app}\friday-mobile.exe')) then
   begin
-    Exec(ExpandConstant('{sys}\schtasks.exe'), '/Change /TN "Pocketdesk" /DISABLE', '', SW_HIDE, ewWaitUntilTerminated, Code);
-    Exec(ExpandConstant('{app}\pocketdesk.exe'), 'stop', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    Exec(ExpandConstant('{sys}\schtasks.exe'), '/Change /TN "FRIDAY Mobile" /DISABLE', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    Exec(ExpandConstant('{app}\friday-mobile.exe'), 'stop', '', SW_HIDE, ewWaitUntilTerminated, Code);
     { A server that has not exited by then (`stop` waits 10 s) still holds
-      pocketdesk.exe, which could then be replaced only at the next restart. }
-    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM pocketdesk.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
-    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM pocketdesk-tray.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
-    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM pocketdesk-app.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
+      friday-mobile.exe, which could then be replaced only at the next restart. }
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM friday-mobile.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM friday-mobile-tray.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM friday-mobile-app.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
   end;
 end;
 
@@ -212,7 +212,7 @@ var
 begin
   if CurStep <> ssPostInstall then
     exit;
-  Exe := ExpandConstant('{app}\pocketdesk.exe');
+  Exe := ExpandConstant('{app}\friday-mobile.exe');
   { FFmpeg first, so the server the logon task starts finds it on PATH. }
   if WizardIsTaskSelected('ffmpeg') then
     RunStep(CustomMessage('FFmpegStatus'), ExpandConstant('{cmd}'),
@@ -236,7 +236,7 @@ begin
   if (CurUninstallStep = usPostUninstall) and not UninstallSilent then
     if MsgBox(CustomMessage('RemoveData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
     begin
-      DelTree(ExpandConstant('{userappdata}\pocketdesk'), True, True, True);
-      DelTree(ExpandConstant('{localappdata}\pocketdesk'), True, True, True);
+      DelTree(ExpandConstant('{userappdata}\friday-mobile'), True, True, True);
+      DelTree(ExpandConstant('{localappdata}\friday-mobile'), True, True, True);
     end;
 end;

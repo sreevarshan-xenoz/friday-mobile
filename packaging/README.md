@@ -12,21 +12,21 @@ The APK is signed with the release key. Its certificate's SHA-256, for AppVerifi
 
 ## The Windows installer
 
-`packaging/windows/pocketdesk.iss` is the Inno Setup 6 script for `pocketdesk-<version>-windows-x86_64-setup.exe`. The release workflow builds it beside the zip.
+`packaging/windows/friday-mobile.iss` is the Inno Setup 6 script for `friday-mobile-<version>-windows-x86_64-setup.exe`. The release workflow builds it beside the zip.
 
 **What it does:**
 - Shows what Pocketdesk sends to whom before installing (`privacy.txt`, a short form of `docs/privacy.md`).
 - Installs to Program Files and adds Pocketdesk to the Start menu and to Apps & features.
 - Offers three tasks:
   - start at sign-in: `firewall-add` elevated, then `install --no-firewall` as the user who ran it;
-  - `pocketdesk` on the system `PATH`;
+  - `friday-mobile` on the system `PATH`;
   - FFmpeg through winget, offered only when it is missing.
 - On an upgrade, stops the running server, the tray and the app first.
 
 **The uninstaller:**
-- Stops them, then runs `pocketdesk uninstall` (the logon task, the firewall rules, Send To and the browser host).
-- Takes `pocketdesk` back off `PATH`.
-- Asks before deleting `%APPDATA%\pocketdesk` and `%LOCALAPPDATA%\pocketdesk`. A silent uninstall keeps them.
+- Stops them, then runs `friday-mobile uninstall` (the logon task, the firewall rules, Send To and the browser host).
+- Takes `friday-mobile` back off `PATH`.
+- Asks before deleting `%APPDATA%\FRIDAY Mobile` and `%LOCALAPPDATA%\FRIDAY Mobile`. A silent uninstall keeps them.
 
 **Failures:** a failed step is reported in a message box and in the setup log. A silent install only logs it.
 
@@ -39,20 +39,20 @@ The APK is signed with the release key. Its certificate's SHA-256, for AppVerifi
 To build it locally, run this from the repository root after `cargo build --release`:
 
 ```
-ISCC packaging\windows\pocketdesk.iss /DAppVersion=v0.7.0 /DNumericVersion=0.7.0
+ISCC packaging\windows\friday-mobile.iss /DAppVersion=v0.7.0 /DNumericVersion=0.7.0
 ```
 
 The output goes to `release\`. `/DSourceDir=` takes the executables from another folder. The wizard's images (`wizard-*.bmp`) are rendered from `assets/brand/pocketdesk-mark-512.png`, and the icon from `pocketdesk-icon-1024.png`.
 
 ## The Linux tarball
 
-`pocketdesk-<version>-linux-x86_64.tar.gz` holds the server, the desktop app and the tray, unpacked and run where they are (`scripts/install.sh` installs from it), and `pocketdesk-pam-ask`, the PAM helper for "Approve with my phone", which install.sh leaves alone: PAM runs it as root, so it must be root's, outside any folder a user can write to (`sudo install -Dm755 pocketdesk-pam-ask /usr/lib/pocketdesk/pocketdesk-pam-ask`, see docs/guide.md). It is built on Ubuntu like the .deb, but meant for any distro, so its server is built without the in-process encoder (`cargo build -p pocketdesk-server --no-default-features`, which leaves out the `inproc` feature):
+`friday-mobile-<version>-linux-x86_64.tar.gz` holds the server, the desktop app and the tray, unpacked and run where they are (`scripts/install.sh` installs from it), and `friday-mobile-pam-ask`, the PAM helper for "Approve with my phone", which install.sh leaves alone: PAM runs it as root, so it must be root's, outside any folder a user can write to (`sudo install -Dm755 friday-mobile-pam-ask /usr/lib/friday-mobile/friday-mobile-pam-ask`, see docs/guide.md). It is built on Ubuntu like the .deb, but meant for any distro, so its server is built without the in-process encoder (`cargo build -p friday-mobile-server --no-default-features`, which leaves out the `inproc` feature):
 
 - **Why:** the in-process encoder links the build machine's FFmpeg libraries, and their sonames change with every FFmpeg major (Ubuntu 24.04's FFmpeg 6 is `libavutil.so.58`, Arch's FFmpeg 9 `libavutil.so.61`). 0.8.3's tarball linked them and did not start on Arch.
-- **How it encodes:** through the system `ffmpeg` program (the sidecar, as on Windows), whose command line works across versions. VAAPI hardware encoding still works: the sidecar binds to the render node whose kernel driver has a VA-API encoder (Intel or AMD first; NVIDIA's own driver, which has none, last), and software encoding is the fallback: libx264 when the system FFmpeg has it, else libopenh264 (Constrained Baseline H.264, which every phone decodes, at lower quality per bitrate than libx264), else the server says neither is there. Which one this machine's `ffmpeg` gives is in `pocketdesk capabilities` (`software H.264 (system ffmpeg)`), and a session that used OpenH264 records its encoder as `ffmpeg-sidecar-openh264` in Diagnostics. NVENC goes through the same program. The .deb and AUR builds use the same node pick when their in-process VAAPI fails and they fall back to the sidecar.
+- **How it encodes:** through the system `ffmpeg` program (the sidecar, as on Windows), whose command line works across versions. VAAPI hardware encoding still works: the sidecar binds to the render node whose kernel driver has a VA-API encoder (Intel or AMD first; NVIDIA's own driver, which has none, last), and software encoding is the fallback: libx264 when the system FFmpeg has it, else libopenh264 (Constrained Baseline H.264, which every phone decodes, at lower quality per bitrate than libx264), else the server says neither is there. Which one this machine's `ffmpeg` gives is in `friday-mobile capabilities` (`software H.264 (system ffmpeg)`), and a session that used OpenH264 records its encoder as `ffmpeg-sidecar-openh264` in Diagnostics. NVENC goes through the same program. The .deb and AUR builds use the same node pick when their in-process VAAPI fails and they fall back to the sidecar.
 - **Fedora:** Fedora 44's own `ffmpeg-free` (listed by the release workflow's Fedora run) has `h264_vaapi`, `hevc_vaapi`, `h264_nvenc`, `hevc_nvenc` and `libopenh264`, but not libx264. VAAPI also needs a VA driver that encodes H.264: Fedora's own Mesa (AMD) leaves that out, and Intel's driver on Fedora is not checked here. Software encoding goes through `libopenh264` there, once Cisco's OpenH264 library (`openh264`, from Fedora's own `fedora-cisco-openh264` repository) has replaced the `noopenh264` stub that `ffmpeg-free` pulls in; the server checks with a one-frame encode and, on the stub, says to install it. The default Auto setting reaches this ladder whenever no hardware encoder runs, and a changed `ffmpeg` (a swap to RPM Fusion's, say) is noticed without a restart: the encoder list is read again when the binary changes or after 10 minutes. So stock Fedora streams in software on any GPU, at lower quality per bitrate than libx264; RPM Fusion's `ffmpeg` (`dnf swap ffmpeg-free ffmpeg --allowerasing`) brings libx264 back, and its freeworld VA drivers bring VAAPI on AMD. install.sh installs `openh264` with `ffmpeg-free` where that repository is enabled, and says the rest.
 - **What it needs:** the `ffmpeg` program (Arch's `ffmpeg`; on Fedora `ffmpeg-free` with `openh264`, or RPM Fusion's `ffmpeg` for libx264), PipeWire, Wayland, Mesa's GBM and EGL, and glibc 2.39 or newer: Ubuntu 24.04, Debian 13, Fedora 40, Arch and later (not Debian 12, Ubuntu 22.04 or RHEL 9). The release job is pinned to `ubuntu-24.04` rather than `ubuntu-latest`, since the floor is the build runner's glibc, and a step fails it if the server needs a glibc symbol newer than 2.39; install.sh stops on an older glibc with that message. The workflow also checks that none of the tarball's programs links an FFmpeg library.
-- **Checked on other distros:** the workflow unpacks it in `archlinux` and `fedora` containers, checks every library resolves with `ldd` (the readelf check sees only direct dependencies; these runs see the whole chain), runs `pocketdesk --version` and `pocketdesk capabilities`, and lists each distro FFmpeg's H.264 and HEVC encoders (on Arch it also runs a software encode through its FFmpeg). Image pulls and package installs are retried three times; a check that fails still fails the release. The release checklist adds a run on a real Arch or Fedora machine.
+- **Checked on other distros:** the workflow unpacks it in `archlinux` and `fedora` containers, checks every library resolves with `ldd` (the readelf check sees only direct dependencies; these runs see the whole chain), runs `friday-mobile --version` and `friday-mobile capabilities`, and lists each distro FFmpeg's H.264 and HEVC encoders (on Arch it also runs a software encode through its FFmpeg). Image pulls and package installs are retried three times; a check that fails still fails the release. The release checklist adds a run on a real Arch or Fedora machine.
 - **What it gives up:** the in-process encoder's keyframe on request (the sidecar's next keyframe is up to two seconds away, its fixed interval, so a lost frame takes longer to recover from) and its bitrate changes in place (the sidecar restarts FFmpeg for one).
 
 The .deb (below) and the AUR package keep the in-process encoder: each is built against the FFmpeg of the distro it installs on.
@@ -61,13 +61,13 @@ Other ways were weighed: loading FFmpeg at run time with `dlopen` (`ffmpeg-next`
 
 ## The Debian/Ubuntu package
 
-`packaging/linux/build-deb.sh <release> <binaries> <output>` builds `pocketdesk-<release>-linux-amd64.deb`. The release workflow runs it on Ubuntu after the release build. Its `Depends` come from `dpkg-shlibdeps`, so they are the libraries the binaries were linked to, and the package fits that Ubuntu release and newer ones that keep those libraries.
+`packaging/linux/build-deb.sh <release> <binaries> <output>` builds `friday-mobile-<release>-linux-amd64.deb`. The release workflow runs it on Ubuntu after the release build. Its `Depends` come from `dpkg-shlibdeps`, so they are the libraries the binaries were linked to, and the package fits that Ubuntu release and newer ones that keep those libraries.
 
 What it holds:
-- `/usr/bin`: `pocketdesk`, `pocketdesk-app` and `pocketdesk-tray`.
-- `/usr/lib/pocketdesk/pocketdesk-pam-ask`: the PAM helper for "Approve with my phone", root's. Nothing uses it until the owner adds its line to `/etc/pam.d` themselves; the package never touches PAM, and the smoke test checks `/etc/pam.d` does not name it.
-- The systemd user unit, at `/usr/lib/systemd/user/pocketdesk.service` and pointed at `/usr/bin`.
-- The menu entry, `dev.pocketdesk.Pocketdesk.desktop`.
+- `/usr/bin`: `friday-mobile`, `friday-mobile-app` and `friday-mobile-tray`.
+- `/usr/lib/friday-mobile/friday-mobile-pam-ask`: the PAM helper for "Approve with my phone", root's. Nothing uses it until the owner adds its line to `/etc/pam.d` themselves; the package never touches PAM, and the smoke test checks `/etc/pam.d` does not name it.
+- The systemd user unit, at `/usr/lib/systemd/user/friday-mobile.service` and pointed at `/usr/bin`.
+- The menu entry, `dev.friday.Mobile.desktop`.
 - The icon, at 512 px and scalable.
 - The man page, the docs and `copyright`.
 
@@ -81,7 +81,7 @@ What its scripts do:
 
 ## winget (Windows)
 
-`packaging/winget/manifests/s/SreevarshanXenoz/Pocketdesk/<version>/` holds the three manifests for a release, in the layout of [winget-pkgs](https://github.com/microsoft/winget-pkgs). They install the release's Windows zip as two portable commands, `pocketdesk` and `pocketdesk-app`, with FFmpeg (`Gyan.FFmpeg`) as a dependency, since the server encodes video with it. The server then wants `pocketdesk install` (logon start and firewall rules), and again after every upgrade, with `pocketdesk stop` first: the logon task and firewall rules name the version's folder, and a running server holds its file.
+`packaging/winget/manifests/s/SreevarshanXenoz/Pocketdesk/<version>/` holds the three manifests for a release, in the layout of [winget-pkgs](https://github.com/microsoft/winget-pkgs). They install the release's Windows zip as two portable commands, `friday-mobile` and `friday-mobile-app`, with FFmpeg (`Gyan.FFmpeg`) as a dependency, since the server encodes video with it. The server then wants `friday-mobile install` (logon start and firewall rules), and again after every upgrade, with `friday-mobile stop` first: the logon task and firewall rules name the version's folder, and a running server holds its file.
 
 For each release:
 1. `python3 scripts/winget_manifest.py <version> <the release's SHA256SUMS>` (`python` or `py` on Windows) writes the manifests.
@@ -102,16 +102,16 @@ After that, F-Droid's update check (`UpdateCheckMode: Tags`) picks up each new `
 
 ## AUR (Arch Linux)
 
-`aur/PKGBUILD` builds the release's source tarball as the release workflow does (the server, then the desktop app and the tray), and installs the three programs, the PAM helper at `/usr/lib/pocketdesk/pocketdesk-pam-ask` (as the .deb does), the systemd user unit pointed at `/usr/bin`, the menu entry, the icon, the man page and the licences. Tailscale is optional, not a dependency. It is published on the AUR as [`pocketdesk`](https://aur.archlinux.org/packages/pocketdesk) (maintainer `xenoz`, from 0.7.0).
+`aur/PKGBUILD` builds the release's source tarball as the release workflow does (the server, then the desktop app and the tray), and installs the three programs, the PAM helper at `/usr/lib/friday-mobile/friday-mobile-pam-ask` (as the .deb does), the systemd user unit pointed at `/usr/bin`, the menu entry, the icon, the man page and the licences. Tailscale is optional, not a dependency. It is published on the AUR as [`pocketdesk`](https://aur.archlinux.org/packages/pocketdesk) (maintainer `xenoz`, from 0.7.0).
 
 For each release, once its tag is pushed:
 1. In `aur/`, set `pkgver`, run `updpkgsums` (it replaces `SKIP` with the tarball's checksum) and `makepkg --printsrcinfo > .SRCINFO`.
 2. `makepkg -si` on an Arch machine or in an `archlinux` container to check it builds and installs.
-3. To publish (the owner's AUR account, with its SSH key and a verified e-mail address, which the AUR requires before a push): in a clone of `ssh://aur@aur.archlinux.org/pocketdesk.git`, copy in `PKGBUILD`, `pocketdesk.install` and `.SRCINFO`, commit and push to `master`. Commit the same `aur/PKGBUILD` here, so the two stay identical.
+3. To publish (the owner's AUR account, with its SSH key and a verified e-mail address, which the AUR requires before a push): in a clone of `ssh://aur@aur.archlinux.org/pocketdesk.git`, copy in `PKGBUILD`, `friday-mobile.install` and `.SRCINFO`, commit and push to `master`. Commit the same `aur/PKGBUILD` here, so the two stay identical.
 
 ## Signing the Windows programs
 
 The Windows programs and `setup.exe` are unsigned, so SmartScreen calls their publisher unknown. [SignPath Foundation](https://signpath.org/) signs open-source projects for free; the certificate is issued to SignPath Foundation, which then shows as the publisher. Applying is the owner's call:
 1. Apply at [signpath.io/product/open-source](https://about.signpath.io/product/open-source). Every member with access needs multi-factor authentication on GitHub and SignPath.
 2. Publish a code signing policy page (who builds and approves releases; the line *Free code signing provided by SignPath.io, certificate by SignPath Foundation*) on the landing page or in the README.
-3. Once accepted, add the API token as a repository secret, and a step in the release workflow's Windows job that sends `pocketdesk.exe`, `pocketdesk-app.exe`, `pocketdesk-tray.exe` and the setup to SignPath (`signpath/github-action-submit-signing-request`) before the zip, the installer and `SHA256SUMS` are made. SignPath checks that the files came from that workflow run (origin verification).
+3. Once accepted, add the API token as a repository secret, and a step in the release workflow's Windows job that sends `friday-mobile.exe`, `friday-mobile-app.exe`, `friday-mobile-tray.exe` and the setup to SignPath (`signpath/github-action-submit-signing-request`) before the zip, the installer and `SHA256SUMS` are made. SignPath checks that the files came from that workflow run (origin verification).

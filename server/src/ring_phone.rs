@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::rings::RingRequest;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::local::rings::RingRequest;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
 
 /// The packet that rings a phone: the one a phone sends to ring a computer.
 pub const FIND: &str = "kdeconnect.findmydevice";
@@ -56,17 +56,17 @@ pub async fn run_watcher() {
     };
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::RINGS_DIR,
+            friday_mobile_core::local::paths::RINGS_DIR,
             Duration::from_millis(250),
         )
         .await;
-        let now = pocketdesk_core::local::pin::now_unix();
-        for request in pocketdesk_core::local::rings::take_all(&dir, now) {
+        let now = friday_mobile_core::local::pin::now_unix();
+        for request in friday_mobile_core::local::rings::take_all(&dir, now) {
             let clients = crate::state::clone_clients().await;
             // A computer is never rung, whatever its switches say (N1 review).
             let allowed = crate::plugins::pair::allows(
                 &request.device_id,
-                pocketdesk_core::protocol::permissions::Capability::Ring,
+                friday_mobile_core::protocol::permissions::Capability::Ring,
             ) && !crate::plugins::pair::is_computer_device(&request.device_id);
             match ring(&request, &clients, allowed, pace(), Instant::now()).await {
                 Ok(()) => tracing::info!("Rang {}", request.device_id),
@@ -112,7 +112,7 @@ async fn ring(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::error::Result;
+    use friday_mobile_core::error::Result;
 
     struct Phone {
         id: &'static str,
@@ -196,7 +196,7 @@ mod tests {
                 "phone-x"
             }
             async fn send_packet(&self, _packet: &NetworkPacket) -> Result<()> {
-                Err(pocketdesk_core::error::PocketdeskError::Io {
+                Err(friday_mobile_core::error::PocketdeskError::Io {
                     operation: "send",
                     detail: "gone".to_string(),
                 })

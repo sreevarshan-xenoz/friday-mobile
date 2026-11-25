@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=Pocketdesk
+Name=FRIDAY Mobile
 GenericName=Remote desktop
 Comment=Your computer, on your Android phone
-Exec=pocketdesk-app
+Exec=friday-mobile-app
 Icon=pocketdesk
 Terminal=false
 Categories=Network;RemoteAccess;
 Keywords=remote;desktop;phone;android;clipboard;kde connect;
-StartupWMClass=pocketdesk-app
+StartupWMClass=friday-mobile-app

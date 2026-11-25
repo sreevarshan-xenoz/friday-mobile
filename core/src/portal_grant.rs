@@ -19,7 +19,7 @@ pub const REMOTE_TOKEN_FILE: &str = "portal_remote_token";
 
 /// The id the desktop portal knows Pocketdesk by: its desktop file's name,
 /// as the packages install it (`packaging/linux`).
-pub const APP_ID: &str = "dev.pocketdesk.Pocketdesk";
+pub const APP_ID: &str = "dev.friday.Mobile";
 
 /// Name this process to the desktop portal as Pocketdesk, before its first
 /// portal call. Unnamed, a host program is "an unidentifiable application"

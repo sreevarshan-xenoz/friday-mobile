@@ -2,8 +2,8 @@
 //! texts held as a pause holds them (K2a), logged and kept to answer, no
 //! toast. Read at each one, so a change in Settings applies to the next.
 
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::quiet_hours::{LocalTime, Schedule};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::quiet_hours::{LocalTime, Schedule};
 
 /// Why this computer is quiet now.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,7 +53,7 @@ pub fn keep_warm() {
         .spawn(|| {
             loop {
                 if crate::events::current_config().quiet_presenting {
-                    let _ = pocketdesk_core::local::quiet_hours::presenting();
+                    let _ = friday_mobile_core::local::quiet_hours::presenting();
                 }
                 std::thread::sleep(std::time::Duration::from_secs(30));
             }
@@ -65,8 +65,8 @@ pub fn keep_warm() {
 pub fn now() -> Option<Quiet> {
     decide(
         &crate::events::current_config(),
-        pocketdesk_core::local::quiet_hours::local_now(),
-        pocketdesk_core::local::quiet_hours::presenting,
+        friday_mobile_core::local::quiet_hours::local_now(),
+        friday_mobile_core::local::quiet_hours::presenting,
     )
 }
 
@@ -159,13 +159,13 @@ mod tests {
     fn the_seam_answers_by_its_file() {
         let path = std::env::temp_dir().join(format!("pd-presenting-{}", std::process::id()));
         let _ = std::fs::remove_file(&path);
-        assert!(!pocketdesk_core::local::quiet_hours::presenting_with(Some(
-            path.clone().into()
-        )));
+        assert!(!friday_mobile_core::local::quiet_hours::presenting_with(
+            Some(path.clone().into())
+        ));
         std::fs::write(&path, b"").unwrap();
-        assert!(pocketdesk_core::local::quiet_hours::presenting_with(Some(
-            path.clone().into()
-        )));
+        assert!(friday_mobile_core::local::quiet_hours::presenting_with(
+            Some(path.clone().into())
+        ));
         let _ = std::fs::remove_file(&path);
     }
 

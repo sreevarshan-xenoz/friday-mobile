@@ -21,9 +21,9 @@ pub fn is_running(state_dir: &Path) -> bool {
     server_pid(state_dir).is_some_and(process_is_server)
 }
 
-/// The names the server runs under: the `pocketdesk` command and its short
-/// form `pd`. The desktop app (`pocketdesk-app`) is not one of them.
-pub const SERVER_PROGRAMS: [&str; 2] = ["pocketdesk", "pd"];
+/// The names the server runs under: the `friday-mobile` command and its
+/// short form `pd`. The desktop app (`friday-mobile-app`) is not one of them.
+pub const SERVER_PROGRAMS: [&str; 2] = ["friday-mobile", "pd"];
 
 /// Whether an executable's file name is the server's, with or without
 /// `.exe`, in any case.
@@ -84,20 +84,23 @@ mod tests {
     use crate::local::paths::PID_FILE;
 
     #[test]
-    fn the_server_runs_as_pocketdesk_or_pd_and_nothing_else() {
+    fn the_server_runs_as_friday_mobile_or_pd_and_nothing_else() {
         for name in [
-            "pocketdesk",
-            "pocketdesk.exe",
-            "POCKETDESK.EXE",
+            "friday-mobile",
+            "friday-mobile.exe",
+            "FRIDAY-MOBILE.EXE",
             "pd",
             "pd.exe",
             "PD.EXE",
         ] {
             assert!(is_server_image(name), "{name}");
         }
+        // Pocketdesk's own server, which may run beside it, is not this one.
         for name in [
-            "pocketdesk-app",
-            "pocketdesk-app.exe",
+            "friday-mobile-app",
+            "friday-mobile-app.exe",
+            "pocketdesk",
+            "pocketdesk.exe",
             "pdf.exe",
             "explorer.exe",
             "",

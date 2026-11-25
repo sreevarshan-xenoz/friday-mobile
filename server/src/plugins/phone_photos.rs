@@ -7,11 +7,11 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::phone_photos::{self as store, Ask};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::phone_camera::{self, CameraAsk};
-use pocketdesk_core::protocol::phone_photos::{
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::phone_photos::{self as store, Ask};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::phone_camera::{self, CameraAsk};
+use friday_mobile_core::protocol::phone_photos::{
     FETCH, LIST, PHOTOS, Photos, TAKE, fetch_body, list_body,
 };
 
@@ -57,7 +57,7 @@ impl Plugin for PhonePhotosPlugin {
         }
         let device = sender.device_id().to_string();
         let dir = crate::state::state_dir().map_err(|e| {
-            pocketdesk_core::error::PocketdeskError::Other {
+            friday_mobile_core::error::PocketdeskError::Other {
                 detail: e.to_string(),
             }
         })?;
@@ -99,7 +99,7 @@ pub async fn run_watcher() {
     let _ = store::clear(&dir);
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::PHONE_PHOTOS_OUT_DIR,
+            friday_mobile_core::local::paths::PHONE_PHOTOS_OUT_DIR,
             Duration::from_millis(300),
         )
         .await;
@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn the_photos_packets_need_files() {
-        use pocketdesk_core::protocol::permissions::{Capability, capability_for};
+        use friday_mobile_core::protocol::permissions::{Capability, capability_for};
         for t in [LIST, PHOTOS, FETCH, TAKE] {
             assert_eq!(capability_for(t), Some(Capability::Files), "{t}");
         }

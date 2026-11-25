@@ -21,11 +21,11 @@ use common::{
     Cleanup, clipboard, clipboard_image, downloads, folders, pair, pairing_link, pocketdesk,
     wait_for,
 };
-use pocketdesk_core::local::computers::{self, ComputerAsk, ComputersFile};
-use pocketdesk_core::local::sent::{self, SentState};
-use pocketdesk_core::local::{device_keys, identity, outbox, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::{Capability, DevicePermissions};
+use friday_mobile_core::local::computers::{self, ComputerAsk, ComputersFile};
+use friday_mobile_core::local::sent::{self, SentState};
+use friday_mobile_core::local::{device_keys, identity, outbox, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::{Capability, DevicePermissions};
 
 /// Ask `from`'s server to send `file` to `to` as its desktop app asks, and
 /// wait for it to arrive whole in `to_state`'s Downloads.

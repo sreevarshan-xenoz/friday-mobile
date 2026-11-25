@@ -2,7 +2,7 @@
 //! to end in one process, and removal following the introduction.
 
 use super::*;
-use pocketdesk_core::protocol::introductions::{PhoneAnswer, read_phone_answer};
+use friday_mobile_core::protocol::introductions::{PhoneAnswer, read_phone_answer};
 use serde_json::json;
 
 // The introduction PINs, and the pace counters (`LISTS`, `PAIRS`,
@@ -700,7 +700,7 @@ fn an_introduction_that_no_longer_holds_admits_nothing() {
     );
     assert!(
         !e.dir
-            .join(pocketdesk_core::local::paths::COMPUTERS_FILE)
+            .join(friday_mobile_core::local::paths::COMPUTERS_FILE)
             .exists()
     );
 }
@@ -1301,7 +1301,7 @@ async fn owed_removals_are_marked_sent_only_once_they_went_and_confirmations_go_
             phone: "kept".to_string(),
             computer: "b".to_string(),
             request: "req-confirm".to_string(),
-            unix: pocketdesk_core::local::pin::now_unix(),
+            unix: friday_mobile_core::local::pin::now_unix(),
         });
     })
     .unwrap();

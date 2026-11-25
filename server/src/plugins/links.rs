@@ -9,9 +9,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::link::{LINK, link_problem};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::link::{LINK, link_problem};
 
 /// How many links one phone may hand over in a minute.
 pub const MAX_PER_MINUTE: usize = 5;
@@ -94,7 +94,7 @@ impl LinksPlugin {
         crate::events::emit(
             "link_received",
             Some(device),
-            serde_json::json!({ "host": pocketdesk_core::protocol::link::link_host(url) }),
+            serde_json::json!({ "host": friday_mobile_core::protocol::link::link_host(url) }),
             serde_json::json!({ "url": url }),
         );
         // Paused (K2a): on Activity with the event above, nothing more.
@@ -104,11 +104,13 @@ impl LinksPlugin {
         }
         if OPEN_LINKS.load(Ordering::Relaxed) {
             // P8: what Settings say for this link's site, if anything.
-            let rules = pocketdesk_core::local::link_rules::rules(&(self.rules)());
-            let action = pocketdesk_core::protocol::link::link_host(url)
-                .and_then(|host| pocketdesk_core::local::link_rules::pick(&rules, &host).cloned())
+            let rules = friday_mobile_core::local::link_rules::rules(&(self.rules)());
+            let action = friday_mobile_core::protocol::link::link_host(url)
+                .and_then(|host| {
+                    friday_mobile_core::local::link_rules::pick(&rules, &host).cloned()
+                })
                 .map(|rule| rule.action);
-            use pocketdesk_core::local::link_rules::Action;
+            use friday_mobile_core::local::link_rules::Action;
             match action {
                 Some(Action::Show) => {}
                 Some(Action::Program(program)) => match (self.run)(&program, url) {
@@ -153,8 +155,8 @@ impl LinksPlugin {
 /// if it is connected within a minute and its Dial permission is on. Runs
 /// for the server's life.
 pub async fn run_dials() {
-    use pocketdesk_core::local::dials;
-    use pocketdesk_core::protocol::dial::{DIAL, dial_body};
+    use friday_mobile_core::local::dials;
+    use friday_mobile_core::protocol::dial::{DIAL, dial_body};
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
@@ -162,14 +164,14 @@ pub async fn run_dials() {
     loop {
         if waiting.is_empty() {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::DIALS_DIR,
+                friday_mobile_core::local::paths::DIALS_DIR,
                 Duration::from_millis(500),
             )
             .await;
         } else {
             tokio::time::sleep(Duration::from_millis(500)).await;
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         waiting.extend(dials::take_all(&dir, now));
         if waiting.is_empty() {
             continue;
@@ -180,7 +182,7 @@ pub async fn run_dials() {
             // Paired now, not only allowed by default (L4 review, as Ring is).
             if !crate::plugins::pair::allows(
                 &call.device_id,
-                pocketdesk_core::protocol::permissions::Capability::Dial,
+                friday_mobile_core::protocol::permissions::Capability::Dial,
             ) {
                 tracing::info!("A call was not sent: Call numbers from here is off for the phone");
                 continue;
@@ -208,8 +210,8 @@ pub async fn run_dials() {
 /// phone if it is connected within a minute and its Phone actions
 /// permission is on. Runs for the server's life.
 pub async fn run_phone_actions() {
-    use pocketdesk_core::local::phone_actions;
-    use pocketdesk_core::protocol::phone_action::{PHONE_ACTION, apps_body, body, open_body};
+    use friday_mobile_core::local::phone_actions;
+    use friday_mobile_core::protocol::phone_action::{PHONE_ACTION, apps_body, body, open_body};
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
@@ -217,14 +219,14 @@ pub async fn run_phone_actions() {
     loop {
         if waiting.is_empty() {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::PHONE_ACTIONS_DIR,
+                friday_mobile_core::local::paths::PHONE_ACTIONS_DIR,
                 Duration::from_millis(500),
             )
             .await;
         } else {
             tokio::time::sleep(Duration::from_millis(500)).await;
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         waiting.extend(phone_actions::take_all(&dir, now));
         if waiting.is_empty() {
             continue;
@@ -238,12 +240,12 @@ pub async fn run_phone_actions() {
             // Paired now, not only allowed by default, as a call is. The
             // contacts go with the texts (P10).
             let (capability, word) = match action {
-                pocketdesk_core::protocol::phone_action::PhoneAction::Contacts => (
-                    pocketdesk_core::protocol::permissions::Capability::Texts,
+                friday_mobile_core::protocol::phone_action::PhoneAction::Contacts => (
+                    friday_mobile_core::protocol::permissions::Capability::Texts,
                     "Texts",
                 ),
                 _ => (
-                    pocketdesk_core::protocol::permissions::Capability::PhoneActions,
+                    friday_mobile_core::protocol::permissions::Capability::PhoneActions,
                     "Phone actions",
                 ),
             };
@@ -268,25 +270,27 @@ pub async fn run_phone_actions() {
             // Apps part 1: a list ask says which icons are kept, an open
             // may want the screen shown here too.
             let ask_body = match (action, ask.app.as_deref()) {
-                (pocketdesk_core::protocol::phone_action::PhoneAction::Apps, _) => apps_body(
-                    &pocketdesk_core::local::phone_app_icons::have(&dir, &ask.device_id),
+                (friday_mobile_core::protocol::phone_action::PhoneAction::Apps, _) => apps_body(
+                    &friday_mobile_core::local::phone_app_icons::have(&dir, &ask.device_id),
                 ),
                 // Phone apps tier 2: an open for a window of its own asks for no
                 // screen of the phone's.
-                (pocketdesk_core::protocol::phone_action::PhoneAction::Open, Some(app)) => {
+                (friday_mobile_core::protocol::phone_action::PhoneAction::Open, Some(app)) => {
                     match &ask.window {
                         Some(window) => {
-                            pocketdesk_core::protocol::phone_action::open_window_body(app, window)
+                            friday_mobile_core::protocol::phone_action::open_window_body(
+                                app, window,
+                            )
                         }
                         None => open_body(app, ask.screen),
                     }
                 }
                 // Apps part 2: the file being sent, to be shared into the app in front.
-                (pocketdesk_core::protocol::phone_action::PhoneAction::Share, _) => {
+                (friday_mobile_core::protocol::phone_action::PhoneAction::Share, _) => {
                     let (Some(name), Some(size)) = (ask.name.as_deref(), ask.size) else {
                         continue;
                     };
-                    pocketdesk_core::protocol::phone_action::share_body(name, size)
+                    friday_mobile_core::protocol::phone_action::share_body(name, size)
                 }
                 (_, app) => body(action, app),
             };
@@ -304,8 +308,8 @@ pub async fn run_phone_actions() {
 /// own phone if it is connected within a minute and its Command permission
 /// is on. Runs for the server's life.
 pub async fn run_commands() {
-    use pocketdesk_core::local::commands;
-    use pocketdesk_core::protocol::command::{COMMAND, command_body};
+    use friday_mobile_core::local::commands;
+    use friday_mobile_core::protocol::command::{COMMAND, command_body};
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
@@ -313,14 +317,14 @@ pub async fn run_commands() {
     loop {
         if waiting.is_empty() {
             crate::inbox::wait(
-                pocketdesk_core::local::paths::COMMANDS_DIR,
+                friday_mobile_core::local::paths::COMMANDS_DIR,
                 Duration::from_millis(500),
             )
             .await;
         } else {
             tokio::time::sleep(Duration::from_millis(500)).await;
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         waiting.extend(commands::take_all(&dir, now));
         if waiting.is_empty() {
             continue;
@@ -331,7 +335,7 @@ pub async fn run_commands() {
             // Paired now, not only allowed by default (L6 review, as Ring is).
             if !crate::plugins::pair::allows(
                 &command.device_id,
-                pocketdesk_core::protocol::permissions::Capability::Command,
+                friday_mobile_core::protocol::permissions::Capability::Command,
             ) {
                 tracing::info!("A command was not sent: it is off for the phone");
                 continue;
@@ -371,9 +375,9 @@ impl Plugin for LinksPlugin {
         // (L6) and a screenshot or lock (O2) go on the same road as a link.
         &[
             LINK,
-            pocketdesk_core::protocol::dial::DIAL,
-            pocketdesk_core::protocol::command::COMMAND,
-            pocketdesk_core::protocol::phone_action::PHONE_ACTION,
+            friday_mobile_core::protocol::dial::DIAL,
+            friday_mobile_core::protocol::command::COMMAND,
+            friday_mobile_core::protocol::phone_action::PHONE_ACTION,
         ]
     }
 
@@ -397,12 +401,12 @@ pub async fn run_watcher() {
     };
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::LINKS_DIR,
+            friday_mobile_core::local::paths::LINKS_DIR,
             Duration::from_millis(250),
         )
         .await;
-        let now = pocketdesk_core::local::pin::now_unix();
-        for request in pocketdesk_core::local::links::take_all(&dir, now) {
+        let now = friday_mobile_core::local::pin::now_unix();
+        for request in friday_mobile_core::local::links::take_all(&dir, now) {
             let clients = crate::state::clone_clients().await;
             let allowed = crate::plugins::pair::permits(&request.device_id, LINK);
             if let Err(reason) = push(&request, &clients, allowed).await {
@@ -414,7 +418,7 @@ pub async fn run_watcher() {
 
 /// Push one queued link to its phone.
 async fn push(
-    request: &pocketdesk_core::local::links::LinkRequest,
+    request: &friday_mobile_core::local::links::LinkRequest,
     clients: &[Arc<dyn DeviceSender>],
     allowed: bool,
 ) -> std::result::Result<(), String> {
@@ -748,7 +752,7 @@ mod tests {
             sent: Mutex::default(),
         });
         let clients: Vec<Arc<dyn DeviceSender>> = vec![a.clone(), b.clone()];
-        let request = pocketdesk_core::local::links::LinkRequest {
+        let request = friday_mobile_core::local::links::LinkRequest {
             id: "x".to_string(),
             device_id: "phone-b".to_string(),
             url: "https://example.org/".to_string(),

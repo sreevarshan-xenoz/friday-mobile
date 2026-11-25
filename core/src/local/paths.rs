@@ -200,7 +200,7 @@ fn missing(what: &str) -> io::Error {
     )
 }
 
-/// `<config dir>/pocketdesk` (`%APPDATA%\pocketdesk`, `~/.config/pocketdesk`).
+/// `<config dir>/friday-mobile` (`%APPDATA%\friday-mobile`, `~/.config/friday-mobile`).
 /// `POCKETDESK_CONFIG_DIR` names another folder, so a second server (for
 /// tests, or a second set of settings) has its own `config.toml` (its own
 /// ports) and its own iroh identity; set `POCKETDESK_STATE_DIR` with it for
@@ -303,7 +303,7 @@ mod harness {
         SAID.call_once(|| {
             sweep_stale(&std::env::temp_dir());
             eprintln!(
-                "pocketdesk: a test binary reached the {what} folder with no override; using throwaway pd-harness-{} folders",
+                "friday-mobile: a test binary reached the {what} folder with no override; using throwaway pd-harness-{} folders",
                 std::process::id()
             );
         });
@@ -372,7 +372,7 @@ mod harness {
     }
 }
 
-/// `<state dir>/pocketdesk`, falling back to local data (`%LOCALAPPDATA%` on
+/// `<state dir>/friday-mobile`, falling back to local data (`%LOCALAPPDATA%` on
 /// Windows, which has no state dir). `POCKETDESK_STATE_DIR` names another
 /// folder (a portable install, or a separate set of pairings).
 pub fn state_dir() -> io::Result<PathBuf> {
@@ -436,25 +436,13 @@ fn dir_from_env(name: &str, value: Option<std::ffi::OsString>) -> Option<io::Res
 }
 
 /// The folder name under the config and state directories.
-pub const DIR_NAME: &str = "pocketdesk";
+pub const DIR_NAME: &str = "friday-mobile";
 
-/// The name before the rename, moved to [`DIR_NAME`] on first use.
-pub const OLD_DIR_NAME: &str = "linux-link";
-
-/// `<base>/pocketdesk`. A folder from before the rename (`<base>/linux-link`)
-/// is moved there the first time, so pairings, keys and settings carry
-/// over; an existing new folder is never touched. If the move fails (a file
-/// held open), the old folder keeps being used rather than starting empty.
+/// `<base>/friday-mobile`. FRIDAY Mobile only ever uses its own folder: a
+/// Pocketdesk folder beside it (`<base>/pocketdesk`) belongs to Pocketdesk,
+/// which may be installed too, and is never read, moved or changed.
 fn app_dir(base: &std::path::Path) -> PathBuf {
-    let new = base.join(DIR_NAME);
-    let old = base.join(OLD_DIR_NAME);
-    if new.exists() || !old.is_dir() {
-        return new;
-    }
-    match std::fs::rename(&old, &new) {
-        Ok(()) => new,
-        Err(_) => old,
-    }
+    base.join(DIR_NAME)
 }
 
 /// Whether `name` is a state or config file saved through
@@ -541,32 +529,34 @@ mod tests {
         use harness::is_harness_path;
         use std::path::Path;
         assert!(is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk_server-afd6384e55342381"
+            "/w/target/debug/deps/friday_mobile_server-afd6384e55342381"
         )));
         assert!(is_harness_path(Path::new(
-            "E:/w/target/debug/deps/pocketdesk_server-afd6384e55342381.exe"
+            "E:/w/target/debug/deps/friday_mobile_server-afd6384e55342381.exe"
         )));
         // `cargo run`, an install, and a hashless name in a deps folder.
-        assert!(!is_harness_path(Path::new("/w/target/debug/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/usr/bin/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/opt/deps/pocketdesk")));
-        assert!(!is_harness_path(Path::new("/opt/deps/pocketdesk-server")));
+        assert!(!is_harness_path(Path::new("/w/target/debug/friday-mobile")));
+        assert!(!is_harness_path(Path::new("/usr/bin/friday-mobile")));
+        assert!(!is_harness_path(Path::new("/opt/deps/friday-mobile")));
+        assert!(!is_harness_path(Path::new(
+            "/opt/deps/friday-mobile-server"
+        )));
         // Near misses: 15 or 17 digits, a letter past f, a hashed binary
         // outside deps, and a build script.
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e5534238"
+            "/w/target/debug/deps/friday-mobile-afd6384e5534238"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e553423811"
+            "/w/target/debug/deps/friday-mobile-afd6384e553423811"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/deps/pocketdesk-afd6384e5534238g"
+            "/w/target/debug/deps/friday-mobile-afd6384e5534238g"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/pocketdesk-afd6384e55342381"
+            "/w/target/debug/friday-mobile-afd6384e55342381"
         )));
         assert!(!is_harness_path(Path::new(
-            "/w/target/debug/build/pocketdesk-core-afd6384e55342381/build-script-build"
+            "/w/target/debug/build/friday-mobile-core-afd6384e55342381/build-script-build"
         )));
     }
 
@@ -624,28 +614,16 @@ mod tests {
     }
 
     #[test]
-    fn a_folder_from_before_the_rename_moves_to_the_new_name_once() {
-        let base = base("migrate");
-        std::fs::create_dir_all(base.join(OLD_DIR_NAME)).unwrap();
-        std::fs::write(base.join(OLD_DIR_NAME).join(TRUST_FILE), "{}").unwrap();
-        let dir = app_dir(&base);
-        assert_eq!(dir, base.join(DIR_NAME));
-        assert!(dir.join(TRUST_FILE).is_file(), "pairings carried over");
-        assert!(!base.join(OLD_DIR_NAME).exists());
-        assert_eq!(app_dir(&base), base.join(DIR_NAME), "and stays put");
-    }
-
-    #[test]
-    fn an_existing_new_folder_is_never_overwritten() {
-        let base = base("both");
-        std::fs::create_dir_all(base.join(OLD_DIR_NAME)).unwrap();
-        std::fs::create_dir_all(base.join(DIR_NAME)).unwrap();
-        std::fs::write(base.join(DIR_NAME).join(TRUST_FILE), "new").unwrap();
+    fn a_pocketdesk_folder_beside_it_is_never_touched() {
+        let base = base("beside");
+        std::fs::create_dir_all(base.join("pocketdesk")).unwrap();
+        std::fs::write(base.join("pocketdesk").join(TRUST_FILE), "pocketdesk's").unwrap();
         assert_eq!(app_dir(&base), base.join(DIR_NAME));
         assert_eq!(
-            std::fs::read_to_string(base.join(DIR_NAME).join(TRUST_FILE)).unwrap(),
-            "new"
+            std::fs::read_to_string(base.join("pocketdesk").join(TRUST_FILE)).unwrap(),
+            "pocketdesk's"
         );
+        assert!(!base.join(DIR_NAME).join(TRUST_FILE).exists());
     }
 
     #[test]

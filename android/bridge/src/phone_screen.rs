@@ -11,8 +11,8 @@ use std::collections::VecDeque;
 use std::sync::{Condvar, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::protocol::phone_screen::{
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::phone_screen::{
     PONG, PhoneEvent, SCREEN, ScreenReport, events_of, pong_body,
 };
 

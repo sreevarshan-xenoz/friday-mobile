@@ -4,14 +4,14 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::approval::{ApprovalRequest, Verdict};
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::pin::now_unix;
-use pocketdesk_core::local::sent::SentState;
-use pocketdesk_core::local::sessions;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::approval::{ApprovalRequest, Verdict};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::pin::now_unix;
+use friday_mobile_core::local::sent::SentState;
+use friday_mobile_core::local::sessions;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 use crate::model::{self, Snapshot};
 use crate::pair_view::PairView;
@@ -42,13 +42,13 @@ fn switches_table(
             ui.label(
                 RichText::new(
                     "The phone has not said which of its features are on. It needs this \
-                     version of Pocketdesk and \"Share the phone's state with the computer\" on.",
+                     version of FRIDAY Mobile and \"Share the phone's state with the computer\" on.",
                 )
                 .color(crate::theme::muted(ui)),
             );
         }
         Some(said) => {
-            let now = pocketdesk_core::local::pin::now_unix();
+            let now = friday_mobile_core::local::pin::now_unix();
             ui.label(
                 RichText::new(format!(
                     "As the phone said {}.",
@@ -125,7 +125,7 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
     (
         Capability::Mic,
         "Use the phone as a microphone",
-        "The phone's microphone becomes \"Pocketdesk Mic\" here.",
+        "The phone's microphone becomes \"FRIDAY Mobile Mic\" here.",
     ),
     (
         Capability::Power,
@@ -210,12 +210,12 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 26] = [
     (
         Capability::Ring,
         "Ring this phone from here",
-        "Ring it from here when it is lost, at most once a minute. The phone rings only with \"Ring from the computer\" on in Pocketdesk's Settings on the phone.",
+        "Ring it from here when it is lost, at most once a minute. The phone rings only with \"Ring from the computer\" on in FRIDAY Mobile's Settings on the phone.",
     ),
     (
         Capability::Mute,
         "Mute this phone from here",
-        "Turn on the phone's Do Not Disturb from here for a while, and see when it is quiet. The phone allows it only with \"Let the computer mute this phone\" on in Pocketdesk's Settings on the phone.",
+        "Turn on the phone's Do Not Disturb from here for a while, and see when it is quiet. The phone allows it only with \"Let the computer mute this phone\" on in FRIDAY Mobile's Settings on the phone.",
     ),
     (
         Capability::AwayLock,
@@ -451,12 +451,15 @@ pub struct PocketdeskApp {
     /// The pause as last read, and when (K2a review: once a second).
     pause_read: Option<(
         Instant,
-        Result<Option<pocketdesk_core::local::pause::Pause>, String>,
+        Result<Option<friday_mobile_core::local::pause::Pause>, String>,
     )>,
     /// A device the user asked to revoke, awaiting confirmation.
     confirm_revoke: Option<String>,
     /// A profile to apply to a phone, asked first (Q2 review).
-    confirm_profile: Option<(String, pocketdesk_core::local::permission_profiles::Profile)>,
+    confirm_profile: Option<(
+        String,
+        friday_mobile_core::local::permission_profiles::Profile,
+    )>,
     /// A profile to remove, asked first under the phone it was chosen on.
     confirm_remove_profile: Option<(String, String)>,
     /// The Name boxes on the Devices page, by device id (U3).
@@ -496,7 +499,7 @@ pub struct PocketdeskApp {
     send_also: Vec<String>,
     /// Files being read from the clipboard (P7).
     pasting:
-        Option<std::thread::JoinHandle<Option<pocketdesk_core::local::clipboard_files::Copied>>>,
+        Option<std::thread::JoinHandle<Option<friday_mobile_core::local::clipboard_files::Copied>>>,
     /// Files dropped while several phones or computers could take them,
     /// waiting for the owner to say which (J5).
     dropped: Vec<PathBuf>,
@@ -559,7 +562,7 @@ pub struct PocketdeskApp {
     /// Whether phone numbers' links open on the phone, as last read (M8).
     tel_registered: Option<bool>,
     /// A link's number waiting for a phone (M8), and when it was read.
-    tel_ask: Option<pocketdesk_core::local::tel_ask::TelAsk>,
+    tel_ask: Option<friday_mobile_core::local::tel_ask::TelAsk>,
     tel_ask_read: Option<std::time::Instant>,
     /// The window showing a phone's screen (T10k), started on the first pass.
     cast: Option<crate::cast_view::CastView>,
@@ -571,7 +574,7 @@ pub struct PocketdeskApp {
     /// The Activity tab (ecosystem 1b).
     activity: crate::activity_view::ActivityView,
     /// Task starts waiting for the owner's answer (ecosystem 1c).
-    task_requests: Vec<pocketdesk_core::local::tasks::TaskRequest>,
+    task_requests: Vec<friday_mobile_core::local::tasks::TaskRequest>,
     /// Those already brought to the owner's attention.
     raised_tasks: Vec<String>,
     /// Those answered here, until the server takes them off its list (it
@@ -918,7 +921,7 @@ impl PocketdeskApp {
 
     fn refresh(&mut self) {
         self.snapshot = model::snapshot(&self.state_dir, now_unix());
-        let requests = pocketdesk_core::local::tasks::read_requests(&self.state_dir, now_unix());
+        let requests = friday_mobile_core::local::tasks::read_requests(&self.state_dir, now_unix());
         self.answered_tasks
             .retain(|id| requests.iter().any(|r| &r.id == id));
         self.task_requests = requests
@@ -926,7 +929,7 @@ impl PocketdeskApp {
             .filter(|r| !self.answered_tasks.contains(&r.id))
             .collect();
         self.config = Config::load().ok();
-        let asked = pocketdesk_core::local::computers::read(&self.state_dir).nearby_in;
+        let asked = friday_mobile_core::local::computers::read(&self.state_dir).nearby_in;
         self.nearby_new |= self.nearby_prompt.update(asked);
         if self.tab == Tab::Status {
             // Read again only when the log changed, not every second.
@@ -1003,7 +1006,7 @@ impl PocketdeskApp {
                     true
                 }
                 TrayAction::WakeComputer(id) => {
-                    let name = pocketdesk_core::local::computers::read(&self.state_dir)
+                    let name = friday_mobile_core::local::computers::read(&self.state_dir)
                         .computers
                         .into_iter()
                         .find(|c| c.device_id == id)
@@ -1069,9 +1072,9 @@ impl PocketdeskApp {
         &mut self,
         ctx: &egui::Context,
         computer: &str,
-        dropped: &pocketdesk_core::local::app_open::DroppedWindow,
+        dropped: &friday_mobile_core::local::app_open::DroppedWindow,
     ) {
-        let Some(known) = pocketdesk_core::local::computers::read(&self.state_dir)
+        let Some(known) = friday_mobile_core::local::computers::read(&self.state_dir)
             .computers
             .into_iter()
             .find(|c| c.device_id == computer)
@@ -1106,7 +1109,7 @@ impl PocketdeskApp {
     fn computer_view_choices(&self) -> (u8, bool, bool) {
         self.config.as_ref().map_or(
             (
-                pocketdesk_core::streaming::input_packet::PRESET_AUTO,
+                friday_mobile_core::streaming::input_packet::PRESET_AUTO,
                 false,
                 false,
             ),
@@ -1184,9 +1187,9 @@ impl PocketdeskApp {
     fn open_asked(
         &mut self,
         ctx: &egui::Context,
-        open: pocketdesk_core::local::app_open::OpenRequest,
+        open: friday_mobile_core::local::app_open::OpenRequest,
     ) {
-        if open.page == pocketdesk_core::local::app_open::QUIT {
+        if open.page == friday_mobile_core::local::app_open::QUIT {
             if open.quits(self.started_unix) {
                 self.quitting = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -1196,7 +1199,7 @@ impl PocketdeskApp {
         // Window handoff 4: a window of another computer dragged here and let
         // go. It opens as a borrowed window where it was let go and does not
         // raise this window.
-        if open.page == pocketdesk_core::local::app_open::BORROW_DROP {
+        if open.page == friday_mobile_core::local::app_open::BORROW_DROP {
             if let (Some(computer), Some(dropped)) = (&open.phone, &open.dropped) {
                 self.open_dropped_window(ctx, computer, dropped);
             }
@@ -1205,18 +1208,18 @@ impl PocketdeskApp {
         // Apps part 2: a pinned phone app. It brings up no page and does not
         // raise this window: the phone's screen window comes up when the app
         // has opened.
-        if open.page == pocketdesk_core::local::app_open::PHONE_APP {
+        if open.page == friday_mobile_core::local::app_open::PHONE_APP {
             if let (Some(phone), Some(app)) = (&open.phone, &open.app) {
                 self.open_phone_app(phone, app);
             }
             return;
         }
         // N9: the typing window, from the tray program or its key.
-        if open.page == pocketdesk_core::local::app_open::TYPE {
+        if open.page == friday_mobile_core::local::app_open::TYPE {
             if let Some(id) = &open.phone {
                 self.type_on(id);
             }
-        } else if open.page == pocketdesk_core::local::app_open::COMPUTER_VIEW {
+        } else if open.page == friday_mobile_core::local::app_open::COMPUTER_VIEW {
             // PC6: a computer's screen from the tray program; on the
             // Overview, which offers to wake it first if it sleeps.
             if let Some(id) = &open.phone {
@@ -1239,7 +1242,7 @@ impl PocketdeskApp {
     /// Phone apps page's click does, with the phone's screen shown here too.
     fn open_phone_app(&mut self, phone: &str, app: &str) {
         let who = crate::model::device_label(&self.snapshot.devices, phone);
-        let list = pocketdesk_core::local::phone_apps::read(&self.state_dir).remove(phone);
+        let list = friday_mobile_core::local::phone_apps::read(&self.state_dir).remove(phone);
         let device = self.snapshot.devices.iter().find(|d| d.id == phone);
         // Phone apps tier 2: in a window of its own when the phone offers it.
         let route = crate::phone_windows::Route {
@@ -1318,13 +1321,13 @@ impl PocketdeskApp {
         let now = now_unix();
         let entries = crate::tray_menu::with_pause(
             crate::tray_menu::menu(&rows, &self.snapshot.devices, now),
-            pocketdesk_core::local::pause::current(&self.state_dir, now).as_ref(),
+            friday_mobile_core::local::pause::current(&self.state_dir, now).as_ref(),
             now,
         );
         // PC6: the owner's computers, to show or wake.
         tray.show(crate::tray_menu::with_computers(
             entries,
-            &pocketdesk_core::local::computers::read(&self.state_dir).computers,
+            &friday_mobile_core::local::computers::read(&self.state_dir).computers,
             self.snapshot.running,
         ));
     }
@@ -1359,13 +1362,13 @@ impl PocketdeskApp {
     }
 
     fn task_prompt(&mut self, ui: &mut egui::Ui) {
-        use pocketdesk_core::local::tasks::{self, TaskVerdict};
+        use friday_mobile_core::local::tasks::{self, TaskVerdict};
         let Some(request) = self.task_requests.first().cloned() else {
             return;
         };
         let mut verdict = None;
         let from_home_assistant =
-            request.device_id == pocketdesk_core::local::home_assistant::HOME_ASSISTANT_DEVICE;
+            request.device_id == friday_mobile_core::local::home_assistant::HOME_ASSISTANT_DEVICE;
         let title = if from_home_assistant {
             "Home Assistant wants to run a task"
         } else {
@@ -1528,9 +1531,9 @@ impl PocketdeskApp {
         });
         // Its keys go too, so the phone can pair again (perhaps reinstalled,
         // with new keys) and bind them.
-        let _ = pocketdesk_core::local::device_keys::clear(&self.state_dir, id);
+        let _ = friday_mobile_core::local::device_keys::clear(&self.state_dir, id);
         // Its contacts go with it (P10).
-        let _ = pocketdesk_core::local::phone_contacts::forget(&self.state_dir, id);
+        let _ = friday_mobile_core::local::phone_contacts::forget(&self.state_dir, id);
         self.notice = crate::notice::Notice::outcome(match result {
             Ok(()) => Ok(format!("Unpaired {who}: it must pair again to connect.")),
             Err(e) => Err(format!("Could not unpair {who}: {e}")),
@@ -1566,7 +1569,7 @@ impl PocketdeskApp {
     fn apply_profile(
         &mut self,
         id: &str,
-        profile: &pocketdesk_core::local::permission_profiles::Profile,
+        profile: &friday_mobile_core::local::permission_profiles::Profile,
     ) {
         let Some(device) = self.snapshot.devices.iter().find(|d| d.id == id).cloned() else {
             return;
@@ -1603,7 +1606,7 @@ impl PocketdeskApp {
     fn set_permissions(&mut self, id: &str, capabilities: &[Capability], allowed: bool) {
         // P10: a phone's contacts go with its texts.
         if capabilities.contains(&Capability::Texts) && !allowed {
-            let _ = pocketdesk_core::local::phone_contacts::forget(&self.state_dir, id);
+            let _ = friday_mobile_core::local::phone_contacts::forget(&self.state_dir, id);
         }
         match model::set_permissions(&self.state_dir, id, capabilities, allowed) {
             Ok(())
@@ -1628,7 +1631,7 @@ impl PocketdeskApp {
     fn set_permission(&mut self, id: &str, capability: Capability, allowed: bool) {
         // P10: a phone's contacts go with its texts.
         if capability == Capability::Texts && !allowed {
-            let _ = pocketdesk_core::local::phone_contacts::forget(&self.state_dir, id);
+            let _ = friday_mobile_core::local::phone_contacts::forget(&self.state_dir, id);
         }
         match model::set_permission(&self.state_dir, id, capability, allowed) {
             Ok(()) if !allowed && model::fixed_at_session_start(capability) => {
@@ -1952,13 +1955,13 @@ impl PocketdeskApp {
     fn computer_cards(
         &mut self,
         ui: &mut egui::Ui,
-        computers: &[pocketdesk_core::local::computers::PeerComputer],
+        computers: &[friday_mobile_core::local::computers::PeerComputer],
         into_here: &[model::Device],
     ) {
         let now = now_unix();
         let running = self.snapshot.running;
         // PC6: the one viewed most recently first.
-        for computer in pocketdesk_core::local::computers::by_recent(computers) {
+        for computer in friday_mobile_core::local::computers::by_recent(computers) {
             crate::theme::card(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     crate::theme::dot(
@@ -2089,20 +2092,19 @@ impl PocketdeskApp {
     /// Ask the phone `id` to ring (N1), and say how that went.
     fn ring(&mut self, id: &str) {
         let who = self.label(id);
-        self.notice =
-            crate::notice::Notice::outcome(
-                match pocketdesk_core::local::rings::request(&self.state_dir, id, now_unix()) {
-                    Ok(_) => Ok(format!("Asked {who} to ring.")),
-                    Err(e) => Err(format!("Could not ring {who}: {e}")),
-                },
-            );
+        self.notice = crate::notice::Notice::outcome(
+            match friday_mobile_core::local::rings::request(&self.state_dir, id, now_unix()) {
+                Ok(_) => Ok(format!("Asked {who} to ring.")),
+                Err(e) => Err(format!("Could not ring {who}: {e}")),
+            },
+        );
     }
 
     /// Pause this computer for `minutes`, or until resumed (K2a).
     fn pause(&mut self, minutes: Option<u32>) {
         self.pause_read = None;
         self.notice = crate::notice::Notice::outcome(
-            pocketdesk_core::local::pause::pause(&self.state_dir, minutes, now_unix())
+            friday_mobile_core::local::pause::pause(&self.state_dir, minutes, now_unix())
                 .map(|_| match minutes {
                     Some(m) => format!("Paused for {}.", crate::tray_menu::span(m)),
                     None => "Paused until you resume.".to_string(),
@@ -2115,7 +2117,7 @@ impl PocketdeskApp {
     fn resume(&mut self) {
         self.pause_read = None;
         self.notice = crate::notice::Notice::outcome(
-            pocketdesk_core::local::pause::resume(&self.state_dir)
+            friday_mobile_core::local::pause::resume(&self.state_dir)
                 .map(|()| "Resumed.".to_string())
                 .map_err(|e| format!("Could not resume: {e}")),
         );
@@ -2126,14 +2128,14 @@ impl PocketdeskApp {
     fn pause_now(
         &mut self,
         now: u64,
-    ) -> Result<Option<pocketdesk_core::local::pause::Pause>, String> {
+    ) -> Result<Option<friday_mobile_core::local::pause::Pause>, String> {
         let stale = self
             .pause_read
             .as_ref()
             .is_none_or(|(at, _)| at.elapsed() >= Duration::from_secs(1));
         if stale {
             let read =
-                pocketdesk_core::local::pause::load(&self.state_dir).map_err(|e| e.to_string());
+                friday_mobile_core::local::pause::load(&self.state_dir).map_err(|e| e.to_string());
             self.pause_read = Some((Instant::now(), read));
         }
         match &self.pause_read {
@@ -2154,7 +2156,7 @@ impl PocketdeskApp {
                 ui.label(
                     RichText::new(format!(
                         "{} could not be read ({e}): nothing is held. Remove the file to pause again.",
-                        pocketdesk_core::local::paths::PAUSE_FILE
+                        friday_mobile_core::local::paths::PAUSE_FILE
                     ))
                     .color(crate::theme::bad(ui)),
                 );
@@ -2187,8 +2189,8 @@ impl PocketdeskApp {
         // P3: quiet hours now, said beside the pause.
         if let Some(config) = &self.config
             && let (Some(schedule), Some(at)) = (
-                pocketdesk_core::local::quiet_hours::Schedule::from_config(config),
-                pocketdesk_core::local::quiet_hours::local_now(),
+                friday_mobile_core::local::quiet_hours::Schedule::from_config(config),
+                friday_mobile_core::local::quiet_hours::local_now(),
             )
             && schedule.holds(at)
         {
@@ -2213,7 +2215,7 @@ impl PocketdeskApp {
                 self.chosen = Tab::Settings;
             }
         } else if self.config.as_ref().is_some_and(|c| c.quiet_presenting)
-            && pocketdesk_core::local::quiet_hours::presenting()
+            && friday_mobile_core::local::quiet_hours::presenting()
         {
             // R2: what the server holds them by, said here as quiet hours are.
             let mut open = false;
@@ -2244,16 +2246,18 @@ impl PocketdeskApp {
     /// 0 (D2), and say how that went.
     fn quiet(&mut self, id: &str, minutes: u32) {
         let who = self.label(id);
-        self.notice = crate::notice::Notice::outcome(match pocketdesk_core::local::quiet::request(
-            &self.state_dir,
-            id,
-            minutes,
-            now_unix(),
-        ) {
-            Ok(_) if minutes == 0 => Ok(format!("Asked {who} to end its mute.")),
-            Ok(_) => Ok(format!("Asked {who} to be quiet for an hour.")),
-            Err(e) => Err(format!("Could not mute {who}: {e}")),
-        });
+        self.notice = crate::notice::Notice::outcome(
+            match friday_mobile_core::local::quiet::request(
+                &self.state_dir,
+                id,
+                minutes,
+                now_unix(),
+            ) {
+                Ok(_) if minutes == 0 => Ok(format!("Asked {who} to end its mute.")),
+                Ok(_) => Ok(format!("Asked {who} to be quiet for an hour.")),
+                Err(e) => Err(format!("Could not mute {who}: {e}")),
+            },
+        );
     }
 
     /// Ask the server to put this computer's clipboard on the phone `id`
@@ -2261,7 +2265,7 @@ impl PocketdeskApp {
     fn send_clipboard(&mut self, id: &str) {
         let who = self.label(id);
         self.notice = crate::notice::Notice::outcome(
-            match pocketdesk_core::local::clip_history::request_current(
+            match friday_mobile_core::local::clip_history::request_current(
                 &self.state_dir,
                 id,
                 now_unix(),
@@ -2281,10 +2285,10 @@ impl PocketdeskApp {
     fn take_photo(&mut self, id: &str) {
         let who = self.label(id);
         self.notice = crate::notice::Notice::outcome(
-            match pocketdesk_core::local::phone_photos::request(
+            match friday_mobile_core::local::phone_photos::request(
                 &self.state_dir,
                 id,
-                pocketdesk_core::local::phone_photos::Ask::Take,
+                friday_mobile_core::local::phone_photos::Ask::Take,
                 now_unix(),
             ) {
                 Ok(_) => Ok(format!(
@@ -2300,10 +2304,10 @@ impl PocketdeskApp {
     fn start_webcam(&mut self, id: &str) {
         let who = self.label(id);
         self.notice = crate::notice::Notice::outcome(
-            match pocketdesk_core::local::phone_photos::request(
+            match friday_mobile_core::local::phone_photos::request(
                 &self.state_dir,
                 id,
-                pocketdesk_core::local::phone_photos::Ask::Webcam,
+                friday_mobile_core::local::phone_photos::Ask::Webcam,
                 now_unix(),
             ) {
                 Ok(_) => Ok(format!(
@@ -2318,12 +2322,12 @@ impl PocketdeskApp {
     fn phone_action(
         &mut self,
         id: &str,
-        action: pocketdesk_core::protocol::phone_action::PhoneAction,
+        action: friday_mobile_core::protocol::phone_action::PhoneAction,
     ) {
-        use pocketdesk_core::protocol::phone_action::PhoneAction;
+        use friday_mobile_core::protocol::phone_action::PhoneAction;
         let who = self.label(id);
         self.notice = crate::notice::Notice::outcome(
-            match pocketdesk_core::local::phone_actions::request(
+            match friday_mobile_core::local::phone_actions::request(
                 &self.state_dir,
                 id,
                 action,
@@ -2624,12 +2628,12 @@ impl PocketdeskApp {
                     for (label, action, why) in [
                         (
                             "Screenshot of the phone",
-                            pocketdesk_core::protocol::phone_action::PhoneAction::Screenshot,
+                            friday_mobile_core::protocol::phone_action::PhoneAction::Screenshot,
                             "The phone takes a screenshot, which comes here as its new screenshots do. On the phone it needs \"Let the computer take screenshots and lock this phone\" and \"Send new screenshots\" on, and the Pocketdesk control service.",
                         ),
                         (
                             "Lock the phone",
-                            pocketdesk_core::protocol::phone_action::PhoneAction::Lock,
+                            friday_mobile_core::protocol::phone_action::PhoneAction::Lock,
                             "The phone locks its screen. On the phone it needs \"Let the computer take screenshots and lock this phone\" on, and the Pocketdesk control service.",
                         ),
                     ] {
@@ -2655,12 +2659,12 @@ impl PocketdeskApp {
                         for (label, action, why) in [
                             (
                                 "Use my phone's hotspot",
-                                pocketdesk_core::protocol::phone_action::PhoneAction::HotspotOn,
+                                friday_mobile_core::protocol::phone_action::PhoneAction::HotspotOn,
                                 "The phone turns on its own Wi-Fi hotspot, as it is set in Android (nothing about its name or password is sent), so this computer can get internet through it. Then connect to its network here (or, on Linux, name it in Settings to be joined when it is already saved). The phone shows its usual hotspot indicator.",
                             ),
                             (
                                 "Turn its hotspot off",
-                                pocketdesk_core::protocol::phone_action::PhoneAction::HotspotOff,
+                                friday_mobile_core::protocol::phone_action::PhoneAction::HotspotOff,
                                 "The phone turns its hotspot off. It also turns it off by itself after the minutes set on the phone.",
                             ),
                         ] {
@@ -2950,7 +2954,7 @@ impl PocketdeskApp {
         // P9: the saved profiles, to apply; a file that cannot be read is
         // said, not taken for none (Q2 review).
         let (profiles, profiles_error) =
-            match pocketdesk_core::local::permission_profiles::load(&self.state_dir) {
+            match friday_mobile_core::local::permission_profiles::load(&self.state_dir) {
                 Ok(profiles) => (profiles, None),
                 Err(e) => (Vec::new(), Some(e.to_string())),
             };
@@ -3214,7 +3218,7 @@ impl PocketdeskApp {
         }
         if let Some((permissions, name)) = save_profile {
             self.notice = crate::notice::Notice::outcome(
-                pocketdesk_core::local::permission_profiles::save(
+                friday_mobile_core::local::permission_profiles::save(
                     &self.state_dir,
                     &name,
                     &permissions,
@@ -3242,7 +3246,8 @@ impl PocketdeskApp {
         {
             // Read again: one replaced or removed since it was asked is
             // not applied as it was (Q2 review).
-            match pocketdesk_core::local::permission_profiles::get(&self.state_dir, &asked.name) {
+            match friday_mobile_core::local::permission_profiles::get(&self.state_dir, &asked.name)
+            {
                 Some(profile) => self.apply_profile(&id, &profile),
                 None => {
                     self.notice = crate::notice::Notice::error(format!(
@@ -3257,7 +3262,7 @@ impl PocketdeskApp {
             && yes
         {
             self.notice = crate::notice::Notice::outcome(
-                pocketdesk_core::local::permission_profiles::remove(&self.state_dir, &name)
+                friday_mobile_core::local::permission_profiles::remove(&self.state_dir, &name)
                     .map(|()| format!("Removed the {name} profile."))
                     .map_err(|e| format!("Could not remove the {name} profile: {e}")),
             );
@@ -3743,7 +3748,7 @@ impl PocketdeskApp {
                 Ok(path) => match form.save_to(&path) {
                     Ok(()) => {
                         if history_off {
-                            let _ = pocketdesk_core::local::clip_history::clear(&self.state_dir);
+                            let _ = friday_mobile_core::local::clip_history::clear(&self.state_dir);
                         }
                         // An open screen window follows its Stats switch.
                         if let Some(view) = &self.computer_view {
@@ -3768,7 +3773,7 @@ impl PocketdeskApp {
     /// registered by the server program, which says where in
     /// `<config>/browser/registered.json`.
     fn browser_setting(&mut self, ui: &mut egui::Ui) {
-        let Ok(config) = pocketdesk_core::local::paths::config_dir() else {
+        let Ok(config) = friday_mobile_core::local::paths::config_dir() else {
             return;
         };
         // Read once, not every frame; again after a change.
@@ -3793,7 +3798,7 @@ impl PocketdeskApp {
             self.setting_job.is_none(),
             egui::Checkbox::new(
                 &mut on,
-                "Send from the browser (the Pocketdesk extension, in browser/: page, link or image to the phone)",
+                "Send from the browser (the FRIDAY Mobile extension, in browser/: page, link or image to the phone)",
             ),
         );
         if let Some(browsers) = &registered {
@@ -3842,7 +3847,7 @@ impl PocketdeskApp {
 
     /// A `tel:` link with several phones to take it (M8): which calls it.
     fn tel_question(&mut self, ui: &mut egui::Ui) {
-        use pocketdesk_core::local::tel_ask;
+        use friday_mobile_core::local::tel_ask;
         let now = now_unix();
         // Read once a second, not every frame.
         if self
@@ -3893,7 +3898,7 @@ impl PocketdeskApp {
         ui.add_space(8.0);
         if let Some(id) = &chosen {
             self.notice = crate::notice::Notice::outcome(
-                pocketdesk_core::local::dials::request(&self.state_dir, id, &ask.number, now)
+                friday_mobile_core::local::dials::request(&self.state_dir, id, &ask.number, now)
                     .map(|_| {
                         "Asked the phone to open its dialer with the number; it does with \u{201c}Calls from the computer\u{201d} on.".to_string()
                     })
@@ -3915,7 +3920,7 @@ impl PocketdeskApp {
     fn wake_helper_setting(&mut self, ui: &mut egui::Ui) {
         ui.add_space(8.0);
         ui.label(RichText::new(crate::settings_view::EXTRA_WAKE_HELPER).strong());
-        let held = pocketdesk_core::local::wake_helper::read(&self.state_dir).helper;
+        let held = friday_mobile_core::local::wake_helper::read(&self.state_dir).helper;
         let Some(helper) = held else {
             ui.label(
                 RichText::new(WAKE_HELPER_NONE)
@@ -3928,7 +3933,8 @@ impl PocketdeskApp {
         ui.horizontal_wrapped(|ui| {
             ui.label(format!("{name} is this computer's wake helper."));
             if ui.button("Remove").clicked() {
-                self.notice = match pocketdesk_core::local::wake_helper::remove(&self.state_dir) {
+                self.notice = match friday_mobile_core::local::wake_helper::remove(&self.state_dir)
+                {
                     Ok(_) => crate::notice::Notice::done(format!(
                         "{name} is no longer this computer's wake helper"
                     )),
@@ -3944,7 +3950,7 @@ impl PocketdeskApp {
     }
 
     fn tel_setting(&mut self, ui: &mut egui::Ui) {
-        let Ok(config) = pocketdesk_core::local::paths::config_dir() else {
+        let Ok(config) = friday_mobile_core::local::paths::config_dir() else {
             return;
         };
         let installed = *self
@@ -3960,7 +3966,7 @@ impl PocketdeskApp {
         );
         if installed && cfg!(windows) {
             ui.label(
-                RichText::new("Pick Pocketdesk when Windows asks which app opens a phone number, or in Settings, Apps, Default apps.")
+                RichText::new("Pick FRIDAY Mobile when Windows asks which app opens a phone number, or in Settings, Apps, Default apps.")
                     .small()
                     .color(crate::theme::muted(ui)),
             );
@@ -4000,7 +4006,7 @@ impl PocketdeskApp {
     /// "Send to phone" in the file manager (T10e): Explorer's Send To, or the
     /// Nautilus, Nemo and Dolphin menus.
     fn send_menu_setting(&mut self, ui: &mut egui::Ui) {
-        use pocketdesk_core::local::send_menu;
+        use friday_mobile_core::local::send_menu;
         ui.add_space(8.0);
         let Ok(data) = send_menu::data_dir() else {
             return;
@@ -4179,7 +4185,7 @@ impl PocketdeskApp {
     /// Mute `app`'s phone notifications here (K2b), and say so.
     fn mute_app(&mut self, app: &str) {
         self.notice = crate::notice::Notice::outcome(
-            pocketdesk_core::local::muted_apps::mute(&self.state_dir, app, now_unix())
+            friday_mobile_core::local::muted_apps::mute(&self.state_dir, app, now_unix())
                 .map(|()| {
                     format!(
                         "{app}'s notifications from phones are not shown here now. Unmute in Settings."
@@ -4196,13 +4202,13 @@ impl PocketdeskApp {
         ui.label(RichText::new(crate::settings_view::EXTRA_MUTED).strong());
         // A file that does not parse says so (K2b review: it read as none,
         // and each mute then failed with no word why).
-        let muted = match pocketdesk_core::local::muted_apps::load(&self.state_dir) {
+        let muted = match friday_mobile_core::local::muted_apps::load(&self.state_dir) {
             Ok(muted) => muted,
             Err(e) => {
                 ui.label(
                     RichText::new(format!(
                         "{} could not be read ({e}): every app shows. Remove the file to start the list again.",
-                        pocketdesk_core::local::paths::MUTED_APPS_FILE
+                        friday_mobile_core::local::paths::MUTED_APPS_FILE
                     ))
                     .color(crate::theme::bad(ui)),
                 );
@@ -4230,7 +4236,7 @@ impl PocketdeskApp {
         }
         if let Some(app) = unmute {
             self.notice = crate::notice::Notice::outcome(
-                pocketdesk_core::local::muted_apps::unmute(&self.state_dir, &app)
+                friday_mobile_core::local::muted_apps::unmute(&self.state_dir, &app)
                     .map(|()| format!("{app}'s notifications show here again."))
                     .map_err(|e| format!("Could not unmute {app}: {e}")),
             );
@@ -4350,7 +4356,7 @@ impl PocketdeskApp {
                 ui,
                 FILES_NO_TARGET,
                 "A phone takes one in a session, or with \"Files from the computer in the \
-                 background\" on in its Pocketdesk Settings; another computer, while linked.",
+                 background\" on in its FRIDAY Mobile Settings; another computer, while linked.",
                 |ui| none_paired && ui.button("Pair a phone").clicked(),
             );
             if pair {
@@ -4476,7 +4482,7 @@ impl PocketdeskApp {
         if paste && self.pasting.is_none() {
             self.notice = crate::notice::Notice::working("Reading the copied files\u{2026}");
             self.pasting = Some(std::thread::spawn(
-                pocketdesk_core::local::clipboard_files::read,
+                friday_mobile_core::local::clipboard_files::read,
             ));
         }
         let mut link = None;
@@ -4552,10 +4558,10 @@ impl PocketdeskApp {
                     ui.label(model::transfer_title(transfer));
                     let other = model::target_label(&self.snapshot, &transfer.device_id);
                     ui.label(match transfer.direction {
-                        pocketdesk_core::local::transfers::Direction::ToPhone => {
+                        friday_mobile_core::local::transfers::Direction::ToPhone => {
                             format!("to {other}")
                         }
-                        pocketdesk_core::local::transfers::Direction::FromPhone => {
+                        friday_mobile_core::local::transfers::Direction::FromPhone => {
                             format!("from {other}")
                         }
                     });
@@ -4575,7 +4581,7 @@ impl PocketdeskApp {
                 }
             });
         if let Some((id, name)) = cancel {
-            self.notice = match pocketdesk_core::local::transfers::request_cancel(
+            self.notice = match friday_mobile_core::local::transfers::request_cancel(
                 &self.state_dir,
                 &id,
                 now_unix(),
@@ -4684,7 +4690,7 @@ impl PocketdeskApp {
             crate::widgets::empty(
                 ui,
                 FILES_NONE_RECEIVED,
-                "Share a file to Pocketdesk on your phone: it lands in Downloads unless \
+                "Share a file to FRIDAY Mobile on your phone: it lands in Downloads unless \
                  Settings says otherwise, and shows here.",
                 |_| {},
             );
@@ -4801,7 +4807,7 @@ impl PocketdeskApp {
                     if left_out > 0 {
                         self.notice = crate::notice::Notice::error(format!(
                             "Only the first {} copied files were taken; {left_out} more were left out.",
-                            pocketdesk_core::local::clipboard_files::MAX_FILES
+                            friday_mobile_core::local::clipboard_files::MAX_FILES
                         ));
                     }
                 }
@@ -4866,13 +4872,15 @@ impl eframe::App for PocketdeskApp {
         if self.refreshed.is_none_or(|t| t.elapsed() >= REFRESH) {
             self.refresh();
             // E2: a page asked for by the tray program or a second launch.
-            if let Some(open) = pocketdesk_core::local::app_open::take(&self.state_dir, now_unix())
+            if let Some(open) =
+                friday_mobile_core::local::app_open::take(&self.state_dir, now_unix())
             {
                 self.open_asked(ctx, open);
             }
             // Windows dragged here from other computers, one file each so
             // two at once are both opened.
-            for open in pocketdesk_core::local::app_open::take_drops(&self.state_dir, now_unix()) {
+            for open in friday_mobile_core::local::app_open::take_drops(&self.state_dir, now_unix())
+            {
                 self.open_asked(ctx, open);
             }
             self.watch_phone_open(ctx);
@@ -5005,7 +5013,7 @@ impl eframe::App for PocketdeskApp {
             .exact_size(170.0)
             .show(ui, |ui| {
                 ui.add_space(8.0);
-                ui.heading("Pocketdesk");
+                ui.heading("FRIDAY Mobile");
                 // Scrolls when the window is short (U1 review).
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     // UX 3: the pages' list stays as tight as it was, so
@@ -5417,7 +5425,7 @@ fn phone_row(ui: &mut egui::Ui, devices: &[model::Device], id: &str) {
 /// server's `phone_battery::LOW_AT`, kept in step by hand: the desktop
 /// cannot take it from the server crate), not charging: its bar on the
 /// Overview is drawn as a warning (I3).
-pub fn battery_low(battery: &pocketdesk_core::local::phone_status::PhoneBattery) -> bool {
+pub fn battery_low(battery: &friday_mobile_core::local::phone_status::PhoneBattery) -> bool {
     battery.charge <= 15 && !battery.charging
 }
 
@@ -5440,7 +5448,7 @@ pub fn version_label(ui: &mut egui::Ui, version: Option<&str>, hints: bool) {
 /// A phone's last battery report for the Devices tab (T8b): its charge,
 /// whether it is charging, and its age once it is over a minute old.
 pub fn battery_text(
-    battery: Option<&pocketdesk_core::local::phone_status::PhoneBattery>,
+    battery: Option<&friday_mobile_core::local::phone_status::PhoneBattery>,
     now_unix: u64,
 ) -> String {
     let Some(battery) = battery else {
@@ -5652,7 +5660,7 @@ mod tests {
 
     #[test]
     fn what_a_phone_plays_reads_as_one_line() {
-        use pocketdesk_core::protocol::phone_media::PhoneMedia;
+        use friday_mobile_core::protocol::phone_media::PhoneMedia;
         let song = PhoneMedia {
             title: "Song".to_string(),
             artist: "Artist".to_string(),
@@ -5686,7 +5694,7 @@ mod tests {
 
     #[test]
     fn a_phones_battery_reads_with_its_age() {
-        use pocketdesk_core::local::phone_status::PhoneBattery;
+        use friday_mobile_core::local::phone_status::PhoneBattery;
         let battery = |charge, charging| PhoneBattery {
             charge,
             charging,
@@ -5709,7 +5717,7 @@ mod tests {
     /// I3: low as the server warns of it, 15 % or under and not charging.
     #[test]
     fn a_battery_is_low_at_the_servers_mark() {
-        use pocketdesk_core::local::phone_status::PhoneBattery;
+        use friday_mobile_core::local::phone_status::PhoneBattery;
         let battery = |charge, charging| PhoneBattery {
             charge,
             charging,

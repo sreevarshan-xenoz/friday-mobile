@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::phone_media::is_command;
+use friday_mobile_core::protocol::phone_media::is_command;
 
 /// How many presses wait for the app at most.
 const MAX_WAITING: usize = 8;

@@ -71,10 +71,10 @@ mod widgets;
 
 use eframe::egui;
 // What the window shares with the tray program (E2).
-use pocketdesk_core::local::phone_pins;
-use pocketdesk_desktop::{icon, model, tray, tray_instance, tray_menu, words};
+use friday_mobile_core::local::phone_pins;
+use friday_mobile_desktop::{icon, model, tray, tray_instance, tray_menu, words};
 
-const TITLE: &str = "Pocketdesk";
+const TITLE: &str = "FRIDAY Mobile";
 
 fn main() -> eframe::Result {
     // M8: a tel: link from Windows, handed to the server program with no
@@ -91,31 +91,36 @@ fn main() -> eframe::Result {
     // are. The request goes to the running copy, or to this one once it is
     // up; neither brings the main window forward.
     let pinned = phone_pins::parse_args(std::env::args_os());
-    let asked_now = pocketdesk_core::local::pin::now_unix;
+    let asked_now = friday_mobile_core::local::pin::now_unix;
     let Some(instance) = single_instance::acquire(TITLE, pinned.is_none()) else {
-        if let (Some((phone, app)), Ok(dir)) = (&pinned, pocketdesk_core::local::paths::state_dir())
+        if let (Some((phone, app)), Ok(dir)) =
+            (&pinned, friday_mobile_core::local::paths::state_dir())
         {
-            let _ =
-                pocketdesk_core::local::app_open::request_phone_app(&dir, phone, app, asked_now());
+            let _ = friday_mobile_core::local::app_open::request_phone_app(
+                &dir,
+                phone,
+                app,
+                asked_now(),
+            );
             return Ok(());
         }
         // Another copy is running; it has been brought to the front, and
         // a page asked for goes to it (E2).
         if let (Some(page), Ok(dir)) = (
             nav::page_from_args(std::env::args_os()),
-            pocketdesk_core::local::paths::state_dir(),
+            friday_mobile_core::local::paths::state_dir(),
         ) {
-            let now = pocketdesk_core::local::pin::now_unix();
-            let _ = pocketdesk_core::local::app_open::request(&dir, page.key(), None, now);
+            let now = friday_mobile_core::local::pin::now_unix();
+            let _ = friday_mobile_core::local::app_open::request(&dir, page.key(), None, now);
         }
         return Ok(());
     };
     // `--page <name>` opens on a page (nav.rs names them).
     let page = nav::page_from_args(std::env::args_os());
-    let state_dir = match pocketdesk_core::local::paths::state_dir() {
+    let state_dir = match friday_mobile_core::local::paths::state_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            eprintln!("Pocketdesk: {e}");
+            eprintln!("FRIDAY Mobile: {e}");
             std::process::exit(1);
         }
     };
@@ -123,7 +128,7 @@ fn main() -> eframe::Result {
     // The app this launch was asked to open, taken by the first look at the
     // state folder once the window is up.
     if let Some((phone, app)) = &pinned {
-        let _ = pocketdesk_core::local::app_open::request_phone_app(
+        let _ = friday_mobile_core::local::app_open::request_phone_app(
             &state_dir,
             phone,
             app,
@@ -144,14 +149,14 @@ fn main() -> eframe::Result {
             if !tray_instance::running()
                 && let Err(e) = tray_instance::start(&program)
             {
-                eprintln!("Pocketdesk: the tray program did not start ({e})");
+                eprintln!("FRIDAY Mobile: the tray program did not start ({e})");
             }
             None
         }
         None => match tray::Tray::new() {
             Ok(tray) => Some(tray),
             Err(e) => {
-                eprintln!("Pocketdesk: no tray icon ({e}); closing the window will quit");
+                eprintln!("FRIDAY Mobile: no tray icon ({e}); closing the window will quit");
                 None
             }
         },
@@ -162,7 +167,8 @@ fn main() -> eframe::Result {
     // every window of the app) and where Settings say not to: a picture
     // then comes about a frame sooner, and the windows are paced instead.
     let vsync = frame_pacing::swap_waits_here(
-        pocketdesk_core::local::config::Config::load().is_ok_and(|config| config.display_no_vsync),
+        friday_mobile_core::local::config::Config::load()
+            .is_ok_and(|config| config.display_no_vsync),
     );
     let options = eframe::NativeOptions {
         glow_options: eframe::egui_glow::GlowConfiguration {
@@ -183,7 +189,7 @@ fn main() -> eframe::Result {
         // A throwaway instance (`POCKETDESK_CONFIG_DIR`, as R6a's second
         // server) keeps its window and page beside its config, never the
         // installed app's.
-        persistence_path: std::env::var_os(pocketdesk_core::local::paths::CONFIG_DIR_VAR)
+        persistence_path: std::env::var_os(friday_mobile_core::local::paths::CONFIG_DIR_VAR)
             .map(std::path::PathBuf::from)
             .filter(|dir| dir.is_absolute())
             .map(|dir| dir.join("app-window.ron")),

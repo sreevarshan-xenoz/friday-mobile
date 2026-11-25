@@ -14,18 +14,18 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use pocketdesk_core::local::computers::{self, PeerComputer};
-use pocketdesk_core::local::view::{self as wire, Message, Phase, ViewFile, ViewPrivacy};
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::streaming::transport::{
+use friday_mobile_core::local::computers::{self, PeerComputer};
+use friday_mobile_core::local::view::{self as wire, Message, Phase, ViewFile, ViewPrivacy};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::streaming::transport::{
     CertManager, PacketHeader, STREAM_KIND_CURSOR, STREAM_KIND_READY, STREAM_KIND_VIDEO,
     StreamServer, StreamTransportConfig,
 };
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::{
     InputPacket, SCREEN_FEATURE_INPUT, SCREEN_FEATURE_SYSTEM_SAID, SCREEN_FEATURE_WINDOWS,
     SCREEN_FEATURES_SAID,
 };
-use pocketdesk_server::computer_view::{
+use friday_mobile_server::computer_view::{
     Command, Dialer, PRIVACY_RENEW, PrivacyHost, WINDOW_GRACE, run, run_with,
 };
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -223,7 +223,7 @@ async fn other_computer_again_and_again(
 async fn other_computer_again_with_pointer(
     cert: Arc<CertManager>,
     refuse_after: Option<usize>,
-    pointer: Vec<pocketdesk_core::protocol::cursor::CursorMessage>,
+    pointer: Vec<friday_mobile_core::protocol::cursor::CursorMessage>,
 ) -> (
     SocketAddr,
     Arc<AtomicUsize>,
@@ -326,7 +326,7 @@ async fn join(file: &ViewFile) -> TcpStream {
 /// hear them.
 async fn other_computer_with_pointer(
     cert: Arc<CertManager>,
-    messages: Vec<pocketdesk_core::protocol::cursor::CursorMessage>,
+    messages: Vec<friday_mobile_core::protocol::cursor::CursorMessage>,
 ) -> SocketAddr {
     let listen = StreamTransportConfig {
         address: "127.0.0.1:0".parse().unwrap(),
@@ -374,7 +374,7 @@ async fn other_computer_with_pointer(
 async fn pointer_view(
     name: &str,
     cursor: bool,
-    messages: Vec<pocketdesk_core::protocol::cursor::CursorMessage>,
+    messages: Vec<friday_mobile_core::protocol::cursor::CursorMessage>,
 ) -> (PathBuf, mpsc::Sender<Command>, ViewFile, TcpStream) {
     let dir = temp_dir(name);
     paired(&dir);
@@ -416,7 +416,7 @@ async fn pointer_view(
 /// sends it.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_window_that_asked_hears_the_pointer_and_one_that_did_not_hears_none() {
-    use pocketdesk_core::protocol::cursor::{CursorMessage, CursorShape, CursorState};
+    use friday_mobile_core::protocol::cursor::{CursorMessage, CursorShape, CursorState};
     let _ = rustls::crypto::ring::default_provider().install_default();
     let shape = CursorShape::new(3, 3, 1, 1, vec![200; 36]).unwrap();
     let messages = vec![
@@ -827,7 +827,7 @@ async fn a_dropped_view_reconnects_by_itself_until_stopped() {
 /// ask hears none of it.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_redial_clears_the_pointer_of_a_window_that_asked_and_tells_one_that_did_not_nothing() {
-    use pocketdesk_core::protocol::cursor::{CursorMessage, CursorShape, CursorState};
+    use friday_mobile_core::protocol::cursor::{CursorMessage, CursorShape, CursorState};
     let _ = rustls::crypto::ring::default_provider().install_default();
     let shape = CursorShape::new(3, 3, 1, 1, vec![200; 36]).unwrap();
     let messages = vec![
@@ -1096,7 +1096,7 @@ async fn frames_too_large_for_the_window_are_said() {
     let (input_tx, _input_rx) = mpsc::unbounded_channel();
     let (_hang_up_tx, hang_up_rx) = tokio::sync::oneshot::channel();
     let mut huge = keyframe();
-    huge.resize(pocketdesk_core::local::cast::MAX_MESSAGE + 1024, 0x11);
+    huge.resize(friday_mobile_core::local::cast::MAX_MESSAGE + 1024, 0x11);
     let addr = other_computer_sending(cert.clone(), input_tx, hang_up_rx, huge).await;
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
     let (commands, rx) = mpsc::channel(4);
@@ -2522,7 +2522,7 @@ async fn a_fit_that_cannot_be_asked_still_shows_the_screen_asked_for() {
             hevc: false,
             cursor: false,
             window: 0,
-            fit: Some(pocketdesk_core::local::computers::FitSize {
+            fit: Some(friday_mobile_core::local::computers::FitSize {
                 width: 1280,
                 height: 720,
             }),

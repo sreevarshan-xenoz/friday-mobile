@@ -571,7 +571,7 @@ impl Driver {
                 if let Some(away) = &self.away
                     && (dx != 0 || dy != 0)
                 {
-                    use pocketdesk_core::streaming::wheel::clamp16;
+                    use friday_mobile_core::streaming::wheel::clamp16;
                     let msg = Msg::WheelFine {
                         dx: clamp16(dx),
                         dy: clamp16(dy),
@@ -1292,9 +1292,9 @@ pub fn layout_for(
     this: &str,
     name: &str,
     own: Vec<Screen>,
-    file: &pocketdesk_core::local::shared_input::ScreensFile,
+    file: &friday_mobile_core::local::shared_input::ScreensFile,
     linked: &[String],
-    saved: Option<&pocketdesk_core::local::shared_input::LayoutFile>,
+    saved: Option<&friday_mobile_core::local::shared_input::LayoutFile>,
 ) -> Layout {
     // Arranged as the Keyboard and mouse page does, over every computer
     // whose screens are known, so the two agree; then only the linked ones
@@ -1305,7 +1305,7 @@ pub fn layout_for(
         .filter(|c| !c.this_computer && c.device_id != this && !c.screens.is_empty())
         .map(|c| (c.device_id.clone(), c.screens.clone()))
         .collect();
-    let origins = pocketdesk_core::local::shared_input::arrange(&own, &others, saved);
+    let origins = friday_mobile_core::local::shared_input::arrange(&own, &others, saved);
     let (others, origins): (Vec<_>, Vec<_>) = others
         .into_iter()
         .zip(origins)
@@ -1340,8 +1340,8 @@ pub fn layout_for(
 /// ([`super::refresh`]).
 #[derive(Debug, Clone, Default)]
 pub struct LayoutFiles {
-    pub file: pocketdesk_core::local::shared_input::ScreensFile,
-    pub saved: Option<pocketdesk_core::local::shared_input::LayoutFile>,
+    pub file: friday_mobile_core::local::shared_input::ScreensFile,
+    pub saved: Option<friday_mobile_core::local::shared_input::LayoutFile>,
     /// The names the owner paired the computers as (read only once there
     /// is another computer in the file).
     pub paired: HashMap<String, String>,
@@ -1355,7 +1355,7 @@ impl LayoutFiles {
     /// Read them now, from `state_dir` (blocking file work).
     pub fn read(state_dir: Option<&std::path::Path>, saved: &mut SavedLayout) -> LayoutFiles {
         let file = state_dir
-            .map(pocketdesk_core::local::shared_input::read)
+            .map(friday_mobile_core::local::shared_input::read)
             .unwrap_or_default();
         let phones: HashSet<String> = file
             .computers
@@ -1366,7 +1366,8 @@ impl LayoutFiles {
         let phones_ready = phones
             .iter()
             .filter(|id| {
-                super::phone::standing_now(id) == pocketdesk_core::local::shared_input::PHONE_READY
+                super::phone::standing_now(id)
+                    == friday_mobile_core::local::shared_input::PHONE_READY
             })
             .cloned()
             .collect();
@@ -1411,7 +1412,7 @@ pub fn layout_from(this: &str, name: &str, own: Vec<Screen>, files: &LayoutFiles
 #[derive(Default)]
 pub struct SavedLayout {
     stamp: Option<std::time::SystemTime>,
-    file: Option<pocketdesk_core::local::shared_input::LayoutFile>,
+    file: Option<friday_mobile_core::local::shared_input::LayoutFile>,
 }
 
 impl SavedLayout {
@@ -1419,12 +1420,14 @@ impl SavedLayout {
     pub fn get(
         &mut self,
         state_dir: &std::path::Path,
-    ) -> Option<&pocketdesk_core::local::shared_input::LayoutFile> {
-        let path = state_dir.join(pocketdesk_core::local::paths::SHARED_LAYOUT_FILE);
+    ) -> Option<&friday_mobile_core::local::shared_input::LayoutFile> {
+        let path = state_dir.join(friday_mobile_core::local::paths::SHARED_LAYOUT_FILE);
         let stamp = std::fs::metadata(&path).and_then(|m| m.modified()).ok();
         if stamp.is_none() || stamp != self.stamp {
             self.stamp = stamp;
-            self.file = stamp.and(pocketdesk_core::local::shared_input::read_layout(state_dir));
+            self.file = stamp.and(friday_mobile_core::local::shared_input::read_layout(
+                state_dir,
+            ));
         }
         self.file.as_ref()
     }
@@ -1433,7 +1436,7 @@ impl SavedLayout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::shared_input::{ComputerScreens, LayoutFile, ScreensFile};
+    use friday_mobile_core::local::shared_input::{ComputerScreens, LayoutFile, ScreensFile};
     use std::collections::BTreeMap;
     use std::time::Duration;
 
@@ -2282,7 +2285,7 @@ mod tests {
             ],
         };
         let own = vec![screen(0, 0, 1920, 1080)];
-        let page = pocketdesk_core::local::shared_input::arrange(
+        let page = friday_mobile_core::local::shared_input::arrange(
             &own,
             &[
                 ("L".to_string(), vec![screen(0, 0, 1600, 1000)]),
@@ -2308,7 +2311,7 @@ mod tests {
     /// the edge and by the phone stopping answering.
     #[test]
     fn a_phone_is_crossed_onto_as_a_computer_and_let_go_of_on_leaving() {
-        use pocketdesk_core::local::shared_input::{PhoneScreen, phone_block};
+        use friday_mobile_core::local::shared_input::{PhoneScreen, phone_block};
         let phone = PhoneScreen {
             width_px: 1080,
             height_px: 2400,

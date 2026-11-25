@@ -6,8 +6,8 @@
 use std::collections::VecDeque;
 use std::sync::{LazyLock, Mutex};
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
-use pocketdesk_core::protocol::link::{LINK, link_problem};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::link::{LINK, link_problem};
 
 /// How many received links wait for the app at most.
 const MAX_WAITING: usize = 16;

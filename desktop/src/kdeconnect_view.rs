@@ -11,11 +11,11 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::kdeconnect::{self, SeenDevice};
-use pocketdesk_core::local::kdeconnect_devices::{
+use friday_mobile_core::local::kdeconnect::{self, SeenDevice};
+use friday_mobile_core::local::kdeconnect_devices::{
     self as devices, KdeAsk, KdeDevice, KdePermission, KdePermissions, Pending,
 };
-use pocketdesk_core::local::phone_status::{self, PhoneBattery};
+use friday_mobile_core::local::phone_status::{self, PhoneBattery};
 use std::collections::BTreeMap;
 
 /// How often the list is read again while the tab is open.

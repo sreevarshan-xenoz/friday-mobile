@@ -17,7 +17,7 @@ use std::collections::VecDeque;
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::protocol::bluetooth::{
+use friday_mobile_core::protocol::bluetooth::{
     BluetoothInfo, LINK_PACKET, PACKET, format_link_hello, link_uuid, parse_address, stream_uuid,
 };
 use tokio::io::AsyncWriteExt;
@@ -188,7 +188,7 @@ where
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
-    use pocketdesk_core::streaming::transport::CertManager;
+    use friday_mobile_core::streaming::transport::CertManager;
     use serde_json::json;
     use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 
@@ -302,7 +302,7 @@ mod tests {
         let mut stream = tokio::io::BufReader::new(stream);
         let mut hello = String::new();
         stream.read_line(&mut hello).await?;
-        let id = pocketdesk_core::protocol::bluetooth::parse_link_hello(&hello)
+        let id = friday_mobile_core::protocol::bluetooth::parse_link_hello(&hello)
             .ok_or_else(|| std::io::Error::other(format!("not a hello: {hello:?}")))?;
         assert!(stream.buffer().is_empty(), "nothing after the hello yet");
         let name = tokio_rustls::rustls::pki_types::ServerName::IpAddress(
@@ -327,7 +327,7 @@ mod tests {
         let phone = CertManager::load_or_create(&dir).unwrap();
         let computer = CertManager::new().unwrap();
         let label =
-            pocketdesk_core::streaming::transport::peer_label_for_address("192.0.2.10").unwrap();
+            friday_mobile_core::streaming::transport::peer_label_for_address("192.0.2.10").unwrap();
         phone.pin_peer(&label, computer.cert_fingerprint()).unwrap();
         let tls = crate::api::transfer_acceptor_in(&dir, "192.0.2.10").unwrap();
 

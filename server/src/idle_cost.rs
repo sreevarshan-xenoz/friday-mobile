@@ -116,14 +116,15 @@ mod tests {
             ),
             ("peer_computers (requests)", || {
                 Box::pin(async {
-                    let certs = pocketdesk_core::streaming::transport::CertManager::new().unwrap();
+                    let certs =
+                        friday_mobile_core::streaming::transport::CertManager::new().unwrap();
                     crate::peer_computers::run(std::sync::Arc::new(certs), None).await
                 })
             }),
             ("tailscale discovery (every 10 s)", || {
                 Box::pin(async {
-                    if let Ok(client) = pocketdesk_core::tailscale::TailscaleClient::new() {
-                        pocketdesk_core::tailscale::discovery::DiscoveryService::new(client)
+                    if let Ok(client) = friday_mobile_core::tailscale::TailscaleClient::new() {
+                        friday_mobile_core::tailscale::discovery::DiscoveryService::new(client)
                             .run(Duration::from_secs(10))
                             .await;
                     }
@@ -159,8 +160,8 @@ mod tests {
         // Throwaway state and config: the Home Assistant and clipboard loops
         // read the config, and must not act on the owner's.
         let base = std::env::temp_dir().join(format!("pd-idle-cost-{}", std::process::id()));
-        let dir = pocketdesk_core::local::paths::use_state_dir(base.join("state"));
-        pocketdesk_core::local::paths::use_config_dir(base.join("config"));
+        let dir = friday_mobile_core::local::paths::use_state_dir(base.join("state"));
+        friday_mobile_core::local::paths::use_config_dir(base.join("config"));
         // As the server does, unless asked to measure the pollers alone.
         if std::env::var_os("POCKETDESK_IDLE_NO_WATCHER").is_none() {
             crate::inbox::start(dir);

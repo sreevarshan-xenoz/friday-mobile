@@ -10,8 +10,8 @@
 //! It only narrows what the connection is used for, so any connection may
 //! say it, paired or not.
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 
 /// The packet a phone names a connection's role with.
 pub const LINK_ROLE: &str = "kdeconnect.pocketdesk.link_role";

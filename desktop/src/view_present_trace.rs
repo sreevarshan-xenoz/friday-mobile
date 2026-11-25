@@ -2,7 +2,7 @@
 //! the time goes from an access unit being read off the relay to its picture
 //! being painted. With `POCKETDESK_VIEWER_TRACE=<file>` the window appends
 //! one line per step with the wall clock in microseconds (one machine, so
-//! the host's trace of [`pocketdesk_core::streaming::latency_trace`] shares
+//! the host's trace of [`friday_mobile_core::streaming::latency_trace`] shares
 //! the clock):
 //!
 //! ```text
@@ -23,8 +23,8 @@ use std::path::Path;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Mutex, OnceLock};
 
-use pocketdesk_core::streaming::latency_probe;
-use pocketdesk_core::streaming::latency_trace::wall_us;
+use friday_mobile_core::streaming::latency_probe;
+use friday_mobile_core::streaming::latency_trace::wall_us;
 
 use crate::nv12::Layout;
 use crate::video::{Picture, Planes};

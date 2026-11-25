@@ -10,8 +10,8 @@
 //! phone has one transfer link at a time: the next waits its turn.
 
 use super::Stream;
-use pocketdesk_core::protocol::bluetooth::LINK_PACKET;
-use pocketdesk_core::protocol::kdeconnect::{
+use friday_mobile_core::protocol::bluetooth::LINK_PACKET;
+use friday_mobile_core::protocol::kdeconnect::{
     DeviceSender, NetworkPacket, OpenLinkStream, TransferIo,
 };
 use std::collections::HashMap;
@@ -282,8 +282,8 @@ impl OpenLinkStream for BluetoothLinks {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::error::Result;
-    use pocketdesk_core::streaming::transport::CertManager;
+    use friday_mobile_core::error::Result;
+    use friday_mobile_core::streaming::transport::CertManager;
     use tokio::io::DuplexStream;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -303,8 +303,8 @@ mod tests {
         fn connection_id(&self) -> &str {
             "conn"
         }
-        fn peer_key(&self) -> Option<pocketdesk_core::streaming::PeerKey> {
-            Some(pocketdesk_core::streaming::PeerKey::Tls(self.key))
+        fn peer_key(&self) -> Option<friday_mobile_core::streaming::PeerKey> {
+            Some(friday_mobile_core::streaming::PeerKey::Tls(self.key))
         }
         fn nearby_by_radio(&self) -> bool {
             true

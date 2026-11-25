@@ -15,7 +15,7 @@ static ANSWERS: LazyLock<Mutex<HashMap<(String, u16), Answer>>> = LazyLock::new(
 
 /// Keep the answer `body` from the computer at `host:port`.
 pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
-    let said = pocketdesk_core::protocol::in_use::in_use(body);
+    let said = friday_mobile_core::protocol::in_use::in_use(body);
     ANSWERS
         .lock()
         .unwrap_or_else(|e| e.into_inner())

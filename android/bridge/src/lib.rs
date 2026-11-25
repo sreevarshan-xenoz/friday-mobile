@@ -138,7 +138,7 @@ fn install_android_context(env: &JNIEnv<'_>, context: &JObject<'_>) {
         // SAFETY: the JVM outlives the process's native code, and the
         // context's global reference is never deleted (forgotten above).
         unsafe {
-            pocketdesk_core::streaming::iroh_connection::install_android_jni_context(
+            friday_mobile_core::streaming::iroh_connection::install_android_jni_context(
                 vm.get_java_vm_pointer().cast(),
                 raw.cast(),
             );
@@ -631,7 +631,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         port as u16,
         monitor,
         codec_caps as u8,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )));
     to_jstring(&mut env, json)
 }
@@ -660,7 +660,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         identity,
         monitor,
         codec_caps as u8,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )));
     to_jstring(&mut env, json)
 }
@@ -691,7 +691,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         identity,
         monitor,
         codec_caps as u8,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )));
     to_jstring(&mut env, json)
 }
@@ -722,7 +722,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
             fd,
             monitor,
             codec_caps as u8,
-            pocketdesk_core::streaming::SessionMode::Screen,
+            friday_mobile_core::streaming::SessionMode::Screen,
         )),
         None => Err("no Bluetooth stream".to_string()),
     };
@@ -744,7 +744,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         port as u16,
         None,
         0,
-        pocketdesk_core::streaming::SessionMode::InputOnly,
+        friday_mobile_core::streaming::SessionMode::InputOnly,
     )));
     to_jstring(&mut env, json)
 }
@@ -765,7 +765,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         identity,
         None,
         0,
-        pocketdesk_core::streaming::SessionMode::InputOnly,
+        friday_mobile_core::streaming::SessionMode::InputOnly,
     )));
     to_jstring(&mut env, json)
 }
@@ -786,7 +786,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         port as u16,
         None,
         0,
-        pocketdesk_core::streaming::SessionMode::Sound,
+        friday_mobile_core::streaming::SessionMode::Sound,
     )));
     to_jstring(&mut env, json)
 }
@@ -807,7 +807,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeConnect
         identity,
         None,
         0,
-        pocketdesk_core::streaming::SessionMode::Sound,
+        friday_mobile_core::streaming::SessionMode::Sound,
     )));
     to_jstring(&mut env, json)
 }
@@ -868,15 +868,15 @@ fn cast_mode(
     sound_alone: jboolean,
     webcam: jboolean,
     windows: jboolean,
-) -> pocketdesk_core::streaming::SessionMode {
+) -> friday_mobile_core::streaming::SessionMode {
     if sound_alone != 0 {
-        pocketdesk_core::streaming::SessionMode::PhoneSound
+        friday_mobile_core::streaming::SessionMode::PhoneSound
     } else if webcam != 0 {
-        pocketdesk_core::streaming::SessionMode::Webcam
+        friday_mobile_core::streaming::SessionMode::Webcam
     } else if windows != 0 {
-        pocketdesk_core::streaming::SessionMode::Windows
+        friday_mobile_core::streaming::SessionMode::Windows
     } else {
-        pocketdesk_core::streaming::SessionMode::Cast
+        friday_mobile_core::streaming::SessionMode::Cast
     }
 }
 
@@ -1250,10 +1250,10 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeSendPen
 ) -> jstring {
     let unsigned = |v: jint| v.clamp(0, u16::MAX as i32) as u16;
     let tilt = |v: jint| {
-        let max = i32::from(pocketdesk_core::streaming::input_packet::PEN_MAX_TILT);
+        let max = i32::from(friday_mobile_core::streaming::input_packet::PEN_MAX_TILT);
         v.clamp(-max, max) as i8
     };
-    let sample = pocketdesk_core::streaming::PenSample {
+    let sample = friday_mobile_core::streaming::PenSample {
         x_norm: unsigned(x_norm),
         y_norm: unsigned(y_norm),
         pressure: unsigned(pressure),
@@ -1326,7 +1326,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeSendScr
     y120: jint,
     fine: jboolean,
 ) -> jstring {
-    use pocketdesk_core::streaming::wheel::clamp16;
+    use friday_mobile_core::streaming::wheel::clamp16;
     let fine = (fine != 0).then(|| (clamp16(x120), clamp16(y120)));
     let json = envelope_unit(RUNTIME.block_on(api::send_scroll(clamp16(dx), clamp16(dy), fine)));
     to_jstring(&mut env, json)
@@ -1379,7 +1379,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeNetwork
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) {
-    RUNTIME.spawn(pocketdesk_core::streaming::network_changed());
+    RUNTIME.spawn(friday_mobile_core::streaming::network_changed());
     // The wake helper's own endpoint, if it listens.
     RUNTIME.spawn(wake_helper::network_changed());
     // A new network may reach a computer the old one could not (BB5).
@@ -1465,7 +1465,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeRecordS
 }
 
 /// Open the R4 E2 phone→desktop mic (start frame; the server creates its
-/// "Pocketdesk Mic" PipeWire source). Opus encoding happens in Kotlin.
+/// "FRIDAY Mobile Mic" PipeWire source). Opus encoding happens in Kotlin.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeStartMic(
     mut env: JNIEnv<'_>,
@@ -1686,7 +1686,7 @@ pub extern "system" fn Java_dev_pocketdesk_android_bridge_RustCore_nativeFetchFi
     } else {
         download::FetchTarget::Path(value)
     };
-    let resume = (pocketdesk_core::protocol::partials::valid_source(&source)
+    let resume = (friday_mobile_core::protocol::partials::valid_source(&source)
         && !location.is_empty())
     .then_some(download::Resume {
         source,

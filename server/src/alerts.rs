@@ -4,8 +4,8 @@
 
 use std::time::Duration;
 
-use pocketdesk_core::local::alerts::{self, Alert};
-use pocketdesk_core::local::paths::ALERTS_DIR;
+use friday_mobile_core::local::alerts::{self, Alert};
+use friday_mobile_core::local::paths::ALERTS_DIR;
 use tokio::sync::broadcast;
 
 use crate::notification_monitor::ForwardedNotification;
@@ -24,7 +24,7 @@ pub async fn run(notifications: broadcast::Sender<ForwardedNotification>) {
     };
     loop {
         crate::inbox::wait(ALERTS_DIR, POLL).await;
-        for alert in alerts::take_all(&dir, pocketdesk_core::local::pin::now_unix()) {
+        for alert in alerts::take_all(&dir, friday_mobile_core::local::pin::now_unix()) {
             tracing::info!(title = %alert.title, "An alert for the phone");
             // None listening is no phone to tell: nothing is kept for later.
             let _ = notifications.send(forwarded(&alert));

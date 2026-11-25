@@ -158,7 +158,7 @@ pub fn verify_chain(
     roots: &[Vec<u8>],
     now_unix: i64,
 ) -> Result<(Vec<u8>, KeyDescription), Refused> {
-    if !(2..=pocketdesk_core::protocol::approve::MAX_CHAIN).contains(&chain.len()) {
+    if !(2..=friday_mobile_core::protocol::approve::MAX_CHAIN).contains(&chain.len()) {
         return Err(Refused::Malformed("a chain is 2 to 8 certificates".into()));
     }
     let mut certs = Vec::new();

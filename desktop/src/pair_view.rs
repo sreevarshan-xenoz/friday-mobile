@@ -8,9 +8,9 @@ use std::path::Path;
 use std::sync::mpsc;
 
 use eframe::egui::{self, Color32, ColorImage, RichText, TextureHandle, TextureOptions};
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::pair_link::{PairLink, order_addresses};
-use pocketdesk_core::local::{identity, network, pin};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::pair_link::{PairLink, order_addresses};
+use friday_mobile_core::local::{identity, network, pin};
 
 use crate::model::Device;
 
@@ -123,7 +123,7 @@ pub fn link_for(
         device_id: identity::device_id(state_dir).unwrap_or_default(),
         addresses,
         // T1: the running server's, when another program holds the configured one.
-        control_port: pocketdesk_core::local::listening::control_port(
+        control_port: friday_mobile_core::local::listening::control_port(
             state_dir,
             config.control_port,
         ),
@@ -294,9 +294,9 @@ pub fn whose_for(chosen_now: bool, view: Whose, on_file: Option<&pin::FilePin>) 
 /// What a profile lets a phone do, in words: its permissions that are on,
 /// by their Devices labels (Q2 review: not the code's names).
 pub fn profile_allows(
-    permissions: &pocketdesk_core::protocol::permissions::DevicePermissions,
+    permissions: &friday_mobile_core::protocol::permissions::DevicePermissions,
 ) -> String {
-    use pocketdesk_core::protocol::permissions::Capability;
+    use friday_mobile_core::protocol::permissions::Capability;
     let on: Vec<String> = Capability::ALL
         .into_iter()
         .filter(|c| permissions.allows(*c))
@@ -505,7 +505,7 @@ impl PairView {
             let configured = config.map_or(Config::default().control_port, |c| c.control_port);
             if let Some(link) = &self.link
                 && link.control_port
-                    != pocketdesk_core::local::listening::control_port(state_dir, configured)
+                    != friday_mobile_core::local::listening::control_port(state_dir, configured)
             {
                 let addresses = link.addresses.clone();
                 self.make_code(ui, state_dir, config, now_unix, addresses);
@@ -604,7 +604,7 @@ impl PairView {
                 // P9: each saved profile is a choice too.
                 // One that cannot be read is said (Q2 review: it read as none).
                 let (profiles, profiles_error) =
-                    match pocketdesk_core::local::permission_profiles::load(state_dir) {
+                    match friday_mobile_core::local::permission_profiles::load(state_dir) {
                         Ok(profiles) => (profiles, None),
                         Err(e) => (Vec::new(), Some(e.to_string())),
                     };
@@ -782,9 +782,9 @@ impl PairView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::config::Config;
-    use pocketdesk_core::local::paths::CERT_FILE;
-    use pocketdesk_core::local::{identity, pin};
+    use friday_mobile_core::local::config::Config;
+    use friday_mobile_core::local::paths::CERT_FILE;
+    use friday_mobile_core::local::{identity, pin};
 
     /// The cross-language pairing link (core's `pair_link` fixture).
     const FIXTURE: &str = "pocketdesk://pair?v=1&name=Desk%20%26%20Co&id=d-1&a=192.168.1.5,100.80.1.2&cp=1716&sp=4716&pin=012345&fp=abababababababababababababababababababababababababababababababab&ep=eyJlbmRwb2ludElkIjoieCIsInJlbGF5VXJscyI6W10sImRpcmVjdEFkZHJzIjpbXX0";

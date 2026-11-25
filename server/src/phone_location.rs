@@ -17,9 +17,9 @@
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::phone_location::{ASK, FIX, Fix, Precision, ask_body};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::phone_location::{ASK, FIX, Fix, Precision, ask_body};
 use serde_json::Value;
 
 use crate::nmea::FixSource;
@@ -233,7 +233,7 @@ fn deliver(device_id: &str, body: &Value) -> bool {
 fn is_owner_phone(device_id: &str) -> bool {
     crate::state::trust_store_path()
         .ok()
-        .and_then(|path| pocketdesk_core::protocol::kdeconnect::TrustStore::read(path).ok())
+        .and_then(|path| friday_mobile_core::protocol::kdeconnect::TrustStore::read(path).ok())
         .is_some_and(|store| store.is_owner_phone(device_id))
 }
 
@@ -411,7 +411,7 @@ async fn start(fixes: Arc<Fixes>) -> std::result::Result<Serving, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_location::WORST_ACCURACY_M;
+    use friday_mobile_core::protocol::phone_location::WORST_ACCURACY_M;
     use serde_json::json;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -633,7 +633,7 @@ mod tests {
 
     #[test]
     fn the_packets_are_not_for_a_phone_without_a_session() {
-        use pocketdesk_core::protocol::permissions::capability_for;
+        use friday_mobile_core::protocol::permissions::capability_for;
         // Gated by the setting and the one phone asked, not by a permission.
         assert_eq!(capability_for(ASK), None);
         assert_eq!(capability_for(FIX), None);

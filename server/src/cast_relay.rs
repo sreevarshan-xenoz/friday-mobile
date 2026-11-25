@@ -14,9 +14,9 @@ use std::net::Ipv4Addr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use pocketdesk_core::local::cast::{self as wire, CastFile, Message, TOKEN_LEN};
-use pocketdesk_core::local::paths::CAST_FILE;
-use pocketdesk_core::streaming::cast::{CastChain, CastEvent, CastPayload, MAX_WINDOWS};
+use friday_mobile_core::local::cast::{self as wire, CastFile, Message, TOKEN_LEN};
+use friday_mobile_core::local::paths::CAST_FILE;
+use friday_mobile_core::streaming::cast::{CastChain, CastEvent, CastPayload, MAX_WINDOWS};
 use rand::RngCore;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -140,7 +140,7 @@ pub async fn run(mut events: mpsc::Receiver<CastEvent>, listener: TcpListener, s
                         // the older ends, its phone told why, so its camera
                         // does not stay open for nothing (PR #604 review N2).
                         if let Some(old) = webcam.take() {
-                            let _ = pocketdesk_core::streaming::sessions::end_session(
+                            let _ = friday_mobile_core::streaming::sessions::end_session(
                                 old.session_id,
                                 REPLACED_CAMERA,
                             );
@@ -495,7 +495,7 @@ fn close_on_phone(control: &mpsc::Sender<Vec<u8>>, window: u8) {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64);
     if let Some(batch) =
-        pocketdesk_core::streaming::cast_control::ControlBatch::close_window(now, window)
+        friday_mobile_core::streaming::cast_control::ControlBatch::close_window(now, window)
             .and_then(|b| b.encode())
     {
         let _ = control.try_send(batch);
@@ -646,7 +646,7 @@ fn start_viewer(
 /// window, and for an app window's viewer the batch made for that window;
 /// `None` for anything the phone could not read.
 fn control_batch(batch: &[u8], window: Option<u8>) -> Option<Vec<u8>> {
-    let decoded = pocketdesk_core::streaming::cast_control::ControlBatch::decode(batch)?;
+    let decoded = friday_mobile_core::streaming::cast_control::ControlBatch::decode(batch)?;
     match window {
         None => decoded.window().is_none().then(|| batch.to_vec()),
         Some(window) => decoded.for_window(window)?.encode(),
@@ -805,9 +805,9 @@ mod tests {
             .await
             .unwrap();
         view.write_all(&file.token_bytes().unwrap()).await.unwrap();
-        let batch = pocketdesk_core::streaming::cast_control::ControlBatch {
+        let batch = friday_mobile_core::streaming::cast_control::ControlBatch {
             sent_ms: 1,
-            events: vec![pocketdesk_core::streaming::cast_control::ControlEvent::Backspace],
+            events: vec![friday_mobile_core::streaming::cast_control::ControlEvent::Backspace],
         }
         .encode()
         .unwrap();
@@ -987,7 +987,7 @@ mod tests {
     /// sees that window's picture and reaches that window only.
     #[tokio::test]
     async fn each_app_window_has_its_own_file_viewer_and_input() {
-        use pocketdesk_core::streaming::cast_control::{ControlBatch, ControlEvent};
+        use friday_mobile_core::streaming::cast_control::{ControlBatch, ControlEvent};
         let dir = temp_dir("windows");
         let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let (events, rx) = mpsc::channel(64);
@@ -1149,7 +1149,7 @@ mod tests {
 
     #[test]
     fn a_screen_viewer_names_no_window_and_a_window_viewer_only_its_own() {
-        use pocketdesk_core::streaming::cast_control::{ControlBatch, ControlEvent};
+        use friday_mobile_core::streaming::cast_control::{ControlBatch, ControlEvent};
         let plain = ControlBatch {
             sent_ms: 1,
             events: vec![ControlEvent::Enter],

@@ -26,13 +26,13 @@ use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::view::{self as wire, Message};
-use pocketdesk_core::local::{identity, pin};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::view::{self as wire, Message};
+use friday_mobile_core::local::{identity, pin};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 use crate::computer_view::percentile;
 use crate::video::{Accel, Admit, Codec, DecodeWanted, Decoder, KeyGate, Planes};
@@ -128,11 +128,11 @@ pub(crate) fn server(
         command.env("POCKETDESK_TEST_PATTERN", value);
         // The latency probe's stage trace, for the table the probe prints
         // (`PD_LIVE_STAGES=0` leaves it off).
-        if value == pocketdesk_core::streaming::latency_probe::MODE
+        if value == friday_mobile_core::streaming::latency_probe::MODE
             && std::env::var("PD_LIVE_STAGES").as_deref() != Ok("0")
         {
             command.env(
-                pocketdesk_core::streaming::latency_trace::VAR,
+                friday_mobile_core::streaming::latency_trace::VAR,
                 trace_file(base),
             );
         }

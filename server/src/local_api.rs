@@ -5,11 +5,11 @@
 
 use std::path::Path;
 
-use pocketdesk_core::local::device_keys;
-use pocketdesk_core::local::paths::{LIVE_FILE, TRUST_FILE};
-use pocketdesk_core::local::sessions::{self, MirrorSession};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::device_keys;
+use friday_mobile_core::local::paths::{LIVE_FILE, TRUST_FILE};
+use friday_mobile_core::local::sessions::{self, MirrorSession};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 use serde_json::{Value, json};
 
 /// The API's version, in every object it prints. Within one version fields
@@ -27,10 +27,10 @@ pub fn versioned(mut value: Value) -> Value {
 /// Print each event as the server writes it, until stopped
 /// (`pocketdesk events`): one line per event, or one JSON object per line.
 pub fn watch(since_start: bool, as_json: bool) -> anyhow::Result<()> {
-    use pocketdesk_core::local::events::Tail;
+    use friday_mobile_core::local::events::Tail;
     use std::io::Write;
     let dir = crate::state::state_dir()?;
-    let config = pocketdesk_core::local::config::Config::load().unwrap_or_default();
+    let config = friday_mobile_core::local::config::Config::load().unwrap_or_default();
     if !config.events && !as_json {
         eprintln!(
             "The event log is off (Settings, \"Event log\"): nothing will show until it is on."
@@ -55,7 +55,7 @@ pub fn watch(since_start: bool, as_json: bool) -> anyhow::Result<()> {
 }
 
 /// One event as `pocketdesk events` prints it.
-pub fn watch_line(event: &pocketdesk_core::local::events::Event, as_json: bool) -> String {
+pub fn watch_line(event: &friday_mobile_core::local::events::Event, as_json: bool) -> String {
     if as_json {
         return versioned(serde_json::to_value(event).unwrap_or_default()).to_string();
     }
@@ -133,22 +133,22 @@ fn live_mirror(state_dir: &Path, now_unix: u64, running: bool) -> Option<session
 pub fn devices(state_dir: &Path, now_unix: u64, running: bool) -> Result<Value, String> {
     let live = live_sessions(state_dir, now_unix, running);
     let keys = device_keys::read(state_dir).unwrap_or_default();
-    let batteries = pocketdesk_core::local::phone_status::read(state_dir);
-    let quiet = pocketdesk_core::local::phone_quiet::read(state_dir);
-    let switches = pocketdesk_core::local::phone_switches::read(state_dir);
+    let batteries = friday_mobile_core::local::phone_status::read(state_dir);
+    let quiet = friday_mobile_core::local::phone_quiet::read(state_dir);
+    let switches = friday_mobile_core::local::phone_switches::read(state_dir);
     // D2 review: only a phone linked now says its quiet; an old report is not now's.
     let linked: std::collections::HashSet<String> = live_mirror(state_dir, now_unix, running)
         .map(|m| m.linked.into_iter().map(|p| p.device_id).collect())
         .unwrap_or_default();
     // Only a running server's: what played in an earlier run is not now.
     let media = if running {
-        pocketdesk_core::local::phone_media::read(state_dir)
+        friday_mobile_core::local::phone_media::read(state_dir)
     } else {
         Default::default()
     };
     let store = trust_store(state_dir)?;
     // Remote revoke: which devices may list and remove the others.
-    let listed = pocketdesk_core::local::computers::read(state_dir);
+    let listed = friday_mobile_core::local::computers::read(state_dir);
     let devices: Vec<Value> = store
         .trusted_devices()
         .into_iter()
@@ -207,7 +207,7 @@ fn trust_store(state_dir: &Path) -> Result<TrustStore, String> {
 /// and how its Bluetooth road stands.
 pub fn status(state_dir: &Path, now_unix: u64, running: bool) -> Value {
     let pid = running
-        .then(|| pocketdesk_core::local::server::server_pid(state_dir))
+        .then(|| friday_mobile_core::local::server::server_pid(state_dir))
         .flatten();
     let sessions: Vec<Value> = live_sessions(state_dir, now_unix, running)
         .into_iter()
@@ -227,7 +227,7 @@ pub fn status(state_dir: &Path, now_unix: u64, running: bool) -> Value {
         })
         .collect();
     let endpoint = running
-        .then(|| pocketdesk_core::local::identity::read_endpoint(state_dir))
+        .then(|| friday_mobile_core::local::identity::read_endpoint(state_dir))
         .flatten();
     versioned(json!({
         "server": {
@@ -245,10 +245,10 @@ pub fn status(state_dir: &Path, now_unix: u64, running: bool) -> Value {
 /// `pocketdesk status --json`.
 pub fn print_status() -> anyhow::Result<()> {
     let dir = crate::state::state_dir()?;
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     print(&status(
         &dir,
-        pocketdesk_core::local::pin::now_unix(),
+        friday_mobile_core::local::pin::now_unix(),
         running,
     ));
     Ok(())
@@ -256,7 +256,7 @@ pub fn print_status() -> anyhow::Result<()> {
 
 /// The last `count` files sent to phones, newest first, and how each went.
 pub fn sent_list(state_dir: &Path, count: usize) -> Value {
-    use pocketdesk_core::local::sent::{self, SentState};
+    use friday_mobile_core::local::sent::{self, SentState};
     let rows: Vec<Value> = sent::read(state_dir)
         .into_iter()
         .rev()
@@ -285,7 +285,7 @@ pub fn sent_list(state_dir: &Path, count: usize) -> Value {
 
 /// The last `count` files received from phones, newest first.
 pub fn received_list(state_dir: &Path, count: usize) -> Value {
-    let rows: Vec<Value> = pocketdesk_core::local::received::read(state_dir)
+    let rows: Vec<Value> = friday_mobile_core::local::received::read(state_dir)
         .into_iter()
         .rev()
         .take(count)
@@ -371,7 +371,7 @@ pub fn send_many_in(
     let ids = trust_store(state_dir)
         .map(|store| store.trusted_devices())
         .unwrap_or_default();
-    let computers = pocketdesk_core::local::computers::read(state_dir).computers;
+    let computers = friday_mobile_core::local::computers::read(state_dir).computers;
     let device_of = |name: &str| {
         resolve_phone(&ids, name)
             .ok()
@@ -471,9 +471,9 @@ pub fn send_in(
         Ok(store) => store.trusted_devices(),
         Err(reason) => return refused(exit::FAILED, reason),
     };
-    let computers = pocketdesk_core::local::computers::read(state_dir).computers;
+    let computers = friday_mobile_core::local::computers::read(state_dir).computers;
     // T6: a paired KDE Connect device, by its id or its name.
-    let kde = pocketdesk_core::local::kdeconnect_devices::devices(state_dir);
+    let kde = friday_mobile_core::local::kdeconnect_devices::devices(state_dir);
     let device_id = match resolve_phone(&ids, query) {
         Ok(id) => id,
         Err(reason) => match resolve_computer(&computers, query) {
@@ -493,7 +493,7 @@ pub fn send_in(
     // internet road with `internet_files` on, 2c), and a computer only
     // while its link is up (2h): say so now, not after queueing a send the
     // server can only fail.
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     if let Some(computer) = computers.iter().find(|c| c.device_id == device_id) {
         if computer.link != "linked" {
             return refused(
@@ -531,7 +531,7 @@ pub fn send_in(
             format!("{} is not there", full.display()),
         );
     }
-    let request = match pocketdesk_core::local::outbox::request(
+    let request = match friday_mobile_core::local::outbox::request(
         state_dir,
         &device_id,
         &full.to_string_lossy(),
@@ -597,7 +597,7 @@ pub fn call_in(state_dir: &Path, query: &str, number: &str, running: bool) -> (V
             exit::NO_SERVER,
         );
     }
-    if pocketdesk_core::protocol::dial::clean_number(number).is_none() {
+    if friday_mobile_core::protocol::dial::clean_number(number).is_none() {
         return (
             error("not a phone number: digits, with a + only at the start"),
             exit::BAD_ARGUMENTS,
@@ -627,8 +627,8 @@ pub fn call_in(state_dir: &Path, query: &str, number: &str, running: bool) -> (V
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
-    match pocketdesk_core::local::dials::request(state_dir, &device_id, number, now) {
+    let now = friday_mobile_core::local::pin::now_unix();
+    match friday_mobile_core::local::dials::request(state_dir, &device_id, number, now) {
         Ok(request) => (
             versioned(json!({
                 "id": request.id,
@@ -658,7 +658,7 @@ pub fn run_call(query: &str, number: &str, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = call_in(&dir, query, number, running);
     if as_json {
         print(&out);
@@ -681,7 +681,7 @@ pub fn command_in(
     text: &str,
     running: bool,
 ) -> (Value, i32) {
-    use pocketdesk_core::protocol::command::{valid_name, valid_text};
+    use friday_mobile_core::protocol::command::{valid_name, valid_text};
     if !running {
         return (
             error("no Pocketdesk server is running to send it"),
@@ -722,8 +722,8 @@ pub fn command_in(
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
-    match pocketdesk_core::local::commands::request(state_dir, &device_id, name, text, now) {
+    let now = friday_mobile_core::local::pin::now_unix();
+    match friday_mobile_core::local::commands::request(state_dir, &device_id, name, text, now) {
         Ok(request) => (
             versioned(json!({
                 "id": request.id,
@@ -753,7 +753,7 @@ pub fn run_command(query: &str, name: &str, text: &str, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = command_in(&dir, query, name, text, running);
     if as_json {
         print(&out);
@@ -777,7 +777,7 @@ pub fn link_in(state_dir: &Path, query: &str, url: &str, running: bool) -> (Valu
             exit::NO_SERVER,
         );
     }
-    if let Some(problem) = pocketdesk_core::protocol::link::link_problem(url) {
+    if let Some(problem) = friday_mobile_core::protocol::link::link_problem(url) {
         return (error(problem), exit::BAD_ARGUMENTS);
     }
     let store = match trust_store(state_dir) {
@@ -795,7 +795,7 @@ pub fn link_in(state_dir: &Path, query: &str, url: &str, running: bool) -> (Valu
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     // Only a session shows a link on the phone.
     if !live_sessions(state_dir, now, true)
         .iter()
@@ -808,7 +808,7 @@ pub fn link_in(state_dir: &Path, query: &str, url: &str, running: bool) -> (Valu
             exit::FAILED,
         );
     }
-    match pocketdesk_core::local::links::request(state_dir, &device_id, url, now) {
+    match friday_mobile_core::local::links::request(state_dir, &device_id, url, now) {
         Ok(request) => (
             versioned(json!({
                 "id": request.id,
@@ -857,7 +857,7 @@ pub fn ring_in(state_dir: &Path, query: &str, running: bool) -> (Value, i32) {
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     // A control link is what carries the ring, a session's or the
     // background one (N1 review: a session's video alone carries none).
     let reachable = live_mirror(state_dir, now, running)
@@ -870,7 +870,7 @@ pub fn ring_in(state_dir: &Path, query: &str, running: bool) -> (Value, i32) {
             exit::FAILED,
         );
     }
-    match pocketdesk_core::local::rings::request(state_dir, &device_id, now) {
+    match friday_mobile_core::local::rings::request(state_dir, &device_id, now) {
         Ok(request) => (
             versioned(json!({
                 "id": request.id,
@@ -887,11 +887,11 @@ pub fn ring_in(state_dir: &Path, query: &str, running: bool) -> (Value, i32) {
 /// for `minutes`, or to end its mute with 0 (D2): one with Mute on that
 /// keeps a link now. What to print, and the exit code.
 pub fn quiet_in(state_dir: &Path, query: &str, minutes: u32, running: bool) -> (Value, i32) {
-    if minutes > pocketdesk_core::local::quiet::MAX_MINUTES {
+    if minutes > friday_mobile_core::local::quiet::MAX_MINUTES {
         return (
             error(format!(
                 "at most {} minutes (a day)",
-                pocketdesk_core::local::quiet::MAX_MINUTES
+                friday_mobile_core::local::quiet::MAX_MINUTES
             )),
             exit::BAD_ARGUMENTS,
         );
@@ -924,7 +924,7 @@ pub fn quiet_in(state_dir: &Path, query: &str, minutes: u32, running: bool) -> (
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let reachable = live_mirror(state_dir, now, running)
         .is_some_and(|mirror| mirror.linked.iter().any(|p| p.device_id == device_id));
     if !reachable {
@@ -935,7 +935,7 @@ pub fn quiet_in(state_dir: &Path, query: &str, minutes: u32, running: bool) -> (
             exit::FAILED,
         );
     }
-    match pocketdesk_core::local::quiet::request(state_dir, &device_id, minutes, now) {
+    match friday_mobile_core::local::quiet::request(state_dir, &device_id, minutes, now) {
         Ok(request) => (
             versioned(json!({
                 "id": request.id,
@@ -962,7 +962,7 @@ pub fn run_quiet(query: &str, minutes: u32, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = quiet_in(&dir, query, minutes, running);
     if as_json {
         print(&out);
@@ -987,7 +987,7 @@ pub enum PauseAsk {
 
 /// Do `ask` in `state_dir` at `now_unix`: what to print, and the exit code.
 pub fn pause_in(state_dir: &Path, ask: PauseAsk, now_unix: u64) -> (Value, i32) {
-    use pocketdesk_core::local::pause;
+    use friday_mobile_core::local::pause;
     let done = match ask {
         PauseAsk::Show => Ok(()),
         PauseAsk::Pause(minutes) => pause::pause(state_dir, minutes, now_unix).map(|_| ()),
@@ -1032,7 +1032,7 @@ pub fn run_pause(ask: PauseAsk, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let (out, code) = pause_in(&dir, ask, pocketdesk_core::local::pin::now_unix());
+    let (out, code) = pause_in(&dir, ask, friday_mobile_core::local::pin::now_unix());
     if as_json {
         print(&out);
     } else if let Some(reason) = out["error"].as_str() {
@@ -1041,7 +1041,7 @@ pub fn run_pause(ask: PauseAsk, as_json: bool) -> i32 {
         match out["until_unix"].as_u64() {
             Some(until) => {
                 let left = until
-                    .saturating_sub(pocketdesk_core::local::pin::now_unix())
+                    .saturating_sub(friday_mobile_core::local::pin::now_unix())
                     .div_ceil(60);
                 let unit = if left == 1 { "minute" } else { "minutes" };
                 println!("paused for {left} more {unit}")
@@ -1063,7 +1063,7 @@ pub fn clipboard_in(
     limit: u32,
     running: bool,
 ) -> (Value, i32) {
-    use pocketdesk_core::local::clip_history;
+    use friday_mobile_core::local::clip_history;
     // As the setting allows (D3 review): none while it is off.
     let entries = clip_history::read_limited(state_dir, limit);
     let Some((place, query)) = send else {
@@ -1108,7 +1108,7 @@ pub fn clipboard_in(
             exit::FAILED,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let reachable = live_mirror(state_dir, now, running)
         .is_some_and(|mirror| mirror.linked.iter().any(|p| p.device_id == device_id));
     if !reachable {
@@ -1146,9 +1146,10 @@ pub fn run_clipboard(send: Option<(u32, &str)>, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     // A config that cannot be read shows none: the history may be off.
-    let limit = pocketdesk_core::local::config::Config::load().map_or(0, |c| c.clipboard_history);
+    let limit =
+        friday_mobile_core::local::config::Config::load().map_or(0, |c| c.clipboard_history);
     let (out, code) = clipboard_in(&dir, send, limit, running);
     if as_json {
         print(&out);
@@ -1183,7 +1184,7 @@ pub fn run_ring(query: &str, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = ring_in(&dir, query, running);
     if as_json {
         print(&out);
@@ -1208,7 +1209,7 @@ pub fn run_link(query: &str, url: &str, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = link_in(&dir, query, url, running);
     if as_json {
         print(&out);
@@ -1294,7 +1295,7 @@ fn linked_without_files(state_dir: &Path, now_unix: u64, running: bool) -> bool 
 pub fn run_send_to_phone(paths: &[std::path::PathBuf]) -> i32 {
     let (summary, body, code) = match crate::state::state_dir() {
         Ok(dir) => {
-            let running = || pocketdesk_core::local::server::is_running(&dir);
+            let running = || friday_mobile_core::local::server::is_running(&dir);
             send_to_phone_in(&dir, paths, &running)
         }
         Err(e) => (
@@ -1329,7 +1330,7 @@ pub fn send_to_phone_in(
             exit::NO_SERVER,
         );
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let Some(phone) = default_phone(state_dir, now, true) else {
         return not_sent(
             if linked_without_files(state_dir, now, true) {
@@ -1378,7 +1379,7 @@ pub fn send_to_phone_in(
 /// `pocketdesk send-menu`: add or remove "Send to phone" in the file
 /// managers, for this program.
 pub fn run_send_menu(remove: bool) -> anyhow::Result<()> {
-    use pocketdesk_core::local::send_menu;
+    use friday_mobile_core::local::send_menu;
     let data = send_menu::data_dir()?;
     if remove {
         send_menu::remove_in(&data)?;
@@ -1404,7 +1405,7 @@ pub fn run_send(query: &str, path: &Path, wait_secs: Option<u64>, as_json: bool)
             return exit::FAILED;
         }
     };
-    let running = || pocketdesk_core::local::server::is_running(&dir);
+    let running = || friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = send_many_in(
         &dir,
         query,
@@ -1483,7 +1484,7 @@ pub fn resolve_phone(ids: &[String], query: &str) -> Result<String, String> {
 /// A paired KDE Connect device named by `query` (T6): its id, or its name
 /// (any case); `Err` when several share the name.
 fn resolve_kde(
-    devices: &[pocketdesk_core::local::kdeconnect_devices::KdeDevice],
+    devices: &[friday_mobile_core::local::kdeconnect_devices::KdeDevice],
     query: &str,
 ) -> Option<Result<String, String>> {
     let query = query.trim();
@@ -1508,7 +1509,7 @@ fn resolve_kde(
 /// or 6 or more of its id's first characters; each of one computer only.
 /// `None` when none is named, an error when more than one is.
 fn resolve_computer(
-    computers: &[pocketdesk_core::local::computers::PeerComputer],
+    computers: &[friday_mobile_core::local::computers::PeerComputer],
     query: &str,
 ) -> Option<Result<String, String>> {
     let query = query.trim();
@@ -1516,7 +1517,7 @@ fn resolve_computer(
         return Some(Ok(c.device_id.clone()));
     }
     let one_of =
-        |found: Vec<&pocketdesk_core::local::computers::PeerComputer>, by: &str| match found
+        |found: Vec<&friday_mobile_core::local::computers::PeerComputer>, by: &str| match found
             .as_slice()
         {
             [] => None,
@@ -1547,8 +1548,8 @@ fn resolve_computer(
 /// `pocketdesk devices`.
 pub fn print_devices(as_json: bool) -> anyhow::Result<()> {
     let dir = crate::state::state_dir()?;
-    let running = pocketdesk_core::local::server::is_running(&dir);
-    let listed = devices(&dir, pocketdesk_core::local::pin::now_unix(), running)
+    let running = friday_mobile_core::local::server::is_running(&dir);
+    let listed = devices(&dir, friday_mobile_core::local::pin::now_unix(), running)
         .map_err(anyhow::Error::msg)?;
     if as_json {
         print(&listed);
@@ -1646,10 +1647,10 @@ pub fn kick_in(state_dir: &Path, target: &str, running: bool) -> (Value, i32) {
     if target.is_empty() {
         return (error("no session named"), exit::BAD_ARGUMENTS);
     }
-    match pocketdesk_core::local::sessions::request_kick(
+    match friday_mobile_core::local::sessions::request_kick(
         state_dir,
         target,
-        pocketdesk_core::local::pin::now_unix(),
+        friday_mobile_core::local::pin::now_unix(),
     ) {
         Ok(()) => (versioned(json!({ "kick_requested": target })), exit::DONE),
         Err(e) => (
@@ -1672,7 +1673,7 @@ pub fn run_kick(target: &str, as_json: bool) -> i32 {
             return exit::FAILED;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&dir);
+    let running = friday_mobile_core::local::server::is_running(&dir);
     let (out, code) = kick_in(&dir, target, running);
     if as_json {
         print(&out);
@@ -1714,7 +1715,7 @@ mod tests {
         assert_eq!(out["until_unix"], Value::Null, "until resumed");
         let (out, _) = pause_in(&dir, PauseAsk::Resume, 1_000);
         assert_eq!(out["paused"], false);
-        std::fs::write(dir.join(pocketdesk_core::local::paths::PAUSE_FILE), "x").unwrap();
+        std::fs::write(dir.join(friday_mobile_core::local::paths::PAUSE_FILE), "x").unwrap();
         assert_eq!(pause_in(&dir, PauseAsk::Resume, 1_000).1, exit::FAILED);
         let (out, code) = pause_in(&dir, PauseAsk::Show, 1_000);
         assert_eq!(code, exit::FAILED, "a broken pause is said so: {out}");
@@ -1751,25 +1752,25 @@ mod tests {
         let mut batteries = std::collections::BTreeMap::new();
         batteries.insert(
             "phone-a".to_string(),
-            pocketdesk_core::local::phone_status::PhoneBattery {
+            friday_mobile_core::local::phone_status::PhoneBattery {
                 charge: 54,
                 charging: true,
                 updated_unix: 95,
                 // L9: what it said of itself, beside the battery.
-                state: pocketdesk_core::local::phone_status::PhoneState {
+                state: friday_mobile_core::local::phone_status::PhoneState {
                     storage_free_mb: Some(12_300),
-                    network: Some(pocketdesk_core::local::phone_status::Network::Wifi),
-                    ringer: Some(pocketdesk_core::local::phone_status::Ringer::Silent),
+                    network: Some(friday_mobile_core::local::phone_status::Network::Wifi),
+                    ringer: Some(friday_mobile_core::local::phone_status::Ringer::Silent),
                     ..Default::default()
                 },
             },
         );
-        pocketdesk_core::local::phone_status::write(&dir, &batteries).unwrap();
+        friday_mobile_core::local::phone_status::write(&dir, &batteries).unwrap();
         let mut media = std::collections::BTreeMap::new();
         media.insert(
             "phone-a".to_string(),
-            pocketdesk_core::local::phone_media::PhoneMediaState {
-                media: pocketdesk_core::protocol::phone_media::PhoneMedia {
+            friday_mobile_core::local::phone_media::PhoneMediaState {
+                media: friday_mobile_core::protocol::phone_media::PhoneMedia {
                     title: "Song".to_string(),
                     artist: String::new(),
                     app: "Spotify".to_string(),
@@ -1783,11 +1784,11 @@ mod tests {
                 art: None,
             },
         );
-        pocketdesk_core::local::phone_media::write(&dir, &media).unwrap();
+        friday_mobile_core::local::phone_media::write(&dir, &media).unwrap();
         let mut quiet = std::collections::BTreeMap::new();
         quiet.insert(
             "phone-a".to_string(),
-            pocketdesk_core::local::phone_quiet::PhoneQuiet {
+            friday_mobile_core::local::phone_quiet::PhoneQuiet {
                 quiet: true,
                 until_unix: Some(3_700),
                 by_computer: true,
@@ -1795,19 +1796,19 @@ mod tests {
                 refused_unix: None,
             },
         );
-        pocketdesk_core::local::phone_quiet::write(&dir, &quiet).unwrap();
+        friday_mobile_core::local::phone_quiet::write(&dir, &quiet).unwrap();
         let mut switches = std::collections::BTreeMap::new();
         switches.insert(
             "phone-a".to_string(),
-            pocketdesk_core::local::phone_switches::PhoneSwitches {
-                switches: pocketdesk_core::local::phone_switches::from_body(
+            friday_mobile_core::local::phone_switches::PhoneSwitches {
+                switches: friday_mobile_core::local::phone_switches::from_body(
                     &json!({"switches": {"links": {"on": true}}}),
                 )
                 .unwrap(),
                 updated_unix: 98,
             },
         );
-        pocketdesk_core::local::phone_switches::write(&dir, &switches).unwrap();
+        friday_mobile_core::local::phone_switches::write(&dir, &switches).unwrap();
         let listed = devices(&dir, 101, true).unwrap();
         assert_eq!(listed["api"], API);
         assert_eq!(listed["server_running"], true);
@@ -1876,8 +1877,8 @@ mod tests {
 
     #[test]
     fn sent_and_received_are_listed_newest_first_with_how_each_went() {
-        use pocketdesk_core::local::received::{self, ReceivedFile};
-        use pocketdesk_core::local::sent::{self, SentFile, SentState};
+        use friday_mobile_core::local::received::{self, ReceivedFile};
+        use friday_mobile_core::local::sent::{self, SentFile, SentState};
         let dir = temp_dir("lists");
         for (n, state) in [SentState::Sent, SentState::Failed("no room".to_string())]
             .into_iter()
@@ -1970,10 +1971,12 @@ mod tests {
         assert_eq!(code, exit::DONE, "{out}");
         assert_eq!(out["number"], "+15550100100");
         assert_eq!(out["state"], "queued");
-        let queued =
-            pocketdesk_core::local::dials::take_all(&dir, pocketdesk_core::local::pin::now_unix());
+        let queued = friday_mobile_core::local::dials::take_all(
+            &dir,
+            friday_mobile_core::local::pin::now_unix(),
+        );
         assert_eq!(queued.len(), 1);
-        let mut off = pocketdesk_core::protocol::permissions::DevicePermissions::default();
+        let mut off = friday_mobile_core::protocol::permissions::DevicePermissions::default();
         off.set(Capability::Dial, false);
         TrustStore::load_or_create(dir.join(TRUST_FILE))
             .unwrap()
@@ -1999,13 +2002,13 @@ mod tests {
         let (out, code) = command_in(&dir, "5f1c9b", "lights", "off", true);
         assert_eq!(code, exit::DONE, "{out}");
         assert_eq!(out["state"], "queued");
-        let queued = pocketdesk_core::local::commands::take_all(
+        let queued = friday_mobile_core::local::commands::take_all(
             &dir,
-            pocketdesk_core::local::pin::now_unix(),
+            friday_mobile_core::local::pin::now_unix(),
         );
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].text, "off");
-        let mut off = pocketdesk_core::protocol::permissions::DevicePermissions::default();
+        let mut off = friday_mobile_core::protocol::permissions::DevicePermissions::default();
         off.set(Capability::Command, false);
         TrustStore::load_or_create(dir.join(TRUST_FILE))
             .unwrap()
@@ -2083,7 +2086,7 @@ mod tests {
             .collect();
         std::fs::write(
             dir.join(LIVE_FILE),
-            json!({ "updated_unix": pocketdesk_core::local::pin::now_unix(), "sessions": sessions, "linked": linked }).to_string(),
+            json!({ "updated_unix": friday_mobile_core::local::pin::now_unix(), "sessions": sessions, "linked": linked }).to_string(),
         )
         .unwrap();
     }
@@ -2095,7 +2098,7 @@ mod tests {
             std::fs::write(
                 dir.join(LIVE_FILE),
                 json!({
-                    "updated_unix": pocketdesk_core::local::pin::now_unix(),
+                    "updated_unix": friday_mobile_core::local::pin::now_unix(),
                     "sessions": [],
                     "linked": [{ "device_id": "5f1c9b3d-6e70", "files": files }],
                 })
@@ -2133,11 +2136,11 @@ mod tests {
                 .collect();
             std::fs::write(
                 dir.join(LIVE_FILE),
-                json!({ "updated_unix": pocketdesk_core::local::pin::now_unix(), "sessions": sessions, "linked": linked }).to_string(),
+                json!({ "updated_unix": friday_mobile_core::local::pin::now_unix(), "sessions": sessions, "linked": linked }).to_string(),
             )
             .unwrap();
         };
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let linked = json!([{ "device_id": "a71e00aa-0002", "files": true }]);
         let both = json!([
             { "device_id": "a71e00aa-0002", "files": true },
@@ -2189,11 +2192,11 @@ mod tests {
                 .collect();
             std::fs::write(
                 dir.join(LIVE_FILE),
-                json!({ "updated_unix": pocketdesk_core::local::pin::now_unix(), "sessions": sessions, "linked": [{ "device_id": "a71e00aa-0002", "files": true }] }).to_string(),
+                json!({ "updated_unix": friday_mobile_core::local::pin::now_unix(), "sessions": sessions, "linked": [{ "device_id": "a71e00aa-0002", "files": true }] }).to_string(),
             )
             .unwrap();
         };
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         mirror(&["stranger", "5f1c9b3d-6e70", "a71e00aa-0002"]);
         assert_eq!(
             link_phone(&dir, now, true).as_deref(),
@@ -2215,8 +2218,11 @@ mod tests {
         assert_eq!(code, exit::DONE, "{summary}: {body}");
         assert_eq!(body, "report.pdf");
         assert_eq!(
-            pocketdesk_core::local::outbox::take_all(&dir, pocketdesk_core::local::pin::now_unix())
-                .len(),
+            friday_mobile_core::local::outbox::take_all(
+                &dir,
+                friday_mobile_core::local::pin::now_unix()
+            )
+            .len(),
             1
         );
         let (_, _, code) = send_to_phone_in(&dir, &[], &|| true);
@@ -2231,7 +2237,7 @@ mod tests {
         std::fs::write(
             dir.join(LIVE_FILE),
             json!({
-                "updated_unix": pocketdesk_core::local::pin::now_unix(),
+                "updated_unix": friday_mobile_core::local::pin::now_unix(),
                 "sessions": [],
                 "linked": [{ "device_id": "5f1c9b3d-6e70", "files": false }],
             })
@@ -2258,8 +2264,11 @@ mod tests {
         assert!(out["error"].as_str().unwrap().contains("not connected"));
         assert!(out["error"].as_str().unwrap().contains("open Pocketdesk"));
         assert!(
-            pocketdesk_core::local::outbox::take_all(&dir, pocketdesk_core::local::pin::now_unix())
-                .is_empty()
+            friday_mobile_core::local::outbox::take_all(
+                &dir,
+                friday_mobile_core::local::pin::now_unix()
+            )
+            .is_empty()
         );
     }
 
@@ -2278,8 +2287,11 @@ mod tests {
         let (out, code) = send_in(&dir, "5f1c9b", &dir.join("missing.pdf"), &|| true, None);
         assert_eq!(code, exit::BAD_ARGUMENTS, "{out}");
         assert!(
-            pocketdesk_core::local::outbox::take_all(&dir, pocketdesk_core::local::pin::now_unix())
-                .is_empty(),
+            friday_mobile_core::local::outbox::take_all(
+                &dir,
+                friday_mobile_core::local::pin::now_unix()
+            )
+            .is_empty(),
             "nothing queued"
         );
     }
@@ -2292,8 +2304,10 @@ mod tests {
         assert_eq!(out["api"], API);
         assert_eq!(out["state"], "queued");
         assert_eq!(out["device_id"], "5f1c9b3d-6e70");
-        let queued =
-            pocketdesk_core::local::outbox::take_all(&dir, pocketdesk_core::local::pin::now_unix());
+        let queued = friday_mobile_core::local::outbox::take_all(
+            &dir,
+            friday_mobile_core::local::pin::now_unix(),
+        );
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].id, out["id"].as_str().unwrap());
         assert_eq!(queued[0].device_id, "5f1c9b3d-6e70");
@@ -2301,16 +2315,16 @@ mod tests {
 
     #[test]
     fn a_send_waited_for_ends_as_the_sent_list_says() {
-        use pocketdesk_core::local::sent::{self, SentFile, SentState};
+        use friday_mobile_core::local::sent::{self, SentFile, SentState};
         let (dir, file) = send_setup("send-wait");
         // The server's part, played here: take the request, then record it failed.
         let server_dir = dir.clone();
         let server = std::thread::spawn(move || {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
             loop {
-                let taken = pocketdesk_core::local::outbox::take_all(
+                let taken = friday_mobile_core::local::outbox::take_all(
                     &server_dir,
-                    pocketdesk_core::local::pin::now_unix(),
+                    friday_mobile_core::local::pin::now_unix(),
                 );
                 if let Some(request) = taken.into_iter().next() {
                     sent::record(
@@ -2390,14 +2404,14 @@ mod tests {
     }
 
     /// Play the server: take the next request and record it as `state`.
-    fn serve_one(dir: std::path::PathBuf, state: pocketdesk_core::local::sent::SentState) {
-        use pocketdesk_core::local::sent::{self, SentFile};
+    fn serve_one(dir: std::path::PathBuf, state: friday_mobile_core::local::sent::SentState) {
+        use friday_mobile_core::local::sent::{self, SentFile};
         std::thread::spawn(move || {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
             loop {
-                let taken = pocketdesk_core::local::outbox::take_all(
+                let taken = friday_mobile_core::local::outbox::take_all(
                     &dir,
-                    pocketdesk_core::local::pin::now_unix(),
+                    friday_mobile_core::local::pin::now_unix(),
                 );
                 if let Some(request) = taken.into_iter().next() {
                     sent::record(
@@ -2427,7 +2441,7 @@ mod tests {
         let (dir, file) = send_setup("send-offered");
         serve_one(
             dir.clone(),
-            pocketdesk_core::local::sent::SentState::Offered,
+            friday_mobile_core::local::sent::SentState::Offered,
         );
         let (out, code) = send_in(
             &dir,
@@ -2490,7 +2504,7 @@ mod tests {
             exit::FAILED,
             "a session's video, no control link: {out}"
         );
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
 
         // The background link, or a session's: a control link.
         std::fs::write(
@@ -2506,8 +2520,11 @@ mod tests {
         let (out, code) = ring_in(&dir, "5f1c9b", true);
         assert_eq!(code, exit::DONE, "linked: {out}");
         assert_eq!(out["state"], "queued");
-        let now = pocketdesk_core::local::pin::now_unix();
-        assert_eq!(pocketdesk_core::local::rings::take_all(&dir, now).len(), 1);
+        let now = friday_mobile_core::local::pin::now_unix();
+        assert_eq!(
+            friday_mobile_core::local::rings::take_all(&dir, now).len(),
+            1
+        );
 
         in_session(&dir, &[]);
         let (out, code) = ring_in(&dir, "5f1c9b", true);
@@ -2541,9 +2558,9 @@ mod tests {
         let (out, code) = ring_in(&dir, "7c2d9e4f", true);
         assert_eq!(code, exit::FAILED, "{out}");
         assert!(out["error"].as_str().unwrap().contains("computer"));
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         assert!(
-            pocketdesk_core::local::rings::take_all(&dir, now).is_empty(),
+            friday_mobile_core::local::rings::take_all(&dir, now).is_empty(),
             "none refused was queued"
         );
     }
@@ -2584,7 +2601,7 @@ mod tests {
     #[test]
     fn a_mute_is_queued_for_a_linked_phone_with_mute_on() {
         let (dir, _) = send_setup("quiet");
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         std::fs::write(
             dir.join(LIVE_FILE),
             json!({
@@ -2600,7 +2617,7 @@ mod tests {
         assert_eq!(out["minutes"], 60);
         let (_, code) = quiet_in(&dir, "5f1c9b", 0, true);
         assert_eq!(code, exit::DONE, "0 ends it");
-        let taken = pocketdesk_core::local::quiet::take_all(&dir, now + 1);
+        let taken = friday_mobile_core::local::quiet::take_all(&dir, now + 1);
         // Both in one second: in either order.
         let mut minutes: Vec<u32> = taken.iter().map(|r| r.minutes).collect();
         minutes.sort_unstable();
@@ -2627,7 +2644,7 @@ mod tests {
         let (out, code) = quiet_in(&dir, "5f1c9b", 60, true);
         assert_eq!(code, exit::FAILED, "not linked: {out}");
         assert!(
-            pocketdesk_core::local::quiet::take_all(&dir, now + 1).is_empty(),
+            friday_mobile_core::local::quiet::take_all(&dir, now + 1).is_empty(),
             "none refused was queued"
         );
     }
@@ -2636,7 +2653,7 @@ mod tests {
     /// Clipboard on, by its place.
     #[test]
     fn the_clipboard_history_is_listed_and_an_entry_sent() {
-        use pocketdesk_core::local::clip_history::{ClipEntry, record, take_sends};
+        use friday_mobile_core::local::clip_history::{ClipEntry, record, take_sends};
         let (dir, _) = send_setup("cliphistory");
         let (out, code) = clipboard_in(&dir, None, 20, true);
         assert_eq!(code, exit::DONE);
@@ -2656,7 +2673,7 @@ mod tests {
         assert_eq!(code, exit::BAD_ARGUMENTS, "no third entry");
         let (_, code) = clipboard_in(&dir, Some((2, "5f1c9b")), 20, false);
         assert_eq!(code, exit::NO_SERVER);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         std::fs::write(
             dir.join(LIVE_FILE),
             json!({
@@ -2685,8 +2702,11 @@ mod tests {
         assert_eq!(code, exit::FAILED, "{out}");
         assert!(out["error"].as_str().unwrap().contains("Links"), "{out}");
         assert!(
-            pocketdesk_core::local::links::take_all(&dir, pocketdesk_core::local::pin::now_unix())
-                .is_empty()
+            friday_mobile_core::local::links::take_all(
+                &dir,
+                friday_mobile_core::local::pin::now_unix()
+            )
+            .is_empty()
         );
     }
 
@@ -2697,8 +2717,10 @@ mod tests {
         assert_eq!(code, exit::DONE, "{out}");
         assert_eq!(out["api"], API);
         assert_eq!(out["state"], "queued");
-        let queued =
-            pocketdesk_core::local::links::take_all(&dir, pocketdesk_core::local::pin::now_unix());
+        let queued = friday_mobile_core::local::links::take_all(
+            &dir,
+            friday_mobile_core::local::pin::now_unix(),
+        );
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].device_id, "5f1c9b3d-6e70");
 
@@ -2711,21 +2733,25 @@ mod tests {
         let (_, code) = link_in(&dir, "5f1c9b", "https://example.org/", true);
         assert_eq!(code, exit::FAILED, "not in a session");
         assert!(
-            pocketdesk_core::local::links::take_all(&dir, pocketdesk_core::local::pin::now_unix())
-                .is_empty()
+            friday_mobile_core::local::links::take_all(
+                &dir,
+                friday_mobile_core::local::pin::now_unix()
+            )
+            .is_empty()
         );
     }
 
     /// T6: a paired KDE Connect device is named by its id or its name.
     #[test]
     fn a_kde_connect_device_is_found_by_id_or_name() {
-        let device = |id: &str, name: &str| pocketdesk_core::local::kdeconnect_devices::KdeDevice {
-            device_id: id.to_string(),
-            name: name.to_string(),
-            cert_hash: String::new(),
-            paired_unix: 0,
-            permissions: Default::default(),
-        };
+        let device =
+            |id: &str, name: &str| friday_mobile_core::local::kdeconnect_devices::KdeDevice {
+                device_id: id.to_string(),
+                name: name.to_string(),
+                cert_hash: String::new(),
+                paired_unix: 0,
+                permissions: Default::default(),
+            };
         let devices = [
             device("kde_1", "Tablet"),
             device("kde_2", "Phone"),
@@ -2748,7 +2774,7 @@ mod tests {
 
     #[test]
     fn a_computer_is_named_by_its_id_its_name_or_a_unique_prefix() {
-        let computer = |id: &str, name: &str| pocketdesk_core::local::computers::PeerComputer {
+        let computer = |id: &str, name: &str| friday_mobile_core::local::computers::PeerComputer {
             device_id: id.to_string(),
             name: name.to_string(),
             addresses: Vec::new(),
@@ -2819,13 +2845,13 @@ mod tests {
 
     #[test]
     fn a_watched_event_reads_as_a_line_or_as_the_apis_json() {
-        let event = pocketdesk_core::local::events::Event::new(
+        let event = friday_mobile_core::local::events::Event::new(
             "phone_battery",
             Some("0123456789abcdef"),
             3_661,
             json!({"charge": 12, "charging": false}),
             json!({}),
-            pocketdesk_core::local::events::EventsDetail::Metadata,
+            friday_mobile_core::local::events::EventsDetail::Metadata,
         );
         let line = watch_line(&event, false);
         assert_eq!(

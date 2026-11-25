@@ -2313,6 +2313,173 @@ dependencies = [
 ]
 
 [[package]]
+name = "friday-mobile-android-bridge"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "friday-mobile-core",
+ "iroh",
+ "jni 0.21.1",
+ "quinn",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "friday-mobile-core"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "ashpd",
+ "async-trait",
+ "base64 0.22.1",
+ "bitflags 2.13.2",
+ "dirs 5.0.1",
+ "evdev",
+ "ffmpeg-next",
+ "ffmpeg-sidecar",
+ "friday-mobile-ffmpeg",
+ "futures-lite",
+ "if-addrs",
+ "iroh",
+ "iroh-mainline-address-lookup",
+ "libc",
+ "libspa",
+ "mdns-sd",
+ "n0-mainline",
+ "netdev 0.46.3",
+ "noq-proto",
+ "opus",
+ "pipewire",
+ "quinn",
+ "rand 0.8.6",
+ "rcgen",
+ "regex",
+ "reqwest 0.12.28",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "socket2 0.6.3",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+ "toml 0.8.23",
+ "toml_edit 0.22.27",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "wayland-backend",
+ "wayland-client",
+ "wayland-protocols",
+ "wayland-protocols-misc",
+ "wayland-protocols-wlr",
+ "wayland-scanner",
+ "windows 0.62.2",
+ "windows-future 0.3.2",
+ "x11rb",
+ "xcap",
+]
+
+[[package]]
+name = "friday-mobile-desktop"
+version = "0.9.0"
+dependencies = [
+ "base64 0.22.1",
+ "dirs 5.0.1",
+ "eframe",
+ "egui_kittest",
+ "friday-mobile-core",
+ "image",
+ "ksni",
+ "memmap2",
+ "qrcode",
+ "serde_json",
+ "sha2 0.10.9",
+ "skrifa",
+ "tokio",
+ "tray-icon",
+ "windows 0.62.2",
+ "windows-future 0.3.2",
+ "winit",
+ "zbus",
+]
+
+[[package]]
+name = "friday-mobile-ffmpeg"
+version = "0.9.0"
+dependencies = [
+ "ffmpeg-next",
+]
+
+[[package]]
+name = "friday-mobile-server"
+version = "0.9.0"
+dependencies = [
+ "ab_glyph",
+ "anyhow",
+ "ashpd",
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "clap",
+ "dashmap",
+ "dirs 5.0.1",
+ "enigo",
+ "evdev",
+ "friday-mobile-core",
+ "futures-lite",
+ "if-addrs",
+ "image",
+ "iroh",
+ "iroh-mainline-address-lookup",
+ "iroh-relay",
+ "libc",
+ "n0-mainline",
+ "notify",
+ "pipewire",
+ "png",
+ "quinn",
+ "rand 0.8.6",
+ "rcgen",
+ "reis",
+ "reqwest 0.12.28",
+ "ring",
+ "rumqttc",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "socket2 0.6.3",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "wayland-client",
+ "wayland-protocols",
+ "wayland-protocols-wlr",
+ "windows 0.62.2",
+ "windows-core 0.62.2",
+ "windows-future 0.3.2",
+ "x11rb",
+ "x509-parser",
+ "xcap",
+ "zbus",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5601,173 +5768,6 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide",
-]
-
-[[package]]
-name = "pocketdesk-android-bridge"
-version = "0.9.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "iroh",
- "jni 0.21.1",
- "pocketdesk-core",
- "quinn",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tokio",
- "tokio-rustls",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "pocketdesk-core"
-version = "0.9.0"
-dependencies = [
- "anyhow",
- "ashpd",
- "async-trait",
- "base64 0.22.1",
- "bitflags 2.13.2",
- "dirs 5.0.1",
- "evdev",
- "ffmpeg-next",
- "ffmpeg-sidecar",
- "futures-lite",
- "if-addrs",
- "iroh",
- "iroh-mainline-address-lookup",
- "libc",
- "libspa",
- "mdns-sd",
- "n0-mainline",
- "netdev 0.46.3",
- "noq-proto",
- "opus",
- "pipewire",
- "pocketdesk-ffmpeg",
- "quinn",
- "rand 0.8.6",
- "rcgen",
- "regex",
- "reqwest 0.12.28",
- "rustls",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "socket2 0.6.3",
- "tokio",
- "tokio-rustls",
- "tokio-util",
- "toml 0.8.23",
- "toml_edit 0.22.27",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "wayland-backend",
- "wayland-client",
- "wayland-protocols",
- "wayland-protocols-misc",
- "wayland-protocols-wlr",
- "wayland-scanner",
- "windows 0.62.2",
- "windows-future 0.3.2",
- "x11rb",
- "xcap",
-]
-
-[[package]]
-name = "pocketdesk-desktop"
-version = "0.9.0"
-dependencies = [
- "base64 0.22.1",
- "dirs 5.0.1",
- "eframe",
- "egui_kittest",
- "image",
- "ksni",
- "memmap2",
- "pocketdesk-core",
- "qrcode",
- "serde_json",
- "sha2 0.10.9",
- "skrifa",
- "tokio",
- "tray-icon",
- "windows 0.62.2",
- "windows-future 0.3.2",
- "winit",
- "zbus",
-]
-
-[[package]]
-name = "pocketdesk-ffmpeg"
-version = "0.9.0"
-dependencies = [
- "ffmpeg-next",
-]
-
-[[package]]
-name = "pocketdesk-server"
-version = "0.9.0"
-dependencies = [
- "ab_glyph",
- "anyhow",
- "ashpd",
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "clap",
- "dashmap",
- "dirs 5.0.1",
- "enigo",
- "evdev",
- "futures-lite",
- "if-addrs",
- "image",
- "iroh",
- "iroh-mainline-address-lookup",
- "iroh-relay",
- "libc",
- "n0-mainline",
- "notify",
- "pipewire",
- "png",
- "pocketdesk-core",
- "quinn",
- "rand 0.8.6",
- "rcgen",
- "reis",
- "reqwest 0.12.28",
- "ring",
- "rumqttc",
- "rustls",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "socket2 0.6.3",
- "tokio",
- "tokio-rustls",
- "tokio-util",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "url",
- "uuid",
- "wayland-client",
- "wayland-protocols",
- "wayland-protocols-wlr",
- "windows 0.62.2",
- "windows-core 0.62.2",
- "windows-future 0.3.2",
- "x11rb",
- "x509-parser",
- "xcap",
- "zbus",
 ]
 
 [[package]]

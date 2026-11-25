@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::transfers::{self as mirror, Direction, Mirror, Transfer};
+use friday_mobile_core::local::transfers::{self as mirror, Direction, Mirror, Transfer};
 
 /// Why the phone's next attempt at a cancelled file is refused.
 pub(crate) const CANCELLED_HERE: &str = "cancelled on the computer";
@@ -108,7 +108,7 @@ pub(crate) fn track(shown: Shown) -> Tracker {
         Row {
             shown,
             done: done.clone(),
-            started_unix: pocketdesk_core::local::pin::now_unix(),
+            started_unix: friday_mobile_core::local::pin::now_unix(),
             samples: VecDeque::new(),
         },
     );
@@ -253,7 +253,7 @@ fn of_devices_gone(table: &Table, let_in: impl Fn(&str) -> bool) -> Vec<String> 
 /// (nothing is stopped on a bad read; the next tick reads again).
 fn paired_now() -> Option<Vec<String>> {
     let path = crate::state::trust_store_path().ok()?;
-    pocketdesk_core::protocol::kdeconnect::TrustStore::read(path)
+    friday_mobile_core::protocol::kdeconnect::TrustStore::read(path)
         .ok()
         .map(|store| store.trusted_devices())
 }
@@ -305,7 +305,7 @@ pub async fn run() {
         let moving = !lock().rows.is_empty();
         if moving {
             crate::inbox::wait_at_most(
-                pocketdesk_core::local::paths::TRANSFER_CANCELS_DIR,
+                friday_mobile_core::local::paths::TRANSFER_CANCELS_DIR,
                 TICK,
                 TICK,
             )
@@ -313,10 +313,10 @@ pub async fn run() {
         } else {
             tokio::select! {
                 _ = added().notified() => {}
-                _ = crate::inbox::wait(pocketdesk_core::local::paths::TRANSFER_CANCELS_DIR, TICK) => {}
+                _ = crate::inbox::wait(friday_mobile_core::local::paths::TRANSFER_CANCELS_DIR, TICK) => {}
             }
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         for request in mirror::take_cancels(&dir, now) {
             cancel(&request.transfer, OFFER_CANCELLED).await;
         }
@@ -346,7 +346,7 @@ pub async fn run() {
 /// Write the list; whether it was written.
 fn write(dir: &std::path::Path, transfers: Vec<Transfer>) -> bool {
     let mirror = Mirror {
-        updated_unix: pocketdesk_core::local::pin::now_unix(),
+        updated_unix: friday_mobile_core::local::pin::now_unix(),
         transfers,
     };
     match mirror::write(dir, &mirror) {

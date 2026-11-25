@@ -4,10 +4,10 @@
 //! the control service, whose connections are control links (TLS from the
 //! first byte, served by `service::handle_bluetooth_control` under the
 //! internet road's rules), the transfer service
-//! ([`link_uuid`](pocketdesk_core::protocol::bluetooth::link_uuid)), whose
+//! ([`link_uuid`](friday_mobile_core::protocol::bluetooth::link_uuid)), whose
 //! connections are transfer links a control link asked for (the link hello
 //! first, [`links`]), and the screen service
-//! ([`stream_uuid`](pocketdesk_core::protocol::bluetooth::stream_uuid)),
+//! ([`stream_uuid`](friday_mobile_core::protocol::bluetooth::stream_uuid)),
 //! whose connections are stream sessions, the screen over Bluetooth (the
 //! stream hello first, then TLS): RFCOMM carries one connection per channel
 //! between two devices, so none can share another's channel, and a screen
@@ -28,10 +28,10 @@ pub(crate) use links::turn;
 use links::{BluetoothLinks, LinkTable};
 pub(crate) use links::{ONE_AT_A_TIME, busy as transfer_busy};
 
-use pocketdesk_core::protocol::bluetooth::{
+use friday_mobile_core::protocol::bluetooth::{
     BluetoothInfo, LINK_HELLO, PACKET, RoadState, STREAM_HELLO,
 };
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::io::{AsyncRead, AsyncReadExt, DuplexStream};
@@ -396,7 +396,7 @@ async fn sort<S: AsyncRead + Unpin>(mut stream: S, kind: Kind) -> Option<Arrival
             return None;
         }
         if kind == Kind::Control {
-            return (byte[0] == pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD)
+            return (byte[0] == friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD)
                 .then(|| Arrival::Control(Prefixed::new(byte[0], stream)));
         }
         let mut line = vec![byte[0]];
@@ -413,13 +413,13 @@ async fn sort<S: AsyncRead + Unpin>(mut stream: S, kind: Kind) -> Option<Arrival
             return None;
         }
         let line = std::str::from_utf8(&line).ok()?;
-        if pocketdesk_core::protocol::bluetooth::parse_stream_hello(line) {
+        if friday_mobile_core::protocol::bluetooth::parse_stream_hello(line) {
             return Some(Arrival::Stream(stream));
         }
         if kind == Kind::Screen {
             return None;
         }
-        let id = pocketdesk_core::protocol::bluetooth::parse_link_hello(line)?;
+        let id = friday_mobile_core::protocol::bluetooth::parse_link_hello(line)?;
         Some(Arrival::Link(id, stream))
     };
     let wait = match kind {
@@ -555,7 +555,7 @@ impl Radio for Winsock {
         screen: uuid::Uuid,
         accepted: mpsc::Sender<Incoming>,
     ) -> std::io::Result<Box<dyn Listener>> {
-        use pocketdesk_core::protocol::bluetooth::{
+        use friday_mobile_core::protocol::bluetooth::{
             LINK_SERVICE_NAME, SERVICE_NAME, STREAM_SERVICE_NAME,
         };
         let runtime = tokio::runtime::Handle::try_current().map_err(std::io::Error::other)?;
@@ -655,12 +655,12 @@ async fn keep_listening(
         if running.is_none()
             && let Some(at) = address
         {
-            let service = pocketdesk_core::protocol::bluetooth::service_uuid();
+            let service = friday_mobile_core::protocol::bluetooth::service_uuid();
             state.begin();
             let started = match uuid::Uuid::parse_str(&service) {
                 Ok(uuid) => {
-                    let link = pocketdesk_core::protocol::bluetooth::link_uuid(uuid);
-                    let screen = pocketdesk_core::protocol::bluetooth::stream_uuid(uuid);
+                    let link = friday_mobile_core::protocol::bluetooth::link_uuid(uuid);
+                    let screen = friday_mobile_core::protocol::bluetooth::stream_uuid(uuid);
                     let radio = radio.clone();
                     let accepted = accepted.clone();
                     tokio::task::spawn_blocking(move || radio.listen(uuid, link, screen, accepted))
@@ -726,7 +726,7 @@ fn live(stream: DuplexStream) -> Stream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::bluetooth::{format_link_hello, format_stream_hello};
+    use friday_mobile_core::protocol::bluetooth::{format_link_hello, format_stream_hello};
     use std::sync::atomic::{AtomicBool, Ordering};
     use tokio::io::AsyncWriteExt;
 
@@ -735,7 +735,7 @@ mod tests {
         let address = [0x00, 0x00, 0x5E, 0x00, 0x53, 0x01];
         assert_eq!(format_address(address), "00:00:5E:00:53:01");
         assert_eq!(
-            pocketdesk_core::protocol::bluetooth::parse_address(&format_address(address)),
+            friday_mobile_core::protocol::bluetooth::parse_address(&format_address(address)),
             Some(address)
         );
     }
@@ -754,7 +754,7 @@ mod tests {
         let state: &'static Listening = Box::leak(Box::new(Listening::new()));
         state.start(BluetoothInfo {
             address: format_address([0, 0, 0x5E, 0, 0x53, 1]),
-            service: pocketdesk_core::protocol::bluetooth::SERVICE_UUID.to_string(),
+            service: friday_mobile_core::protocol::bluetooth::SERVICE_UUID.to_string(),
         });
         tokio::spawn(serve(
             accepted_rx,
@@ -827,7 +827,7 @@ mod tests {
         let (accepted, table, mut control, mut sessions) = serving();
         let (waiting, _arrived) = table.wait();
         let mut hello = format_stream_hello().into_bytes();
-        let record = [pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
+        let record = [friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
         hello.extend_from_slice(&record);
         let mut phone = dial(&accepted, kind, &hello).await;
         let mut session = sessions.recv().await.expect("a stream session");
@@ -845,7 +845,7 @@ mod tests {
     #[tokio::test]
     async fn tls_goes_to_the_control_loop_with_its_first_byte() {
         let (accepted, _table, mut control, _sessions) = serving();
-        let record = [pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
+        let record = [friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
         let _phone = dial(&accepted, Kind::Control, &record).await;
         let mut link = control.recv().await.expect("a control link");
         let mut got = [0u8; 3];
@@ -857,7 +857,7 @@ mod tests {
     async fn anything_else_is_dropped() {
         let (accepted, table, mut control, mut sessions) = serving();
         let (waiting, _arrived) = table.wait();
-        let tls = vec![pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
+        let tls = vec![friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
         for (kind, first) in [
             (Kind::Link, b"GET / HTTP/1.1\r\n".to_vec()),
             (Kind::Control, b"GET / HTTP/1.1\r\n".to_vec()),
@@ -968,7 +968,7 @@ mod tests {
         let late = tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(12)).await;
             phone_end
-                .write_all(&[pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD])
+                .write_all(&[friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD])
                 .await
                 .unwrap();
             phone_end
@@ -1022,11 +1022,11 @@ mod tests {
         ) -> std::io::Result<Box<dyn Listener>> {
             assert_eq!(
                 link,
-                pocketdesk_core::protocol::bluetooth::link_uuid(control)
+                friday_mobile_core::protocol::bluetooth::link_uuid(control)
             );
             assert_eq!(
                 screen,
-                pocketdesk_core::protocol::bluetooth::stream_uuid(control)
+                friday_mobile_core::protocol::bluetooth::stream_uuid(control)
             );
             assert!(screen != control && screen != link, "three services");
             *self.accepted.lock().unwrap() = Some(accepted);
@@ -1090,7 +1090,7 @@ mod tests {
         assert_eq!(told.address, "00:00:5E:00:53:01");
         assert_eq!(
             told.service,
-            pocketdesk_core::protocol::bluetooth::service_uuid()
+            friday_mobile_core::protocol::bluetooth::service_uuid()
         );
 
         // The switch off: it stops, and tells nothing.
@@ -1215,7 +1215,7 @@ mod tests {
         until("listening", || state.get().is_some()).await;
         let accepted = radio.accepted.lock().unwrap().clone().unwrap();
 
-        let record = [pocketdesk_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
+        let record = [friday_mobile_core::protocol::TLS_HANDSHAKE_RECORD, 3, 1];
         let _phone = dial(&accepted, Kind::Control, &record).await;
         let mut link = control_rx.recv().await.expect("a control link");
         let mut got = [0u8; 3];

@@ -28,7 +28,7 @@ use super::{EncodedPacket, EncoderPreset, H264Profile, StreamingConfig, VideoCod
 #[cfg(target_os = "linux")]
 use ffmpeg_next as ffmpeg;
 #[cfg(windows)]
-use pocketdesk_ffmpeg::ffmpeg_next as ffmpeg;
+use friday_mobile_ffmpeg::ffmpeg_next as ffmpeg;
 #[cfg(all(windows, feature = "capture"))]
 use windows::Win32::Graphics::Direct3D11::{ID3D11Device, ID3D11Texture2D};
 #[cfg(all(windows, feature = "capture"))]

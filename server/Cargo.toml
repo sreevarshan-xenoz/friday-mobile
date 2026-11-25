@@ -1,17 +1,21 @@
 [package]
-name = "pocketdesk-server"
+name = "friday-mobile-server"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [lib]
-name = "pocketdesk_server"
+name = "friday_mobile_server"
 path = "src/lib.rs"
 
 [[bin]]
-name = "pocketdesk"
+name = "friday-mobile"
 path = "src/main.rs"
+
+[[bin]]
+name = "friday-mobile-pam-ask"
+path = "src/bin/friday-mobile-pam-ask.rs"
 
 [dependencies]
 # Notifications' icons and pictures come as base64 (K3).
@@ -19,7 +23,7 @@ base64 = "0.22"
 anyhow.workspace = true
 # Core's `inproc` (the in-process Linux encoders) comes through this crate's
 # own default feature, so the portable tarball can build without it.
-pocketdesk-core = { path = "../core", default-features = false, features = ["server", "wan", "local"] }
+friday-mobile-core = { path = "../core", default-features = false, features = ["server", "wan", "local"] }
 serde.workspace = true
 # Same version core already uses: the OS CSPRNG for pairing PINs.
 rand = "0.8"
@@ -122,7 +126,7 @@ windows-future = "0.3"
 
 [dev-dependencies]
 # Tests never reach the owner's state or config folder (core `test-harness`).
-pocketdesk-core = { path = "../core", default-features = false, features = ["test-harness"] }
+friday-mobile-core = { path = "../core", default-features = false, features = ["test-harness"] }
 rustls.workspace = true
 # A local Mainline DHT for the N3 publishing test (no internet).
 n0-mainline = "0.7"
@@ -138,10 +142,10 @@ default = ["inproc"]
 # The in-process Linux encoders, linking the build machine's FFmpeg libraries.
 # The release tarball builds with `--no-default-features` and encodes through
 # the system `ffmpeg` program instead, so it runs on any FFmpeg major.
-inproc = ["pocketdesk-core/inproc"]
+inproc = ["friday-mobile-core/inproc"]
 # BG8: the in-process Windows encoder (needs FFmpeg's development files to
 # build and its DLLs to run; docs/development-setup.md).
-inproc-windows = ["pocketdesk-core/inproc-windows"]
+inproc-windows = ["friday-mobile-core/inproc-windows"]
 
 # `cargo fuzz` builds with `--cfg fuzzing` (the entry points in
 # `src/fuzzing.rs`, for `fuzz/`).

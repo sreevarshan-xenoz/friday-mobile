@@ -102,7 +102,7 @@ pub fn handle(
     if !running {
         return err("Pocketdesk is not running on this computer.");
     }
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let any_phone = crate::local_api::default_phone(state_dir, now, running);
     let Some(phone) = any_phone else {
         return err("No phone is connected: open Pocketdesk on your phone.");
@@ -123,7 +123,7 @@ pub fn handle(
             }
         }
         Some("image") => {
-            if let Some(problem) = pocketdesk_core::protocol::link::link_problem(url) {
+            if let Some(problem) = friday_mobile_core::protocol::link::link_problem(url) {
                 return err(format!("Not sent: {problem}"));
             }
             let image = match fetch(url) {
@@ -156,7 +156,7 @@ fn images_dir() -> io::Result<PathBuf> {
     let base = std::env::temp_dir();
     #[cfg(not(windows))]
     let base = dirs::cache_dir().ok_or_else(|| io::Error::other("no cache folder"))?;
-    Ok(base.join("pocketdesk-browser"))
+    Ok(base.join("friday-mobile-browser"))
 }
 
 /// Keep `image` in its own owner-only folder under `dir`, so the phone gets
@@ -173,7 +173,7 @@ fn keep_image(dir: &Path, image: &Image) -> io::Result<PathBuf> {
         }
         _ => {}
     }
-    pocketdesk_core::secure_fs::create_private_dir(&dir)?;
+    friday_mobile_core::secure_fs::create_private_dir(&dir)?;
     if let Ok(entries) = std::fs::read_dir(&dir) {
         for entry in entries.flatten() {
             let old = entry
@@ -186,9 +186,9 @@ fn keep_image(dir: &Path, image: &Image) -> io::Result<PathBuf> {
         }
     }
     let one = dir.join(uuid::Uuid::new_v4().simple().to_string());
-    pocketdesk_core::secure_fs::create_private_dir(&one)?;
+    friday_mobile_core::secure_fs::create_private_dir(&one)?;
     let path = one.join(&image.name);
-    pocketdesk_core::secure_fs::write_private(&path, &image.bytes)?;
+    friday_mobile_core::secure_fs::write_private(&path, &image.bytes)?;
     Ok(path)
 }
 
@@ -326,7 +326,7 @@ fn redirect_problem(followed: usize, url: &str) -> Option<String> {
     if followed >= 5 {
         return Some("too many redirects".to_string());
     }
-    pocketdesk_core::protocol::link::link_problem(url).map(|p| format!("a redirect: {p}"))
+    friday_mobile_core::protocol::link::link_problem(url).map(|p| format!("a redirect: {p}"))
 }
 
 fn fetch_blocking(url: &str) -> Result<Image, String> {
@@ -403,7 +403,7 @@ pub fn run() -> i32 {
                 return 1;
             }
         };
-        let running = pocketdesk_core::local::server::is_running(&dir);
+        let running = friday_mobile_core::local::server::is_running(&dir);
         let answer = handle(&dir, &request, running, &fetch_image);
         if write_message(&mut stdout, &answer).is_err() {
             return 0;
@@ -551,7 +551,7 @@ pub const REGISTERED_FILE: &str = "registered.json";
 /// Register the host with the browsers found, and say which in
 /// [`REGISTERED_FILE`]. The browsers registered.
 pub fn install() -> anyhow::Result<Vec<&'static str>> {
-    let config = pocketdesk_core::local::paths::config_dir()?;
+    let config = friday_mobile_core::local::paths::config_dir()?;
     let exe = std::env::current_exe()?;
     #[cfg(windows)]
     let done = install_windows(&config, &exe)?;
@@ -571,7 +571,7 @@ pub fn install() -> anyhow::Result<Vec<&'static str>> {
 
 /// Undo [`install`].
 pub fn remove() -> anyhow::Result<()> {
-    let config = pocketdesk_core::local::paths::config_dir()?;
+    let config = friday_mobile_core::local::paths::config_dir()?;
     #[cfg(windows)]
     remove_windows(&config);
     #[cfg(not(windows))]
@@ -768,13 +768,13 @@ mod tests {
         let dir = images_dir().unwrap();
         #[cfg(not(windows))]
         assert!(!dir.starts_with("/tmp"), "{}", dir.display());
-        assert!(dir.ends_with("pocketdesk-browser"));
+        assert!(dir.ends_with("friday-mobile-browser"));
     }
 
     #[test]
     fn a_file_where_the_folder_should_be_is_left_alone() {
         let base = temp("not-a-folder");
-        let dir = base.join("pocketdesk-browser");
+        let dir = base.join("friday-mobile-browser");
         std::fs::write(&dir, b"someone else's").unwrap();
         let image = Image {
             bytes: vec![1],
@@ -799,7 +799,7 @@ mod tests {
         let home = temp("home");
         std::fs::create_dir_all(home.join(".config/google-chrome")).unwrap();
         std::fs::create_dir_all(home.join(".mozilla")).unwrap();
-        let exe = Path::new("/usr/bin/pocketdesk");
+        let exe = Path::new("/usr/bin/friday-mobile");
         let done = install_linux(&home, exe).unwrap();
         assert_eq!(done, vec!["Chrome", "Firefox"]);
         let chrome: Value = serde_json::from_str(
@@ -813,7 +813,7 @@ mod tests {
             chrome["allowed_origins"][0],
             format!("chrome-extension://{CHROMIUM_EXTENSION_ID}/")
         );
-        assert_eq!(chrome["path"], "/usr/bin/pocketdesk");
+        assert_eq!(chrome["path"], "/usr/bin/friday-mobile");
         let firefox: Value = serde_json::from_str(
             &std::fs::read_to_string(
                 home.join(".mozilla/native-messaging-hosts/dev.pocketdesk.host.json"),

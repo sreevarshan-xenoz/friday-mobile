@@ -4,9 +4,9 @@
 //! computer is in use" on. Asked on any link, a copies-only one included
 //! (L8), since the phone asks each computer of its owner's.
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::in_use::{ANSWER, ASK, answer_body};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::in_use::{ANSWER, ASK, answer_body};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde_json::Value;
 
 #[derive(Debug, Default)]
@@ -64,7 +64,7 @@ fn answer_for(telling: bool, showing: bool, idle_secs: Option<u64>) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::in_use::in_use;
+    use friday_mobile_core::protocol::in_use::in_use;
 
     /// N7 review: a computer that would not show the notification never
     /// says it is in use.

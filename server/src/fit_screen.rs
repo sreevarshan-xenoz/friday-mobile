@@ -18,8 +18,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::local::computers::FitSize;
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::computers::FitSize;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use tokio::sync::oneshot;
 
 use crate::virtual_screen::{PACKET, is_request};

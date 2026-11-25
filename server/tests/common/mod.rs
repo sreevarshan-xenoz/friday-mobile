@@ -11,11 +11,11 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::pair_link::PairLink;
-use pocketdesk_core::local::{identity, pin};
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::pair_link::PairLink;
+use friday_mobile_core::local::{identity, pin};
 
-const EXE: &str = env!("CARGO_BIN_EXE_pocketdesk");
+const EXE: &str = env!("CARGO_BIN_EXE_friday-mobile");
 
 /// A server's config and state folders, under `pd-<test>-<name>-<pid>` in
 /// the temporary folder, with its ports and nothing reaching out but the

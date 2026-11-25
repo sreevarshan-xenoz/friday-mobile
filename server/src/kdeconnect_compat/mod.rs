@@ -18,9 +18,9 @@ use std::collections::BTreeMap;
 use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use pocketdesk_core::local::kdeconnect::{self, SeenDevice};
-use pocketdesk_core::local::kdeconnect_devices::{self, KdeAsk};
-use pocketdesk_core::local::paths::KDECONNECT_OUT_DIR;
+use friday_mobile_core::local::kdeconnect::{self, SeenDevice};
+use friday_mobile_core::local::kdeconnect_devices::{self, KdeAsk};
+use friday_mobile_core::local::paths::KDECONNECT_OUT_DIR;
 use tokio::net::TcpStream;
 
 /// `kdeconnect_compat`, on by default (the owner's decision).
@@ -179,7 +179,7 @@ pub async fn serve(stream: TcpStream) {
         SeenDevice {
             device_id: link.hello.device_id.clone(),
             name: link.hello.device_name.clone(),
-            seen_unix: pocketdesk_core::local::pin::now_unix(),
+            seen_unix: friday_mobile_core::local::pin::now_unix(),
             paired,
         },
     );
@@ -200,7 +200,9 @@ pub async fn run_requests() {
     share::sweep_parts(&dir);
     loop {
         crate::inbox::wait(KDECONNECT_OUT_DIR, std::time::Duration::from_secs(1)).await;
-        for request in kdeconnect_devices::take_all(&dir, pocketdesk_core::local::pin::now_unix()) {
+        for request in
+            kdeconnect_devices::take_all(&dir, friday_mobile_core::local::pin::now_unix())
+        {
             let (device_id, event) = match request.ask {
                 // The owner's change of what a paired device may do (3c):
                 // the links read it as each packet comes.

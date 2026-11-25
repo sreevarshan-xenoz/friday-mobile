@@ -9,10 +9,10 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::protocol::computer_media::{PUSH, WATCH, art_id};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::protocol::computer_media::{PUSH, WATCH, art_id};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::permissions::Capability;
 use serde_json::Value;
 
 /// How often what plays is read while a phone watches.

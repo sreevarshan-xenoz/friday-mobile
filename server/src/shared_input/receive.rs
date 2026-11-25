@@ -13,16 +13,16 @@
 //! here or its permission goes. A computer that may drive this one has it
 //! flash its name ([`badge`]) when its cursor arrives, and on Identify.
 //!
-//! [`Capability::SharedInput`]: pocketdesk_core::protocol::permissions::Capability::SharedInput
+//! [`Capability::SharedInput`]: friday_mobile_core::protocol::permissions::Capability::SharedInput
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::shared_input;
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::streaming::input_packet::InputPacket;
+use friday_mobile_core::local::shared_input;
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::streaming::input_packet::InputPacket;
 
 use super::awake::KeepAwake;
 use super::badge;
@@ -751,7 +751,7 @@ fn standing_now(device_id: &str) -> Standing {
     // One this computer paired with has no trust store entry: what it may
     // do is kept with it in computers.json.
     let paired_with = crate::state::state_dir().ok().and_then(|dir| {
-        pocketdesk_core::local::computers::read(&dir)
+        friday_mobile_core::local::computers::read(&dir)
             .computers
             .into_iter()
             .find(|c| c.device_id == device_id)
@@ -1127,7 +1127,7 @@ async fn write_screens(state_dir: Option<&PathBuf>, heard: Heard, own: Option<Ve
     };
     let written = tokio::task::spawn_blocking(move || {
         let me = own.as_ref().map(|_| crate::kde::host_identity());
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         // Only the computers and phones paired now are kept (none dropped
         // on a reading that failed).
         let paired = status::kept_devices(&dir);

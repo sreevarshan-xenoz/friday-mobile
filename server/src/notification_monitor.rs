@@ -28,8 +28,9 @@ impl ForwardedNotification {
     pub fn to_packet(
         &self,
         own_id: &str,
-    ) -> pocketdesk_core::error::Result<pocketdesk_core::protocol::kdeconnect::NetworkPacket> {
-        let mut packet = pocketdesk_core::protocol::kdeconnect::NetworkPacket::from_wire(
+    ) -> friday_mobile_core::error::Result<friday_mobile_core::protocol::kdeconnect::NetworkPacket>
+    {
+        let mut packet = friday_mobile_core::protocol::kdeconnect::NetworkPacket::from_wire(
             &self.to_kdeconnect_payload(),
         )?;
         packet.source = Some(own_id.to_string());

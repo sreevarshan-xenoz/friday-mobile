@@ -1,19 +1,19 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::PluginRegistry;
-use pocketdesk_core::protocol::v2::{ALPN_V2, IdentityPacketV2, perform_v2_handshake};
-use pocketdesk_core::streaming::transport::{
+use friday_mobile_core::protocol::kdeconnect::PluginRegistry;
+use friday_mobile_core::protocol::v2::{ALPN_V2, IdentityPacketV2, perform_v2_handshake};
+use friday_mobile_core::streaming::transport::{
     CertManager, StreamClient, StreamServer, StreamTransportConfig,
 };
 
 // We need to access handle_v2_session and the push registry
-use pocketdesk_server::state::{self, ACTIVE_CLIENTS};
-use pocketdesk_server::v2_multiplexer::handle_v2_session;
+use friday_mobile_server::state::{self, ACTIVE_CLIENTS};
+use friday_mobile_server::v2_multiplexer::handle_v2_session;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn test_reconnect_storm_pushes_to_one_connection() -> anyhow::Result<()> {
-    pocketdesk_core::local::paths::use_test_dirs("server-it");
+    friday_mobile_core::local::paths::use_test_dirs("server-it");
     let _ = rustls::crypto::ring::default_provider().install_default();
     let cert_manager = Arc::new(CertManager::new()?);
     let registry = Arc::new(PluginRegistry::new());

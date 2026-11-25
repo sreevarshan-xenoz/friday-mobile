@@ -3,7 +3,7 @@
 //! registration allows, and it asks for the host by its name.
 
 use base64::Engine;
-use pocketdesk_server::browser_host::{CHROMIUM_EXTENSION_ID, FIREFOX_EXTENSION_ID, HOST_NAME};
+use friday_mobile_server::browser_host::{CHROMIUM_EXTENSION_ID, FIREFOX_EXTENSION_ID, HOST_NAME};
 use sha2::{Digest, Sha256};
 
 fn read(path: &str) -> String {

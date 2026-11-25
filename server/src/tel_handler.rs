@@ -9,9 +9,9 @@
 
 use std::path::Path;
 
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 use crate::local_api::exit;
 
@@ -19,7 +19,7 @@ use crate::local_api::exit;
 pub const MARKER: &str = "tel_handler.json";
 
 /// The ProgID the links' associations name (Windows).
-pub const PROG_ID: &str = "Pocketdesk.tel";
+pub const PROG_ID: &str = "FridayMobile.tel";
 
 /// The schemes taken.
 pub const SCHEMES: [&str; 2] = ["tel", "callto"];
@@ -61,7 +61,7 @@ pub fn tel_in(
     running: bool,
 ) -> (String, String, i32, bool) {
     let not_called = |body: String, code: i32| ("Not called".to_string(), body, code, false);
-    let Some(number) = pocketdesk_core::protocol::dial::tel_number(uri) else {
+    let Some(number) = friday_mobile_core::protocol::dial::tel_number(uri) else {
         return not_called(
             "That link names no number the phone can dial: digits, a + only at the start, no codes or extensions.".to_string(),
             exit::BAD_ARGUMENTS,
@@ -90,10 +90,10 @@ pub fn tel_in(
     let linked = crate::local_api::linked_phones(state_dir, now_unix, running);
     match pick(&allowed, &linked) {
         Pick::Nobody(why) => not_called(why.to_string(), exit::FAILED),
-        Pick::Ask => match pocketdesk_core::local::tel_ask::put(state_dir, &number, now_unix) {
+        Pick::Ask => match friday_mobile_core::local::tel_ask::put(state_dir, &number, now_unix) {
             Ok(()) => (
                 format!("Call {number}?"),
-                "Choose the phone in Pocketdesk.".to_string(),
+                "Choose the phone in FRIDAY Mobile.".to_string(),
                 exit::DONE,
                 true,
             ),
@@ -126,8 +126,13 @@ pub fn tel_in(
 pub fn run_tel(uri: &str) -> i32 {
     let (summary, body, code, ask) = match crate::state::state_dir() {
         Ok(dir) => {
-            let running = pocketdesk_core::local::server::is_running(&dir);
-            tel_in(&dir, uri, pocketdesk_core::local::pin::now_unix(), running)
+            let running = friday_mobile_core::local::server::is_running(&dir);
+            tel_in(
+                &dir,
+                uri,
+                friday_mobile_core::local::pin::now_unix(),
+                running,
+            )
         }
         Err(e) => (
             "Not called".to_string(),
@@ -144,7 +149,7 @@ pub fn run_tel(uri: &str) -> i32 {
     let (summary, body) = if ask && !open_app() {
         (
             "Not called".to_string(),
-            "Pocketdesk's window could not be opened to ask which phone.".to_string(),
+            "FRIDAY Mobile's window could not be opened to ask which phone.".to_string(),
         )
     } else {
         (summary, body)
@@ -163,9 +168,9 @@ fn open_app() -> bool {
         return false;
     };
     let app = exe.with_file_name(if cfg!(windows) {
-        "pocketdesk-app.exe"
+        "friday-mobile-app.exe"
     } else {
-        "pocketdesk-app"
+        "friday-mobile-app"
     });
     match std::process::Command::new(&app)
         .args(["--page", "overview"])
@@ -176,7 +181,7 @@ fn open_app() -> bool {
     {
         Ok(_) => true,
         Err(e) => {
-            eprintln!("Pocketdesk could not be opened to ask which phone ({e})");
+            eprintln!("FRIDAY Mobile could not be opened to ask which phone ({e})");
             false
         }
     }
@@ -185,17 +190,17 @@ fn open_app() -> bool {
 /// The Linux desktop file: `Exec` runs `exe tel %u`.
 pub fn desktop_file(exe: &Path) -> String {
     format!(
-        "[Desktop Entry]\nType=Application\nName=Pocketdesk: call on the phone\nExec={} tel %u\nNoDisplay=true\nMimeType=x-scheme-handler/tel;x-scheme-handler/callto;\n",
-        pocketdesk_core::local::send_menu::desktop_exec_quote(&exe.to_string_lossy())
+        "[Desktop Entry]\nType=Application\nName=FRIDAY Mobile: call on the phone\nExec={} tel %u\nNoDisplay=true\nMimeType=x-scheme-handler/tel;x-scheme-handler/callto;\n",
+        friday_mobile_core::local::send_menu::desktop_exec_quote(&exe.to_string_lossy())
     )
 }
 
 /// The desktop file's name.
-pub const DESKTOP_FILE: &str = "pocketdesk-tel.desktop";
+pub const DESKTOP_FILE: &str = "friday-mobile-tel.desktop";
 
 /// `pocketdesk tel-handler [--remove]`.
 pub fn run_tel_handler(remove: bool) -> anyhow::Result<()> {
-    let config = pocketdesk_core::local::paths::config_dir()?;
+    let config = friday_mobile_core::local::paths::config_dir()?;
     if remove {
         let was = config.join(MARKER).exists();
         unregister()?;
@@ -210,7 +215,7 @@ pub fn run_tel_handler(remove: bool) -> anyhow::Result<()> {
         std::fs::write(config.join(MARKER), b"{\"registered\":true}")?;
         if cfg!(windows) {
             println!(
-                "Registered for phone numbers: pick Pocketdesk when Windows asks, or in Settings, Apps, Default apps"
+                "Registered for phone numbers: pick FRIDAY Mobile when Windows asks, or in Settings, Apps, Default apps"
             );
         } else {
             println!("Phone numbers now open on the phone");
@@ -225,7 +230,7 @@ pub fn run_tel_handler(remove: bool) -> anyhow::Result<()> {
 /// itself when the window's is not beside it.
 #[cfg(windows)]
 pub fn windows_command(exe: &Path) -> String {
-    let app = exe.with_file_name("pocketdesk-app.exe");
+    let app = exe.with_file_name("friday-mobile-app.exe");
     if app.is_file() {
         format!("\"{}\" --tel \"%1\"", app.display())
     } else {
@@ -239,10 +244,10 @@ fn register(exe: &Path) -> anyhow::Result<()> {
     let command = windows_command(exe);
     // No "URL Protocol": the ProgID is not a scheme of its own (M8 review).
     let class = format!(r"Software\Classes\{PROG_ID}");
-    set_user_default_value(&class, "Phone number (Pocketdesk)")?;
+    set_user_default_value(&class, "Phone number (FRIDAY Mobile)")?;
     set_user_default_value(&format!(r"{class}\shell\open\command"), &command)?;
-    let caps = r"Software\Pocketdesk\Capabilities";
-    set_user_value(caps, "ApplicationName", "Pocketdesk")?;
+    let caps = r"Software\FRIDAY Mobile\Capabilities";
+    set_user_value(caps, "ApplicationName", "FRIDAY Mobile")?;
     set_user_value(
         caps,
         "ApplicationDescription",
@@ -251,7 +256,7 @@ fn register(exe: &Path) -> anyhow::Result<()> {
     for scheme in SCHEMES {
         set_user_value(&format!(r"{caps}\URLAssociations"), scheme, PROG_ID)?;
     }
-    set_user_value(r"Software\RegisteredApplications", "Pocketdesk", caps)?;
+    set_user_value(r"Software\RegisteredApplications", "FRIDAY Mobile", caps)?;
     Ok(())
 }
 
@@ -259,10 +264,10 @@ fn register(exe: &Path) -> anyhow::Result<()> {
 fn unregister() -> anyhow::Result<()> {
     use crate::platform::{delete_user_key, delete_user_value};
     delete_user_key(&format!(r"Software\Classes\{PROG_ID}"));
-    delete_user_key(r"Software\Pocketdesk\Capabilities");
-    delete_user_value(r"Software\RegisteredApplications", "Pocketdesk");
+    delete_user_key(r"Software\FRIDAY Mobile\Capabilities");
+    delete_user_value(r"Software\RegisteredApplications", "FRIDAY Mobile");
     // Its parent, only once empty (M8 review: an empty key was left).
-    crate::platform::delete_user_key_if_empty(r"Software\Pocketdesk");
+    crate::platform::delete_user_key_if_empty(r"Software\FRIDAY Mobile");
     Ok(())
 }
 
@@ -387,7 +392,7 @@ mod tests {
 
     #[test]
     fn a_bad_link_is_refused_before_anything_is_read() {
-        let dir = std::path::Path::new("/nonexistent/pocketdesk-tel-test");
+        let dir = std::path::Path::new("/nonexistent/friday-mobile-tel-test");
         let (_, body, code, ask) = tel_in(dir, "tel:*%2306%23", 0, true);
         assert_eq!(code, exit::BAD_ARGUMENTS);
         assert!(body.contains("no number"));
@@ -403,17 +408,17 @@ mod tests {
     #[ignore = "writes HKCU; run by hand"]
     fn the_registry_keys_are_written_read_back_and_removed() {
         use crate::platform::user_value;
-        let exe = Path::new(r"C:\Program Files\Pocketdesk\pocketdesk.exe");
+        let exe = Path::new(r"C:\Program Files\FRIDAY Mobile\friday-mobile.exe");
         register(exe).unwrap();
         let class = format!(r"Software\Classes\{PROG_ID}");
         assert_eq!(
             user_value(&format!(r"{class}\shell\open\command"), None).as_deref(),
-            Some(r#""C:\Program Files\Pocketdesk\pocketdesk.exe" tel "%1""#)
+            Some(r#""C:\Program Files\FRIDAY Mobile\friday-mobile.exe" tel "%1""#)
         );
         for scheme in SCHEMES {
             assert_eq!(
                 user_value(
-                    r"Software\Pocketdesk\Capabilities\URLAssociations",
+                    r"Software\FRIDAY Mobile\Capabilities\URLAssociations",
                     Some(scheme)
                 )
                 .as_deref(),
@@ -421,13 +426,13 @@ mod tests {
             );
         }
         assert_eq!(
-            user_value(r"Software\RegisteredApplications", Some("Pocketdesk")).as_deref(),
-            Some(r"Software\Pocketdesk\Capabilities")
+            user_value(r"Software\RegisteredApplications", Some("FRIDAY Mobile")).as_deref(),
+            Some(r"Software\FRIDAY Mobile\Capabilities")
         );
         unregister().unwrap();
         assert_eq!(user_value(&class, None), None);
         assert_eq!(
-            user_value(r"Software\RegisteredApplications", Some("Pocketdesk")),
+            user_value(r"Software\RegisteredApplications", Some("FRIDAY Mobile")),
             None
         );
     }
@@ -448,8 +453,10 @@ mod tests {
         assert_eq!(code, exit::DONE);
         assert!(!ask, "one phone may dial: no question");
         // The request is stamped with the clock's time.
-        let dialled =
-            pocketdesk_core::local::dials::take_all(&dir, pocketdesk_core::local::pin::now_unix());
+        let dialled = friday_mobile_core::local::dials::take_all(
+            &dir,
+            friday_mobile_core::local::pin::now_unix(),
+        );
         assert_eq!(dialled.len(), 1);
         assert_eq!(dialled[0].device_id, "phone-b");
         let _ = std::fs::remove_dir_all(&dir);
@@ -457,7 +464,7 @@ mod tests {
 
     #[test]
     fn mimeapps_loses_only_this_handler() {
-        let raw = "[Default Applications]\nx-scheme-handler/tel=pocketdesk-tel.desktop;\nx-scheme-handler/callto=other.desktop;pocketdesk-tel.desktop;\ntext/html=firefox.desktop\n";
+        let raw = "[Default Applications]\nx-scheme-handler/tel=friday-mobile-tel.desktop;\nx-scheme-handler/callto=other.desktop;friday-mobile-tel.desktop;\ntext/html=firefox.desktop\n";
         assert_eq!(
             without_desktop_file(raw),
             "[Default Applications]\nx-scheme-handler/callto=other.desktop;\ntext/html=firefox.desktop\n"
@@ -466,8 +473,8 @@ mod tests {
 
     #[test]
     fn the_desktop_file_runs_tel_with_the_link() {
-        let file = desktop_file(Path::new("/opt/pocket desk/pocketdesk"));
-        assert!(file.contains("Exec=\"/opt/pocket desk/pocketdesk\" tel %u\n"));
+        let file = desktop_file(Path::new("/opt/pocket desk/friday-mobile"));
+        assert!(file.contains("Exec=\"/opt/pocket desk/friday-mobile\" tel %u\n"));
         assert!(file.contains("MimeType=x-scheme-handler/tel;x-scheme-handler/callto;"));
     }
 }

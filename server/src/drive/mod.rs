@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::phone_files::{
+use friday_mobile_core::protocol::phone_files::{
     EXISTS, Entry, Listing, MAX_PUT_BYTES, addable_name, valid_name,
 };
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -575,7 +575,7 @@ fn allow(drive: &Drive) -> String {
 /// `dir` (owner-only), so the Files page names it as it is (N6 review):
 /// its path and the open file.
 fn new_upload(dir: &std::path::Path, name: &str) -> std::io::Result<(PathBuf, std::fs::File)> {
-    pocketdesk_core::secure_fs::create_private_dir(dir)?;
+    friday_mobile_core::secure_fs::create_private_dir(dir)?;
     let own = dir.join(uuid::Uuid::new_v4().simple().to_string());
     std::fs::create_dir(&own)?;
     let name = if addable_name(name) { name } else { "file" };

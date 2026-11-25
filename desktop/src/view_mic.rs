@@ -1,6 +1,6 @@
 //! "Send my mic" in the window that shows another computer's screen
 //! (PC10): this computer's microphone goes to that computer, where it
-//! becomes its "Pocketdesk Mic", as a phone's microphone does (R4 E2).
+//! becomes its "FRIDAY Mobile Mic", as a phone's microphone does (R4 E2).
 //!
 //! While the window controls that computer and the switch on its bar is
 //! on, a thread reads the microphone ([`MicSource`]: WASAPI on Windows,
@@ -28,8 +28,8 @@ use std::io;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use pocketdesk_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
-use pocketdesk_core::streaming::{AudioConfig, AudioEncoder, InputPacket};
+use friday_mobile_core::streaming::audio::{MIC_CHANNELS, MIC_SAMPLE_RATE};
+use friday_mobile_core::streaming::{AudioConfig, AudioEncoder, InputPacket};
 
 /// The frames' length: the phone's, which the other computer's relay takes.
 pub const FRAME_MS: u32 = 20;
@@ -136,7 +136,7 @@ impl Framer {
 }
 
 /// The start a phone sends first: the other computer makes its
-/// "Pocketdesk Mic".
+/// "FRIDAY Mobile Mic".
 pub fn start_packet() -> InputPacket {
     InputPacket::Mic {
         enabled: true,
@@ -814,7 +814,8 @@ mod tests {
         assert_eq!(sent.len(), 4, "{sent:?}");
         assert!(matches!(&sent[0], InputPacket::Mic { enabled: true, opus } if opus.is_empty()));
         let mut decoder =
-            pocketdesk_core::streaming::AudioDecoder::new(MIC_SAMPLE_RATE, MIC_CHANNELS).unwrap();
+            friday_mobile_core::streaming::AudioDecoder::new(MIC_SAMPLE_RATE, MIC_CHANNELS)
+                .unwrap();
         for packet in &sent[1..] {
             let InputPacket::Mic { enabled, opus } = packet else {
                 panic!("a mic frame: {packet:?}");

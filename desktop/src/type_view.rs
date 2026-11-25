@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::protocol::typing::{MAX_EVENTS, MAX_TEXT, TypeEvent};
+use friday_mobile_core::protocol::typing::{MAX_EVENTS, MAX_TEXT, TypeEvent};
 
 /// How long typing gathers before it goes.
 const FLUSH: Duration = Duration::from_millis(100);
@@ -273,7 +273,7 @@ fn flush(state: &mut State, state_dir: &Path) {
         .unwrap_or(0);
     // One file a flush (M4 review), so its batches stay in order.
     state.seq += 1;
-    match pocketdesk_core::local::typing::request(
+    match friday_mobile_core::local::typing::request(
         state_dir, &device_id, state.seq, &batches, now_ms,
     ) {
         Ok(()) => state.error = None,
@@ -349,7 +349,7 @@ mod tests {
         assert_eq!(long.len(), 2, "text past the limit starts a new batch");
         assert!(
             long.iter()
-                .all(|b| pocketdesk_core::protocol::typing::fits(b))
+                .all(|b| friday_mobile_core::protocol::typing::fits(b))
         );
     }
 

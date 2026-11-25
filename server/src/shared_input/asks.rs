@@ -7,8 +7,8 @@
 use std::collections::{BTreeSet, HashMap};
 use std::time::Duration;
 
-use pocketdesk_core::local::paths::SHARED_INPUT_DIR;
-use pocketdesk_core::local::shared_input::{self, ShareAsk};
+use friday_mobile_core::local::paths::SHARED_INPUT_DIR;
+use friday_mobile_core::local::shared_input::{self, ShareAsk};
 
 use super::badge;
 use super::link::{self, Channel};
@@ -78,7 +78,7 @@ pub async fn run() {
         let taken = {
             let dir = dir.clone();
             tokio::task::spawn_blocking(move || {
-                shared_input::take_all(&dir, pocketdesk_core::local::pin::now_unix())
+                shared_input::take_all(&dir, friday_mobile_core::local::pin::now_unix())
             })
             .await
             .unwrap_or_default()

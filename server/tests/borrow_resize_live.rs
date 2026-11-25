@@ -28,11 +28,11 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, PeerComputer};
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_server::hyprland::{HyprMonitor, HyprWindow};
-use pocketdesk_server::{lend_window, sway_tree, virtual_screen};
+use friday_mobile_core::local::computers::{self, PeerComputer};
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_server::hyprland::{HyprMonitor, HyprWindow};
+use friday_mobile_server::{lend_window, sway_tree, virtual_screen};
 use serde_json::{Value, json};
 
 /// A computer paired both ways.

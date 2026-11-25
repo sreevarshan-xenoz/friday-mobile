@@ -1,26 +1,26 @@
 [package]
-name = "pocketdesk-desktop"
-description = "Pocketdesk desktop app: pair phones, manage sessions and settings"
+name = "friday-mobile-desktop"
+description = "FRIDAY Mobile desktop app: pair phones, manage sessions and settings"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish = false
-# `cargo run -p pocketdesk-desktop` runs the window, as before E2.
-default-run = "pocketdesk-app"
+# `cargo run -p friday-mobile-desktop` runs the window, as before E2.
+default-run = "friday-mobile-app"
 
 [[bin]]
-name = "pocketdesk-app"
+name = "friday-mobile-app"
 path = "src/main.rs"
 
 # The tray on its own, with no window (E2).
 [[bin]]
-name = "pocketdesk-tray"
+name = "friday-mobile-tray"
 path = "src/tray_main.rs"
 
 [dependencies]
 # PC10: "opus" for the screen window's mic, encoded as a phone's.
-pocketdesk-core = { path = "../core", default-features = false, features = ["local", "opus"] }
+friday-mobile-core = { path = "../core", default-features = false, features = ["local", "opus"] }
 eframe = { version = "0.36", default-features = false, features = ["accesskit", "glow", "default_fonts", "persistence", "x11", "wayland"] }
 qrcode = { version = "0.14", default-features = false }
 # System fonts for other scripts, mapped rather than read (fonts.rs).
@@ -75,7 +75,7 @@ snapshots = ["dep:egui_kittest"]
 
 [dev-dependencies]
 # Tests never reach the owner's state or config folder (core `test-harness`).
-pocketdesk-core = { path = "../core", default-features = false, features = ["test-harness"] }
+friday-mobile-core = { path = "../core", default-features = false, features = ["test-harness"] }
 # C4: the app driven headless through AccessKit.
 egui_kittest = { version = "=0.36.2", features = ["eframe"] }
 # C7: a fixture answer's thumbnails, as the phone encodes them.

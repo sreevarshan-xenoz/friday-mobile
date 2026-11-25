@@ -1,11 +1,12 @@
 [package]
-name = "pocketdesk-android-bridge"
+name = "friday-mobile-android-bridge"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [lib]
+name = "pocketdesk_android_bridge"
 crate-type = ["cdylib"]
 
 [dependencies]
@@ -13,7 +14,7 @@ crate-type = ["cdylib"]
 # which does not cross-compile cleanly under cargo-ndk here. The R4 E2 mic
 # path encodes Opus on the Kotlin side (MediaCodec c2.android.opus.encoder)
 # and sends finished packets through `send_mic_frame`.
-pocketdesk-core = { path = "../../core", default-features = false, features = ["client", "wan"] }
+friday-mobile-core = { path = "../../core", default-features = false, features = ["client", "wan"] }
 jni = "0.21"
 anyhow.workspace = true
 tokio = { workspace = true, features = ["fs"] }

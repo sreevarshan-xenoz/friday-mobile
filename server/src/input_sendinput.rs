@@ -18,7 +18,7 @@
 //! per event, and the session carries on.
 
 use anyhow::Result;
-use pocketdesk_core::input::evdev_codes::KeyCode;
+use friday_mobile_core::input::evdev_codes::KeyCode;
 use tracing::{debug, warn};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetKeyboardLayoutNameW, INPUT, INPUT_0, INPUT_KEYBOARD, INPUT_MOUSE, KEYBD_EVENT_FLAGS,
@@ -314,7 +314,7 @@ impl SendInputBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::input::keys::phone_emittable_codes;
+    use friday_mobile_core::input::keys::phone_emittable_codes;
 
     fn key_flags(input: &INPUT) -> (u16, u16, u32) {
         let ki = unsafe { input.Anonymous.ki };
@@ -348,7 +348,7 @@ mod tests {
     /// scancode, never one the layout picks.
     #[test]
     fn every_scancode_read_back_is_pressed_as_itself() {
-        use pocketdesk_core::input::windows_scan::evdev_from_scan;
+        use friday_mobile_core::input::windows_scan::evdev_from_scan;
         let mut seen = 0;
         for extended in [false, true] {
             for scan in 0..=0x7Fu16 {

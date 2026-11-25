@@ -4,7 +4,7 @@
 //! show a code from the two certificates' public keys and the timestamp, so
 //! the owner can tell this device from another asking at the same time.
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 /// The packet type, both ways.
 pub const PAIR: &str = "kdeconnect.pair";

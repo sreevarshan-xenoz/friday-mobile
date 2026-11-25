@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use pocketdesk_server::*;
+use friday_mobile_server::*;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 /// How long the process waits, once a command is done, for work that cannot
@@ -73,9 +73,9 @@ async fn main_async() -> Result<()> {
             command,
         }) => std::process::exit(done::run(*pid, command, !*no_output, title.as_deref())),
         // BF3: before the log starts too, so a script reads only the answer.
-        Some(cli::Commands::Ask { wait, question }) => {
-            std::process::exit(pocketdesk_server::asks::run_cli(&question.join(" "), *wait))
-        }
+        Some(cli::Commands::Ask { wait, question }) => std::process::exit(
+            friday_mobile_server::asks::run_cli(&question.join(" "), *wait),
+        ),
         _ => {}
     }
 
@@ -102,7 +102,7 @@ async fn main_async() -> Result<()> {
         std::fs::create_dir_all(&dir)?;
         let appender = tracing_appender::rolling::Builder::new()
             .rotation(tracing_appender::rolling::Rotation::DAILY)
-            .filename_prefix("pocketdesk")
+            .filename_prefix("friday-mobile")
             .filename_suffix("log")
             .max_log_files(7)
             .build(&dir)?;
@@ -149,7 +149,7 @@ async fn run(command: cli::Commands, config: config::Config) -> Result<()> {
             session_telemetry::init();
             // Temp files a crashed save left (they hold a copy of a state
             // file's data).
-            let swept = pocketdesk_core::local::paths::sweep_temp_leftovers();
+            let swept = friday_mobile_core::local::paths::sweep_temp_leftovers();
             if swept > 0 {
                 tracing::info!("Removed {swept} leftover temp file(s) from the state folders");
             }

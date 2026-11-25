@@ -8,6 +8,6 @@ fuzz_target!(|data: &[u8]| {
     let Ok(body) = serde_json::from_slice::<serde_json::Value>(data) else {
         return;
     };
-    pocketdesk_server::fuzzing::introductions_body(&body);
-    pocketdesk_server::fuzzing::remote_devices_body(&body);
+    friday_mobile_server::fuzzing::introductions_body(&body);
+    friday_mobile_server::fuzzing::remote_devices_body(&body);
 });

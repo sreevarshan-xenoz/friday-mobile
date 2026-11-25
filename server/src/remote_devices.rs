@@ -29,9 +29,9 @@ use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, ComputersFile, DevicesThere};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::remote_devices::{
+use friday_mobile_core::local::computers::{self, ComputersFile, DevicesThere};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::remote_devices::{
     self as wire, Answer, Ask, REMOTE_DEVICES, REMOTE_DEVICES_ANSWER, REMOVALS_PER_MINUTE, Refusal,
     Request, ThereDevice,
 };
@@ -70,7 +70,7 @@ pub(crate) fn asker_name(store: &TrustStore, file: &ComputersFile, device_id: &s
             file.computers
                 .iter()
                 .find(|c| c.device_id == device_id)
-                .and_then(|c| pocketdesk_core::protocol::kdeconnect::clean_device_name(&c.name))
+                .and_then(|c| friday_mobile_core::protocol::kdeconnect::clean_device_name(&c.name))
         });
     match known {
         Some(name) => format!("{name} ({kind} {short})"),
@@ -88,7 +88,7 @@ fn shown_name(store: &TrustStore, file: &ComputersFile, device_id: &str) -> Stri
             file.computers
                 .iter()
                 .find(|c| c.device_id == device_id)
-                .and_then(|c| pocketdesk_core::protocol::kdeconnect::clean_device_name(&c.name))
+                .and_then(|c| friday_mobile_core::protocol::kdeconnect::clean_device_name(&c.name))
         })
         .unwrap_or_else(|| device_id.chars().take(8).collect())
 }
@@ -110,7 +110,9 @@ pub(crate) fn listing(
                 file.computers
                     .iter()
                     .find(|c| c.device_id == id)
-                    .and_then(|c| pocketdesk_core::protocol::kdeconnect::clean_device_name(&c.name))
+                    .and_then(|c| {
+                        friday_mobile_core::protocol::kdeconnect::clean_device_name(&c.name)
+                    })
                     .unwrap_or_default()
             }),
             computer: store.is_computer(&id),
@@ -232,18 +234,18 @@ pub(crate) fn remove_in(
             };
             store.untrust_device(target)?;
             // Its keys go too, so it pairs again only with a new code.
-            if let Err(e) = pocketdesk_core::local::device_keys::clear(dir, target) {
+            if let Err(e) = friday_mobile_core::local::device_keys::clear(dir, target) {
                 tracing::warn!("Could not clear a removed device's keys: {e}");
             }
             // A phone's contacts go with it (P10); its notifications, cards
             // and texts go as the watcher sees it unpaired (AY5).
-            let _ = pocketdesk_core::local::phone_contacts::forget(dir, target);
+            let _ = friday_mobile_core::local::phone_contacts::forget(dir, target);
             Ok(Ok(removed))
         })
     };
     // With no computers file there is nothing to hold, and none is made.
     let written = if dir
-        .join(pocketdesk_core::local::paths::COMPUTERS_FILE)
+        .join(friday_mobile_core::local::paths::COMPUTERS_FILE)
         .exists()
     {
         let mut written = None;
@@ -280,13 +282,13 @@ pub(crate) fn remove_in(
 /// paired both ways is forgotten by the links' loop, which sees it is no
 /// longer trusted: told to forget, its nudge dropped, its view ended.
 async fn end_what_it_has(target: &str) {
-    end_what_it_has_with(target, pocketdesk_core::streaming::sessions::kick_device);
+    end_what_it_has_with(target, friday_mobile_core::streaming::sessions::kick_device);
 }
 
 /// [`end_what_it_has`] with the sessions ended by `kick`; how many were.
 fn end_what_it_has_with(
     target: &str,
-    kick: impl Fn(&str) -> Vec<pocketdesk_core::streaming::sessions::LiveSession>,
+    kick: impl Fn(&str) -> Vec<friday_mobile_core::streaming::sessions::LiveSession>,
 ) -> usize {
     let ended = kick(target);
     for session in &ended {
@@ -445,7 +447,7 @@ async fn connected_now() -> Vec<String> {
         .map(|c| c.device_id().to_string())
         .collect();
     ids.extend(
-        pocketdesk_core::streaming::sessions::list()
+        friday_mobile_core::streaming::sessions::list()
             .into_iter()
             .filter_map(|s| s.device_id),
     );
@@ -474,7 +476,7 @@ impl Plugin for RemoteDevicesPlugin {
         &self,
         packet: &NetworkPacket,
         sender: &dyn DeviceSender,
-    ) -> pocketdesk_core::error::Result<()> {
+    ) -> friday_mobile_core::error::Result<()> {
         if packet.packet_type == REMOTE_DEVICES {
             if let Some(body) = answer(sender.device_id(), &packet.body).await {
                 sender
@@ -497,7 +499,7 @@ pub(crate) async fn ask(dir: &Path, computer: &str, ask: Ask) {
         request: uuid::Uuid::new_v4().simple().to_string(),
         ask,
     };
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let recorded = {
         let (dir, computer, request) = (dir.to_path_buf(), computer.to_string(), request.clone());
         tokio::task::spawn_blocking(move || {
@@ -594,7 +596,7 @@ pub(crate) async fn heard(from: &str, body: &Value) {
         return;
     };
     let from = from.to_string();
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let _ = tokio::task::spawn_blocking(move || {
         // A removal owed for a phone introduced between the two (ecosystem
         // phase 4), else the app's own ask.
@@ -660,7 +662,7 @@ fn take_answer(file: &mut ComputersFile, from: &str, request: &str, answer: Answ
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::local::computers::PeerComputer;
+    use friday_mobile_core::local::computers::PeerComputer;
 
     struct Dirs {
         dir: std::path::PathBuf,
@@ -812,10 +814,10 @@ mod tests {
     fn an_owner_device_removes_another_and_not_itself() {
         let d = Dirs::new("remove");
         household(&d);
-        pocketdesk_core::local::device_keys::register(
+        friday_mobile_core::local::device_keys::register(
             &d.dir,
             "someone-else",
-            pocketdesk_core::local::device_keys::Slot::Tls,
+            friday_mobile_core::local::device_keys::Slot::Tls,
             &"cd".repeat(32),
         )
         .unwrap();
@@ -835,7 +837,7 @@ mod tests {
         let store = d.store();
         assert!(!store.is_trusted("someone-else"));
         assert!(
-            !pocketdesk_core::local::device_keys::read(&d.dir)
+            !friday_mobile_core::local::device_keys::read(&d.dir)
                 .unwrap()
                 .contains_key("someone-else"),
             "its keys go"
@@ -1037,10 +1039,10 @@ mod tests {
     fn the_list_says_no_secret() {
         let d = Dirs::new("list");
         household(&d);
-        pocketdesk_core::local::device_keys::register(
+        friday_mobile_core::local::device_keys::register(
             &d.dir,
             "owner-phone",
-            pocketdesk_core::local::device_keys::Slot::Tls,
+            friday_mobile_core::local::device_keys::Slot::Tls,
             &"ef".repeat(32),
         )
         .unwrap();
@@ -1143,7 +1145,7 @@ mod tests {
         .expect("its connections are told to close");
         // Its sessions: the removal kicks the removed device's own, by its
         // exact id (core's `kick_device` closes each one's connection).
-        let session = pocketdesk_core::streaming::sessions::LiveSession {
+        let session = friday_mobile_core::streaming::sessions::LiveSession {
             streamed: Default::default(),
             id: 9,
             device_id: Some("ends-lost".to_string()),
@@ -1267,7 +1269,10 @@ mod tests {
             "recorder"
         }
 
-        async fn send_packet(&self, packet: &NetworkPacket) -> pocketdesk_core::error::Result<()> {
+        async fn send_packet(
+            &self,
+            packet: &NetworkPacket,
+        ) -> friday_mobile_core::error::Result<()> {
             self.sent.lock().unwrap().push(packet.clone());
             Ok(())
         }

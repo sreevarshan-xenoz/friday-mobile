@@ -217,7 +217,8 @@ static TAKES_FINE: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(Defau
 /// Whether `device_id` takes fine wheel turns on the link `link` now: it
 /// said so on that link, and smooth scrolling is on here.
 fn takes_fine_now(device_id: &str, link: usize) -> bool {
-    pocketdesk_core::streaming::wheel::smooth() && lock(&TAKES_FINE).get(device_id) == Some(&link)
+    friday_mobile_core::streaming::wheel::smooth()
+        && lock(&TAKES_FINE).get(device_id) == Some(&link)
 }
 
 /// A channel's fine wheel turns on their way: as they are to a computer
@@ -226,7 +227,7 @@ fn takes_fine_now(device_id: &str, link: usize) -> bool {
 /// yet a notch is forgotten when the pointer arrives or leaves, and when
 /// the way they go changes (the setting, or the computer's answer).
 ///
-/// [`wheel::add_plain`]: pocketdesk_core::streaming::wheel::add_plain
+/// [`wheel::add_plain`]: friday_mobile_core::streaming::wheel::add_plain
 #[derive(Debug, Default)]
 pub(crate) struct WheelFit {
     rest: (i32, i32),
@@ -237,7 +238,7 @@ impl WheelFit {
     /// A fine turn as it is sent, none until it makes a notch where
     /// notches are what go.
     pub(crate) fn fit(&mut self, fine_ok: bool, dx: i16, dy: i16) -> Option<Msg> {
-        use pocketdesk_core::streaming::wheel::{add_plain, clamp16};
+        use friday_mobile_core::streaming::wheel::{add_plain, clamp16};
         if self.fine_ok != Some(fine_ok) {
             self.rest = (0, 0);
             self.fine_ok = Some(fine_ok);
@@ -291,7 +292,7 @@ pub fn screens_heard() -> HashMap<String, std::time::Instant> {
 /// punch a direct path while the traffic rides a relay, so this can turn
 /// true on its own; with no path selected yet it is false.
 pub fn is_direct(conn: &Connection) -> bool {
-    pocketdesk_core::streaming::iroh_connection::selected_path(&conn.paths())
+    friday_mobile_core::streaming::iroh_connection::selected_path(&conn.paths())
         .is_some_and(|path| !path.is_relay())
 }
 
@@ -302,7 +303,7 @@ pub fn is_direct(conn: &Connection) -> bool {
 pub fn peer_addr(device_id: &str) -> Option<std::net::SocketAddr> {
     let conn = connection(device_id)?;
     let paths = conn.paths();
-    let path = pocketdesk_core::streaming::iroh_connection::selected_path(&paths)?;
+    let path = friday_mobile_core::streaming::iroh_connection::selected_path(&paths)?;
     match path.remote_addr() {
         iroh::TransportAddr::Ip(addr) => Some(*addr),
         _ => None,
@@ -969,7 +970,7 @@ async fn write_stream(
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use pocketdesk_core::protocol::ALPN_CONTROL;
+    use friday_mobile_core::protocol::ALPN_CONTROL;
 
     /// A button or wheel turn after a move sends that move on the stream
     /// first, once; nothing else does, and a crossing settles it.
@@ -1099,7 +1100,7 @@ pub(crate) mod tests {
             .secret_key(iroh::SecretKey::generate())
             .alpns(vec![ALPN_CONTROL.to_vec()])
             .relay_mode(iroh::RelayMode::Disabled)
-            .transport_config(pocketdesk_core::streaming::iroh_connection::iroh_transport())
+            .transport_config(friday_mobile_core::streaming::iroh_connection::iroh_transport())
             .bind_addr(std::net::SocketAddr::from(([127, 0, 0, 1], 0)))
             .unwrap()
             .bind()

@@ -27,8 +27,10 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use eframe::egui;
-use pocketdesk_core::local::cast::{self as wire, CastFile, Message};
-use pocketdesk_core::streaming::cast_control::{ControlBatch, ControlEvent, Global, TouchAction};
+use friday_mobile_core::local::cast::{self as wire, CastFile, Message};
+use friday_mobile_core::streaming::cast_control::{
+    ControlBatch, ControlEvent, Global, TouchAction,
+};
 
 use crate::video::{
     Admit, Decoder, KeyGate, Picture, Recorder, fraction, free_name, letterbox, now_unix, stamp,
@@ -155,11 +157,11 @@ const SHARE_LOOK: std::time::Duration = std::time::Duration::from_secs(1);
 /// What the phone's word on a share says (Apps part 2): `app` is the app it
 /// went to or was tried on, as the phone listed it, if the phone said one.
 pub fn share_words(
-    result: pocketdesk_core::protocol::phone_action::AppResult,
+    result: friday_mobile_core::protocol::phone_action::AppResult,
     app: Option<&str>,
     name: &str,
 ) -> String {
-    use pocketdesk_core::protocol::phone_action::AppResult as R;
+    use friday_mobile_core::protocol::phone_action::AppResult as R;
     let front = app.unwrap_or("The app in front");
     match result {
         R::Shared => format!("Shared {name} into {}.", app.unwrap_or("the app in front")),
@@ -213,13 +215,13 @@ fn watch_share(shared: &Mutex<State>, ctx: &egui::Context, state_dir: &std::path
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
-    let word = pocketdesk_core::local::phone_apps::read_results(state_dir)
+    let word = friday_mobile_core::local::phone_apps::read_results(state_dir)
         .remove(&device)
         .filter(|o| o.answers("share", asked_at) && o.report.name.as_deref() == Some(&name));
     let said = match word {
         Some(outcome) => {
             let label = outcome.report.app.as_deref().map(|id| {
-                pocketdesk_core::local::phone_apps::read(state_dir)
+                friday_mobile_core::local::phone_apps::read(state_dir)
                     .remove(&device)
                     .and_then(|l| l.apps.into_iter().find(|a| a.id == id))
                     .map_or_else(|| id.to_string(), |a| a.name)
@@ -244,7 +246,7 @@ fn watch_share(shared: &Mutex<State>, ctx: &egui::Context, state_dir: &std::path
 
 /// `text` cut to the control road's limit for one text, at a character (L2).
 fn pasted(text: &str) -> String {
-    let max = pocketdesk_core::streaming::cast_control::MAX_TEXT;
+    let max = friday_mobile_core::streaming::cast_control::MAX_TEXT;
     if text.len() <= max {
         return text.to_string();
     }
@@ -291,7 +293,7 @@ impl CastView {
     ) -> Self {
         let keys = window
             .and(package)
-            .filter(|p| pocketdesk_core::local::keymap::package_ok(p))
+            .filter(|p| friday_mobile_core::local::keymap::package_ok(p))
             .map(|p| crate::keymap_view::Keys::new(p, state_dir.clone()));
         let shared = Arc::new(Mutex::new(State {
             window,
@@ -587,7 +589,7 @@ fn send_control(writer: &mut TcpStream, events: Vec<ControlEvent>) -> bool {
     let sent_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64);
-    for chunk in events.chunks(pocketdesk_core::streaming::cast_control::MAX_EVENTS) {
+    for chunk in events.chunks(friday_mobile_core::streaming::cast_control::MAX_EVENTS) {
         let batch = ControlBatch {
             sent_ms,
             events: chunk.to_vec(),
@@ -637,7 +639,7 @@ fn take_drops(
             match crate::model::queue_send(state_dir, &device, path, now) {
                 Ok(name) if share && files == 1 && folders == 0 => {
                     let size = std::fs::metadata(path).map_or(0, |m| m.len());
-                    if pocketdesk_core::local::phone_actions::request_share(
+                    if friday_mobile_core::local::phone_actions::request_share(
                         state_dir, &device, &name, size, now,
                     )
                     .is_ok()
@@ -1018,7 +1020,7 @@ fn draw(shared: &Arc<Mutex<State>>, ui: &mut egui::Ui, control: bool, keymaps: b
                     };
                     events.extend(control_events(&input, rect, hover, &mut state.pressing));
                     // A paste cut to the road's limit says so (L2 review).
-                    let max = pocketdesk_core::streaming::cast_control::MAX_TEXT;
+                    let max = friday_mobile_core::streaming::cast_control::MAX_TEXT;
                     if input
                         .iter()
                         .any(|e| matches!(e, egui::Event::Paste(text) if text.len() > max))
@@ -1335,7 +1337,7 @@ mod tests {
     /// Apps part 2: the phone's word on a share says where the file went or why not.
     #[test]
     fn a_share_says_where_the_file_went() {
-        use pocketdesk_core::protocol::phone_action::AppResult as R;
+        use friday_mobile_core::protocol::phone_action::AppResult as R;
         assert_eq!(
             share_words(R::Shared, Some("Notes"), "a.png"),
             "Shared a.png into Notes."
@@ -1379,7 +1381,7 @@ mod tests {
     /// L2: a paste is typed, cut at a character within the road's limit.
     #[test]
     fn a_paste_is_typed_within_its_limit() {
-        let max = pocketdesk_core::streaming::cast_control::MAX_TEXT;
+        let max = friday_mobile_core::streaming::cast_control::MAX_TEXT;
         assert_eq!(pasted("héllo"), "héllo");
         let long = "é".repeat(max);
         let cut = pasted(&long);

@@ -161,7 +161,7 @@ async fn run(
         .map_err(|e| format!("no session bus for input capture: {e}"))?;
     // Named as the server is, on this connection too: the portal names each
     // connection apart (review N4).
-    pocketdesk_core::portal_grant::register_app_on(connection.clone()).await;
+    friday_mobile_core::portal_grant::register_app_on(connection.clone()).await;
     let portal = match InputCapture::with_connection(connection).await {
         Ok(portal) => portal,
         // Only the portal's own word that it has no such interface is "not
@@ -261,7 +261,7 @@ async fn run(
         .map_err(|e| format!("no libei stream: {e}"))?;
     let context = ei::Context::new(UnixStream::from(fd)).map_err(|e| format!("libei: {e}"))?;
     let (_connection, ei_events) = context
-        .handshake_tokio("pocketdesk", ei::handshake::ContextType::Receiver)
+        .handshake_tokio("friday-mobile", ei::handshake::ContextType::Receiver)
         .await
         .map_err(|e| format!("the libei greeting: {e}"))?;
     let mut scroll = ScrollFrame::default();
@@ -455,7 +455,7 @@ mod tests {
     async fn receive(socket: UnixStream) -> Vec<Portal> {
         let context = ei::Context::new(socket).unwrap();
         let (_connection, events) = context
-            .handshake_tokio("pocketdesk-test", ei::handshake::ContextType::Receiver)
+            .handshake_tokio("friday-mobile-test", ei::handshake::ContextType::Receiver)
             .await
             .unwrap();
         let mut events = std::pin::pin!(events);

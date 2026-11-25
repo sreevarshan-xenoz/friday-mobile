@@ -27,7 +27,7 @@
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::hotkey::Hotkey;
+use friday_mobile_core::local::hotkey::Hotkey;
 
 use super::badge;
 use super::barriers::{self, Barrier, Flip, FlipBreaker};
@@ -94,7 +94,7 @@ pub enum Standing {
 impl Standing {
     /// How it is said in the status file (empty: nothing to say yet).
     pub fn word(self) -> &'static str {
-        use pocketdesk_core::local::shared_input as words;
+        use friday_mobile_core::local::shared_input as words;
         match self {
             Standing::Starting => "",
             Standing::NeedsPermission => words::CAPTURE_NEEDS_PERMISSION,
@@ -130,8 +130,8 @@ const STRAY_GAP: Duration = Duration::from_secs(1);
 
 /// Smooth scroll in 120ths of a notch a pixel: a wheel's notch is 15
 /// pixels of libei's smooth scroll, and 120 of its discrete scroll.
-const FINE_PER_PIXEL: f64 = pocketdesk_core::streaming::wheel::NOTCH as f64
-    / pocketdesk_core::streaming::wheel::NOTCH_PIXELS;
+const FINE_PER_PIXEL: f64 = friday_mobile_core::streaming::wheel::NOTCH as f64
+    / friday_mobile_core::streaming::wheel::NOTCH_PIXELS;
 
 /// The words said once when an edge turns into a wall.
 pub const WALL_WORDS: &str = "An edge stopped leading to the next computer: the desktop kept \
@@ -641,7 +641,7 @@ mod tests {
     use crate::shared_input::drive::ANSWER_WITHIN;
     use crate::shared_input::layout::Placed;
     use crate::shared_input::wire::Msg;
-    use pocketdesk_core::local::hotkey::parse;
+    use friday_mobile_core::local::hotkey::parse;
     use std::time::Duration;
 
     #[derive(Debug, Clone, PartialEq)]

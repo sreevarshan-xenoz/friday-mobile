@@ -11,7 +11,7 @@
 //! name one (`player`, an id from that list); one not named, or gone, is
 //! the system's own choice, as before.
 
-use pocketdesk_core::protocol::phone_media::clean_line as clean;
+use friday_mobile_core::protocol::phone_media::clean_line as clean;
 use serde_json::{Value, json};
 
 #[cfg(not(windows))]
@@ -308,7 +308,7 @@ pub fn parse_playerctl_list(output: &str) -> Vec<Player> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pocketdesk_core::protocol::phone_media::MAX_TEXT;
+    use friday_mobile_core::protocol::phone_media::MAX_TEXT;
 
     #[test]
     fn only_the_three_commands_are_taken() {

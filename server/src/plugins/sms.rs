@@ -12,10 +12,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::sms::{self, Direction, Message, Reply, ReplyRequest, ReplyState};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::sms::{self, Direction, Message, Reply, ReplyRequest, ReplyState};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin, TrustStore};
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// Texts a phone forwards.
 pub const MESSAGES: &str = "kdeconnect.sms.messages";
@@ -119,7 +119,7 @@ fn received_texts(body: &serde_json::Value, now: u64, names: bool) -> Vec<Receiv
                 .and_then(|v| v.as_str())
                 .filter(|_| names)
                 .map(|n| {
-                    pocketdesk_core::protocol::phone_media::clean_line(n)
+                    friday_mobile_core::protocol::phone_media::clean_line(n)
                         .chars()
                         .take(MAX_NAME)
                         .collect::<String>()

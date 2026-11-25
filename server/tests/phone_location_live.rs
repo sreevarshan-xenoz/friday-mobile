@@ -24,10 +24,10 @@ use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::phone_location::{Fix, Precision};
-use pocketdesk_server::nmea::{self, FixSource};
-use pocketdesk_server::nmea_announce::Announcement;
-use pocketdesk_server::phone_location::{Asker, Fixes};
+use friday_mobile_core::protocol::phone_location::{Fix, Precision};
+use friday_mobile_server::nmea::{self, FixSource};
+use friday_mobile_server::nmea_announce::Announcement;
+use friday_mobile_server::phone_location::{Asker, Fixes};
 
 /// The stub phone: always the same made-up place, as the real one gives it.
 struct StubPhone;

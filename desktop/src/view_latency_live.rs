@@ -14,7 +14,7 @@
 //! decoder ([`crate::video`]) and every `PD_LIVE_GAP_MS` (250) sends an
 //! absolute move to one of two known places, alternating; each decoded
 //! NV12 picture's luma is scanned for the marker
-//! ([`pocketdesk_core::streaming::latency_probe::find`]) and the time from
+//! ([`friday_mobile_core::streaming::latency_probe::find`]) and the time from
 //! the send to the first picture showing the marker in its new place is
 //! kept. Printed: p50, p95 and max over the moves that were seen, how many
 //! pictures came, the misses (no marker in its new place within 1 s), the
@@ -56,12 +56,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::pin;
-use pocketdesk_core::local::view::{self as wire, Message};
-use pocketdesk_core::streaming::InputPacket;
-use pocketdesk_core::streaming::latency_probe;
-use pocketdesk_core::streaming::latency_trace::{self, wall_us};
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::pin;
+use friday_mobile_core::local::view::{self as wire, Message};
+use friday_mobile_core::streaming::InputPacket;
+use friday_mobile_core::streaming::latency_probe;
+use friday_mobile_core::streaming::latency_trace::{self, wall_us};
 
 use crate::computer_view::percentile;
 use crate::nv12::Layout;

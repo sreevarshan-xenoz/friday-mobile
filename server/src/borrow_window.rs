@@ -24,8 +24,8 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use pocketdesk_core::local::computers::{self, FitSize, LendableWindow, WindowsThere};
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::local::computers::{self, FitSize, LendableWindow, WindowsThere};
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 use serde_json::{Value, json};
 use tokio::sync::broadcast;
 
@@ -228,7 +228,7 @@ fn record_answer(
 /// what came back (or why not) written for the app. The windows' titles
 /// are never logged.
 pub async fn ask_list(dir: &Path, computer: &str) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let recorded = {
         let (dir, computer) = (dir.to_path_buf(), computer.to_string());
         tokio::task::spawn_blocking(move || {
@@ -247,7 +247,7 @@ pub async fn ask_list(dir: &Path, computer: &str) {
     }
     let (dir, computer) = (dir.to_path_buf(), computer.to_string());
     let _ = tokio::task::spawn_blocking(move || {
-        let done = pocketdesk_core::local::pin::now_unix();
+        let done = friday_mobile_core::local::pin::now_unix();
         computers::update(&dir, |file| {
             record_answer(file, &computer, now, answer, done)
         })
@@ -268,7 +268,7 @@ fn list_expired(there: &WindowsThere, now: u64) -> bool {
 /// Drop a list nobody asked for again within [`LIST_KEPT`] (run every pass
 /// of the computers loop), and, at start (`all`), any a stopped server left.
 pub fn expire_lists(dir: &Path, all: bool) {
-    let now = pocketdesk_core::local::pin::now_unix();
+    let now = friday_mobile_core::local::pin::now_unix();
     let saved = computers::update(dir, |file| {
         if file
             .windows_there
@@ -579,7 +579,7 @@ mod tests {
     fn a_list_nobody_asked_for_again_is_dropped_and_a_start_drops_any() {
         let dir = std::env::temp_dir().join(format!("pd-borrow-expire-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let kept = |dir: &Path| computers::read(dir).windows_there.is_some();
         computers::update(&dir, |file| record_ask(file, "desk", now - LIST_KEPT - 5)).unwrap();
         assert!(kept(&dir));

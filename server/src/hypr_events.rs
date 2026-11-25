@@ -10,7 +10,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket};
 
 use crate::hyprland::{HyprEvent, HyprlandIpc};
 use crate::plugins::windows::{entries, screen_box};

@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::protocol::phone_action::PhoneAction;
+use friday_mobile_core::protocol::phone_action::PhoneAction;
 
 /// How many asks wait for the app at most.
 const MAX_WAITING: usize = 8;
@@ -34,7 +34,7 @@ pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
     let mut ask = serde_json::json!({ "host": host, "port": port, "action": action.as_str() });
     match (action, app) {
         (PhoneAction::Open, Some(app))
-            if pocketdesk_core::protocol::phone_action::valid_app_id(app) =>
+            if friday_mobile_core::protocol::phone_action::valid_app_id(app) =>
         {
             ask["app"] = serde_json::Value::from(app);
             // Apps part 1: the computer wants the phone's screen shown too.
@@ -45,7 +45,7 @@ pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
             // own: a sound one (an id the cap allows, a size and density in
             // bounds) or none; and then it wants no screen of the phone's.
             if let Some(window) =
-                pocketdesk_core::protocol::phone_action::WindowAsk::from_body(body)
+                friday_mobile_core::protocol::phone_action::WindowAsk::from_body(body)
             {
                 ask["window"] = serde_json::to_value(window).unwrap_or_default();
                 ask.as_object_mut().map(|o| o.remove("screen"));
@@ -61,7 +61,7 @@ pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
             let size = body.get("size").and_then(|v| v.as_u64());
             match (name, size) {
                 (Some(name), Some(size))
-                    if pocketdesk_core::protocol::phone_action::valid_share_name(name) =>
+                    if friday_mobile_core::protocol::phone_action::valid_share_name(name) =>
                 {
                     ask["name"] = serde_json::Value::from(name);
                     ask["size"] = serde_json::Value::from(size);
@@ -75,7 +75,7 @@ pub(crate) fn receive(body: &serde_json::Value, host: &str, port: u16) {
         // Apps part 1: the icons the computer keeps (id and version), so
         // only the rest are sent.
         (PhoneAction::Apps, _) => {
-            let have = pocketdesk_core::protocol::phone_action::parse_have(body);
+            let have = friday_mobile_core::protocol::phone_action::parse_have(body);
             if !have.is_empty() {
                 ask["have"] = serde_json::json!(have);
             }

@@ -60,7 +60,7 @@ use std::collections::BTreeMap;
 use std::io;
 use std::sync::Mutex;
 
-use pocketdesk_core::streaming::window_target::{self, Identity, Lease, RegisterError};
+use friday_mobile_core::streaming::window_target::{self, Identity, Lease, RegisterError};
 use serde_json::{Value, json};
 
 use super::{Env, Lent, Seen, error};
@@ -199,7 +199,8 @@ pub fn output_name(index: u32) -> String {
 /// the window picker gives it) is this one's own: the app and the server never
 /// lend their own windows (the viewing windows would show themselves).
 pub fn is_own_program(class: &str) -> bool {
-    class.to_ascii_lowercase().starts_with("pocketdesk")
+    let lower = class.to_ascii_lowercase();
+    lower.starts_with("friday") || lower.starts_with("pocketdesk")
 }
 
 /// Whether a window the picker described is one to list: not this server's or
@@ -963,6 +964,9 @@ mod tests {
     #[test]
     fn this_programs_own_windows_are_never_listed() {
         for own in [
+            "friday-mobile",
+            "friday-mobile-app",
+            "friday-mobile-tray",
             "pocketdesk",
             "pocketdesk-desktop",
             "PocketDesk",

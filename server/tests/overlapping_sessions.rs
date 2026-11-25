@@ -24,8 +24,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
-use pocketdesk_core::streaming::{
+use friday_mobile_core::streaming::transport::{CertManager, StreamServer, StreamTransportConfig};
+use friday_mobile_core::streaming::{
     QuinnConnection, SessionMode, SharedConnection, StreamingClient, StreamingServer,
 };
 use tokio_util::sync::CancellationToken;
@@ -114,7 +114,7 @@ async fn close(phone: Phone) {
 async fn server_ended_all() -> bool {
     let deadline = Instant::now() + Duration::from_secs(5);
     while Instant::now() < deadline {
-        if pocketdesk_core::streaming::sessions::list().is_empty() {
+        if friday_mobile_core::streaming::sessions::list().is_empty() {
             return true;
         }
         tokio::time::sleep(Duration::from_millis(50)).await;
@@ -142,8 +142,8 @@ async fn overlapping_sessions_never_bring_the_server_down() {
     std::fs::create_dir_all(&crash_dir).unwrap();
     println!("crash reports and the log: {}", crash_dir.display());
     // As the server starts: its process setup, then the crash reporter.
-    pocketdesk_server::platform::init_process();
-    pocketdesk_server::crash_report::install(&crash_dir);
+    friday_mobile_server::platform::init_process();
+    friday_mobile_server::crash_report::install(&crash_dir);
     let log_path = crash_dir.join("sessions.log");
     let log = LogFile(Arc::new(Mutex::new(
         std::fs::File::create(&log_path).unwrap(),
@@ -160,7 +160,7 @@ async fn overlapping_sessions_never_bring_the_server_down() {
         .and_then(|n| n.parse().ok())
         .unwrap_or(200);
     // The video settings the server streams with by default.
-    let streaming_config = pocketdesk_core::local::config::Config::default()
+    let streaming_config = friday_mobile_core::local::config::Config::default()
         .video_quality
         .to_streaming_config();
     let cert = Arc::new(CertManager::new().expect("cert manager"));
@@ -242,7 +242,7 @@ async fn overlapping_sessions_never_bring_the_server_down() {
         assert!(
             server_ended_all().await,
             "round {round}: the server still runs {} sessions",
-            pocketdesk_core::streaming::sessions::list().len()
+            friday_mobile_core::streaming::sessions::list().len()
         );
         if round % 20 == 19 {
             println!(

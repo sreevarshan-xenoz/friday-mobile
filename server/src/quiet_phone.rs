@@ -12,13 +12,13 @@ use std::collections::{BTreeMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::paths::TRUST_FILE;
-use pocketdesk_core::local::phone_quiet::PhoneQuiet;
-use pocketdesk_core::local::quiet::QuietRequest;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::permissions::Capability;
-use pocketdesk_core::protocol::quiet::{QUIET, QUIET_STATE};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::paths::TRUST_FILE;
+use friday_mobile_core::local::phone_quiet::PhoneQuiet;
+use friday_mobile_core::local::quiet::QuietRequest;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::permissions::Capability;
+use friday_mobile_core::protocol::quiet::{QUIET, QUIET_STATE};
 
 /// The most phones whose state is kept.
 const MAX_PHONES: usize = 64;
@@ -31,12 +31,12 @@ pub async fn run_watcher() {
     };
     loop {
         crate::inbox::wait(
-            pocketdesk_core::local::paths::QUIET_DIR,
+            friday_mobile_core::local::paths::QUIET_DIR,
             Duration::from_millis(250),
         )
         .await;
-        let now = pocketdesk_core::local::pin::now_unix();
-        for request in pocketdesk_core::local::quiet::take_all(&dir, now) {
+        let now = friday_mobile_core::local::pin::now_unix();
+        for request in friday_mobile_core::local::quiet::take_all(&dir, now) {
             let clients = crate::state::clone_clients().await;
             let allowed = crate::plugins::pair::allows(&request.device_id, Capability::Mute)
                 && !crate::plugins::pair::is_computer_device(&request.device_id);
@@ -137,7 +137,7 @@ impl Plugin for PhoneQuietPlugin {
         {
             return Ok(());
         }
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let (changed, quiet) = {
             let mut states = STATES.lock().unwrap_or_else(|e| e.into_inner());
             let Some(changed) = take(&mut states, device, &packet.body, now) else {
@@ -174,7 +174,7 @@ fn write() {
         static WRITING: Mutex<()> = Mutex::new(());
         let _one = WRITING.lock().unwrap_or_else(|e| e.into_inner());
         let paired: Option<HashSet<String>> =
-            pocketdesk_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
+            friday_mobile_core::protocol::kdeconnect::TrustStore::read(dir.join(TRUST_FILE))
                 .ok()
                 .map(|store| store.trusted_devices().into_iter().collect());
         let states = {
@@ -184,7 +184,7 @@ fn write() {
             }
             states.clone()
         };
-        if let Err(e) = pocketdesk_core::local::phone_quiet::write(&dir, &states) {
+        if let Err(e) = friday_mobile_core::local::phone_quiet::write(&dir, &states) {
             tracing::warn!("Could not keep the phones' quiet state: {e}");
         }
     });
@@ -196,7 +196,7 @@ pub fn load() {
     let Ok(dir) = crate::state::state_dir() else {
         return;
     };
-    let kept = pocketdesk_core::local::phone_quiet::read(&dir);
+    let kept = friday_mobile_core::local::phone_quiet::read(&dir);
     let mut states = STATES.lock().unwrap_or_else(|e| e.into_inner());
     for (device, state) in kept {
         states.entry(device).or_insert(state);

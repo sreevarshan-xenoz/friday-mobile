@@ -20,7 +20,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::local::sent::{SentFile, SentState};
+use friday_mobile_core::local::sent::{SentFile, SentState};
 
 /// The catcher's side, in physical pixels, centred on the parked cursor.
 pub const CATCHER_PX: i32 = 64;

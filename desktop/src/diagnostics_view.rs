@@ -5,9 +5,9 @@ use std::path::Path;
 use std::thread::JoinHandle;
 
 use eframe::egui;
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::local::diagnostics::{self, Finding, Report, Status};
-use pocketdesk_core::local::shared_input::LatencyReport;
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::local::diagnostics::{self, Finding, Report, Status};
+use friday_mobile_core::local::shared_input::LatencyReport;
 
 #[derive(Default)]
 pub struct DiagnosticsView {
@@ -45,7 +45,7 @@ impl DiagnosticsView {
                     self.report = Some(report);
                     self.ran_at = now_unix();
                     self.failed = false;
-                    self.latency = pocketdesk_core::local::shared_input::read_latency(state_dir);
+                    self.latency = friday_mobile_core::local::shared_input::read_latency(state_dir);
                 }
                 Err(_) => self.failed = true,
             }
@@ -251,13 +251,13 @@ fn run(state_dir: &Path, config: Option<Config>) -> Report {
     // T1: the port the running server bound, when another program holds
     // the configured one.
     let control_port =
-        pocketdesk_core::local::listening::control_port(state_dir, config.control_port);
+        friday_mobile_core::local::listening::control_port(state_dir, config.control_port);
     let mut findings = vec![
         diagnostics::check_server(state),
         diagnostics::check_control_port(control_port, state),
         diagnostics::check_stream_port(config.streaming_port, state),
     ];
-    if let Some(moved) = diagnostics::check_port_moved(pocketdesk_core::local::listening::moved(
+    if let Some(moved) = diagnostics::check_port_moved(friday_mobile_core::local::listening::moved(
         state_dir,
         config.control_port,
     )) {
@@ -278,7 +278,7 @@ fn run(state_dir: &Path, config: Option<Config>) -> Report {
         },
     ));
     findings.push(diagnostics::check_addresses(
-        &pocketdesk_core::local::network::local_ips(),
+        &friday_mobile_core::local::network::local_ips(),
     ));
     if config.internet_path {
         findings.push(diagnostics::check_internet_path(
@@ -298,7 +298,7 @@ fn run(state_dir: &Path, config: Option<Config>) -> Report {
         findings.push(diagnostics::internet_path_off());
     }
     // N6: the adapter a phone on this network would wake it through.
-    let wake = pocketdesk_core::local::wake::wake_facts(None);
+    let wake = friday_mobile_core::local::wake::wake_facts(None);
     let allowed = wake
         .as_ref()
         .map(|facts| wake_allowed(&facts.adapter))
@@ -325,13 +325,13 @@ fn run(state_dir: &Path, config: Option<Config>) -> Report {
 #[cfg(windows)]
 fn firewall_state(state_dir: &Path) -> Option<Result<diagnostics::FirewallState, String>> {
     // The pid is a number, so it goes into the script as one.
-    let exe = pocketdesk_core::local::server::server_pid(state_dir)
-        .filter(|_| pocketdesk_core::local::server::is_running(state_dir))
+    let exe = friday_mobile_core::local::server::server_pid(state_dir)
+        .filter(|_| friday_mobile_core::local::server::is_running(state_dir))
         .map(|pid| format!("(Get-Process -Id {pid}).Path"))
         .unwrap_or_else(|| "''".to_string());
     let script = format!("$Exe = {exe}; {FIREWALL_QUERY}");
     let powershell = crate::restart::system32("WindowsPowerShell\\v1.0\\powershell.exe");
-    let answer = pocketdesk_core::local::network::output_within(
+    let answer = friday_mobile_core::local::network::output_within(
         &powershell.to_string_lossy(),
         &["-NoProfile", "-NonInteractive", "-Command", &script],
         std::time::Duration::from_secs(10),
@@ -345,7 +345,7 @@ fn firewall_state(state_dir: &Path) -> Option<Result<diagnostics::FirewallState,
 /// Counts, for `$Exe`, the rules that apply to the active profiles:
 /// "allow,block,profiles".
 #[cfg(windows)]
-const FIREWALL_QUERY: &str = r"$ErrorActionPreference = 'SilentlyContinue'; $profiles = @(Get-NetConnectionProfile | ForEach-Object { $c = $_.NetworkCategory.ToString(); if ($c -eq 'DomainAuthenticated') { 'Domain' } else { $c } } | Select-Object -Unique); $rules = @(Get-NetFirewallRule -Group 'Pocketdesk' -Enabled True -Direction Inbound); if ($Exe) { $rules += @(Get-NetFirewallApplicationFilter | Where-Object { $_.Program -eq $Exe } | Get-NetFirewallRule | Where-Object { $_.Enabled -eq 'True' -and $_.Direction -eq 'Inbound' }) }; $rules = @($rules | Sort-Object -Property Name -Unique); $applies = @($rules | Where-Object { $p = $_.Profile.ToString(); $p -eq 'Any' -or @($profiles | Where-Object { $p -match $_ }).Count -gt 0 }); '{0},{1},{2}' -f @($applies | Where-Object { $_.Action -eq 'Allow' }).Count, @($applies | Where-Object { $_.Action -eq 'Block' }).Count, ($profiles -join '/')";
+const FIREWALL_QUERY: &str = r"$ErrorActionPreference = 'SilentlyContinue'; $profiles = @(Get-NetConnectionProfile | ForEach-Object { $c = $_.NetworkCategory.ToString(); if ($c -eq 'DomainAuthenticated') { 'Domain' } else { $c } } | Select-Object -Unique); $rules = @(Get-NetFirewallRule -Group 'FRIDAY Mobile' -Enabled True -Direction Inbound); if ($Exe) { $rules += @(Get-NetFirewallApplicationFilter | Where-Object { $_.Program -eq $Exe } | Get-NetFirewallRule | Where-Object { $_.Enabled -eq 'True' -and $_.Direction -eq 'Inbound' }) }; $rules = @($rules | Sort-Object -Property Name -Unique); $applies = @($rules | Where-Object { $p = $_.Profile.ToString(); $p -eq 'Any' -or @($profiles | Where-Object { $p -match $_ }).Count -gt 0 }); '{0},{1},{2}' -f @($applies | Where-Object { $_.Action -eq 'Allow' }).Count, @($applies | Where-Object { $_.Action -eq 'Block' }).Count, ($profiles -join '/')";
 
 /// Whether `adapter` lets a magic packet wake this computer: Windows'
 /// `Get-NetAdapterPowerManagement`.
@@ -358,7 +358,7 @@ fn wake_allowed(adapter: &str) -> diagnostics::WakeAllowed {
         "$ErrorActionPreference = 'SilentlyContinue'; $v = (Get-NetAdapterPowerManagement -Name '{name}').WakeOnMagicPacket; if (-not $v) {{ $k = (Get-NetAdapterAdvancedProperty -Name '{name}' -RegistryKeyword '*WakeOnMagicPacket').RegistryValue; if ($k -eq '1') {{ $v = 'Enabled' }} elseif ($k -eq '0') {{ $v = 'Disabled' }} }}; $v"
     );
     let powershell = crate::restart::system32("WindowsPowerShell\\v1.0\\powershell.exe");
-    pocketdesk_core::local::network::output_within(
+    friday_mobile_core::local::network::output_within(
         &powershell.to_string_lossy(),
         &["-NoProfile", "-NonInteractive", "-Command", &script],
         std::time::Duration::from_secs(10),
@@ -386,7 +386,7 @@ fn single_quoted(text: &str) -> String {
 /// says only that the device may wake the system, not by magic packet.
 #[cfg(not(windows))]
 fn wake_allowed(adapter: &str) -> diagnostics::WakeAllowed {
-    pocketdesk_core::local::network::output_within(
+    friday_mobile_core::local::network::output_within(
         "ethtool",
         &[adapter],
         std::time::Duration::from_secs(3),
@@ -438,8 +438,12 @@ fn unit_on(unit: &str) -> bool {
     }
     let on = installed(&["/usr/bin/systemctl", "/bin/systemctl"]).is_some_and(|systemctl| {
         ["is-active", "is-enabled"].iter().any(|ask| {
-            pocketdesk_core::local::network::output_within(systemctl, &[ask, unit], FIREWALL_WAIT)
-                .is_some()
+            friday_mobile_core::local::network::output_within(
+                systemctl,
+                &[ask, unit],
+                FIREWALL_WAIT,
+            )
+            .is_some()
         })
     });
     if let Ok(mut kept) = KEPT.lock() {
@@ -458,7 +462,7 @@ fn linux_nftables(control_port: u16, stream_port: u16) -> diagnostics::LinuxFire
         return diagnostics::LinuxFirewall::None;
     };
     if let Some(out) =
-        pocketdesk_core::local::network::output_within(nft, &["list", "ruleset"], FIREWALL_WAIT)
+        friday_mobile_core::local::network::output_within(nft, &["list", "ruleset"], FIREWALL_WAIT)
     {
         return diagnostics::parse_nftables(
             &String::from_utf8_lossy(&out),
@@ -492,7 +496,7 @@ fn linux_iptables(control_port: u16, stream_port: u16) -> diagnostics::LinuxFire
     ]) else {
         return diagnostics::LinuxFirewall::None;
     };
-    if let Some(out) = pocketdesk_core::local::network::output_within(save, &[], FIREWALL_WAIT) {
+    if let Some(out) = friday_mobile_core::local::network::output_within(save, &[], FIREWALL_WAIT) {
         return diagnostics::parse_iptables(
             &String::from_utf8_lossy(&out),
             None,
@@ -531,9 +535,11 @@ fn linux_ufw(control_port: u16, stream_port: u16) -> diagnostics::LinuxFirewall 
     let Some(ufw) = installed(&["/usr/sbin/ufw", "/sbin/ufw", "/usr/bin/ufw"]) else {
         return diagnostics::LinuxFirewall::None;
     };
-    if let Some(out) =
-        pocketdesk_core::local::network::output_within(ufw, &["status", "verbose"], FIREWALL_WAIT)
-    {
+    if let Some(out) = friday_mobile_core::local::network::output_within(
+        ufw,
+        &["status", "verbose"],
+        FIREWALL_WAIT,
+    ) {
         return diagnostics::parse_ufw(&String::from_utf8_lossy(&out), control_port, stream_port);
     }
     let enabled = std::fs::read_to_string("/etc/ufw/ufw.conf")
@@ -550,7 +556,7 @@ fn linux_ufw(control_port: u16, stream_port: u16) -> diagnostics::LinuxFirewall 
 /// may come in through any of them (O9 review).
 #[cfg(target_os = "linux")]
 fn linux_firewalld(control_port: u16, stream_port: u16) -> diagnostics::LinuxFirewall {
-    use pocketdesk_core::local::network::output_within;
+    use friday_mobile_core::local::network::output_within;
     let Some(cmd) = installed(&["/usr/bin/firewall-cmd", "/bin/firewall-cmd"]) else {
         return diagnostics::LinuxFirewall::None;
     };
@@ -651,7 +657,7 @@ mod tests {
     #[test]
     #[ignore = "live: reads this computer's firewall"]
     fn this_computers_firewall_is_read() {
-        use pocketdesk_core::local::diagnostics;
+        use friday_mobile_core::local::diagnostics;
         let needs = diagnostics::FirewallNeeds {
             control_port: 1716,
             stream_port: 4716,
@@ -682,12 +688,12 @@ mod tests {
     #[test]
     #[ignore]
     fn the_checks_run_on_this_computer() {
-        let dir = pocketdesk_core::local::paths::state_dir().unwrap();
-        let config = pocketdesk_core::local::config::Config::load().ok();
+        let dir = friday_mobile_core::local::paths::state_dir().unwrap();
+        let config = friday_mobile_core::local::config::Config::load().ok();
         let report = super::run(&dir, config);
         println!(
             "{}",
-            pocketdesk_core::local::diagnostics::report_text(
+            friday_mobile_core::local::diagnostics::report_text(
                 &report,
                 "test",
                 std::env::consts::OS,

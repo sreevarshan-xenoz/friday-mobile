@@ -12,10 +12,10 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::home_assistant::HOME_ASSISTANT_DEVICE;
-use pocketdesk_core::local::tasks::{self, TaskRequest, TaskSpec, TaskVerdict};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::home_assistant::HOME_ASSISTANT_DEVICE;
+use friday_mobile_core::local::tasks::{self, TaskRequest, TaskSpec, TaskVerdict};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
 use serde_json::{Value, json};
 use tokio::io::AsyncReadExt;
 
@@ -39,7 +39,7 @@ static STARTS: LazyLock<Mutex<HashMap<String, VecDeque<Instant>>>> =
     LazyLock::new(Default::default);
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 /// A phone's id for a run: short printable text, echoed back.
@@ -284,7 +284,8 @@ pub(crate) fn shell(command: &str) -> tokio::process::Command {
 pub fn clear_left_over() {
     if let Ok(dir) = crate::state::state_dir() {
         let _ = tasks::write_requests(&dir, &[]);
-        let _ = std::fs::remove_dir_all(dir.join(pocketdesk_core::local::paths::TASK_ANSWERS_DIR));
+        let _ =
+            std::fs::remove_dir_all(dir.join(friday_mobile_core::local::paths::TASK_ANSWERS_DIR));
     }
 }
 

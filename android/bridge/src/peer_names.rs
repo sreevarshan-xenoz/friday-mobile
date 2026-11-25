@@ -5,7 +5,7 @@
 //! again at every handshake, so a computer replaced or changed at an address
 //! is seen at its next connection.
 
-use pocketdesk_core::protocol::connection::PeerClaims;
+use friday_mobile_core::protocol::connection::PeerClaims;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -263,7 +263,7 @@ mod tests {
         assert!(!takes_kept(address), "never heard");
         note(
             address,
-            says(vec![pocketdesk_core::protocol::kept::KEEP_RUN]),
+            says(vec![friday_mobile_core::protocol::kept::KEEP_RUN]),
         );
         assert!(takes_kept(address));
         note(address, named(None));
@@ -272,7 +272,7 @@ mod tests {
         assert!(!takes_kept(address), "an older computer now");
         note(
             address,
-            says(vec![pocketdesk_core::protocol::kept::KEEP_RUN]),
+            says(vec![friday_mobile_core::protocol::kept::KEEP_RUN]),
         );
         forget(address);
         assert!(!takes_kept(address), "let go with the rest");

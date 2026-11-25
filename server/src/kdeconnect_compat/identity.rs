@@ -54,11 +54,11 @@ impl CompatIdentity {
             tmp.push(".tmp");
             let tmp = PathBuf::from(tmp);
             if private {
-                pocketdesk_core::secure_fs::write_private(&tmp, bytes)?;
+                friday_mobile_core::secure_fs::write_private(&tmp, bytes)?;
             } else {
                 std::fs::write(&tmp, bytes)?;
             }
-            pocketdesk_core::atomic_file::replace(&tmp, path)?;
+            friday_mobile_core::atomic_file::replace(&tmp, path)?;
             Ok(())
         };
         write(&id_path, id.as_bytes(), false)?;

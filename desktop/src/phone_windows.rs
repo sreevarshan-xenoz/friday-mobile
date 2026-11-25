@@ -15,9 +15,9 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui;
-use pocketdesk_core::local::cast as wire;
-use pocketdesk_core::protocol::phone_action::{OpenMode, WindowAsk, WindowsMode, open_mode};
-use pocketdesk_core::streaming::cast::MAX_WINDOWS;
+use friday_mobile_core::local::cast as wire;
+use friday_mobile_core::protocol::phone_action::{OpenMode, WindowAsk, WindowsMode, open_mode};
+use friday_mobile_core::streaming::cast::MAX_WINDOWS;
 
 use crate::cast_view::CastView;
 use crate::model::Device;
@@ -80,7 +80,7 @@ pub fn ask_open(
     route: &Route,
     now: u64,
 ) -> Result<Asked, String> {
-    use pocketdesk_core::local::phone_actions as ask;
+    use friday_mobile_core::local::phone_actions as ask;
     let failed = |e: std::io::Error| format!("Could not ask the phone: {e}");
     match route.pick() {
         OpenMode::Window(id) => {
@@ -198,7 +198,7 @@ impl Windows {
 }
 
 fn slot(id: u8) -> Option<usize> {
-    pocketdesk_core::streaming::cast::valid_window(id).then(|| usize::from(id) - 1)
+    friday_mobile_core::streaming::cast::valid_window(id).then(|| usize::from(id) - 1)
 }
 
 #[cfg(test)]
@@ -270,7 +270,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(asked, Asked::Window(2));
-        let taken = pocketdesk_core::local::phone_actions::take_all(&dir, 1_000);
+        let taken = friday_mobile_core::local::phone_actions::take_all(&dir, 1_000);
         assert_eq!(taken.len(), 1);
         assert_eq!(taken[0].window, Some(WindowAsk::standard(2)));
         assert!(!taken[0].screen);
@@ -284,7 +284,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(asked, Asked::Screen);
-        let taken = pocketdesk_core::local::phone_actions::take_all(&dir, 1_000);
+        let taken = friday_mobile_core::local::phone_actions::take_all(&dir, 1_000);
         assert!(taken[0].window.is_none() && taken[0].screen);
         // At the limit nothing is asked.
         let none = ask_open(
@@ -295,7 +295,7 @@ mod tests {
             1_000,
         );
         assert!(none.is_err());
-        assert!(pocketdesk_core::local::phone_actions::take_all(&dir, 1_000).is_empty());
+        assert!(friday_mobile_core::local::phone_actions::take_all(&dir, 1_000).is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

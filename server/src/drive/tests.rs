@@ -1,5 +1,5 @@
 use super::*;
-use pocketdesk_core::protocol::phone_files::Root;
+use friday_mobile_core::protocol::phone_files::Root;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 const TOKEN: &str = "0123456789abcdef0123456789abcdef";

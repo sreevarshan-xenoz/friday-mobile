@@ -43,14 +43,14 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use base64::Engine as _;
-use pocketdesk_core::local::approve::{self as files, PhoneKey, Request, Status};
-use pocketdesk_core::local::config::Config;
-use pocketdesk_core::protocol::approve::{
+use friday_mobile_core::local::approve::{self as files, PhoneKey, Request, Status};
+use friday_mobile_core::local::config::Config;
+use friday_mobile_core::protocol::approve::{
     Approval, HELPER_PATH, Kind, MAX_COMMAND, MAX_ORIGIN, MAX_TIMEOUT_SECS, MAX_TTY,
     MIN_TIMEOUT_SECS, NONCE_LEN, PAM_SERVICES, PIN_DIR, PIN_SERVICE, PIN_TIMEOUT_SECS,
     is_plain_name, pam_line, shown_text, signed_message,
 };
-use pocketdesk_core::protocol::ask::Answer;
+use friday_mobile_core::protocol::ask::Answer;
 use serde::{Deserialize, Serialize};
 
 use crate::phone_approves::{Refusal, verify};
@@ -394,7 +394,7 @@ pub fn rate_allows(history: &[u64], now: u64, kind: Kind) -> bool {
 }
 
 fn now_unix() -> u64 {
-    pocketdesk_core::local::pin::now_unix()
+    friday_mobile_core::local::pin::now_unix()
 }
 
 fn new_nonce() -> Result<String, GiveUp> {
@@ -542,7 +542,7 @@ fn pin_path(user: &str) -> PathBuf {
 fn read_pin(user: &str) -> Result<Pin, GiveUp> {
     let path = pin_path(user);
     for p in [
-        Path::new("/etc/pocketdesk"),
+        Path::new("/etc/friday-mobile"),
         Path::new(PIN_DIR),
         path.as_path(),
     ] {
@@ -599,7 +599,7 @@ fn rate_file() -> Option<PathBuf> {
     // SAFETY: geteuid has no preconditions.
     let euid = unsafe { libc::geteuid() };
     let dir = if euid == 0 {
-        PathBuf::from("/run/pocketdesk")
+        PathBuf::from("/run/friday-mobile")
     } else {
         PathBuf::from(format!("/run/user/{euid}"))
     };
@@ -609,7 +609,7 @@ fn rate_file() -> Option<PathBuf> {
     }
     let meta = std::fs::symlink_metadata(&dir).ok()?;
     (meta.is_dir() && meta.uid() == euid && meta.mode() & 0o022 == 0)
-        .then(|| dir.join("pocketdesk-pam-ask-rate.json"))
+        .then(|| dir.join("friday-mobile-pam-ask-rate.json"))
 }
 
 /// Note a request for `key` now, if the rate allows one: whether it does.
@@ -808,10 +808,10 @@ pub fn pam_mode(forced: Option<Kind>, env: &PamEnv) -> Result<String, GiveUp> {
         counted = true;
     }
     become_user(&account)?;
-    let state_dir = account.home.join(".local/state/pocketdesk");
-    let config = Config::load_from(&account.home.join(".config/pocketdesk/config.toml"))
+    let state_dir = account.home.join(".local/state/friday-mobile");
+    let config = Config::load_from(&account.home.join(".config/friday-mobile/config.toml"))
         .map_err(|e| GiveUp::Broken(format!("the settings do not read: {e}")))?;
-    let running = pocketdesk_core::local::server::is_running(&state_dir);
+    let running = friday_mobile_core::local::server::is_running(&state_dir);
     let phones = precheck(ask, &config, running, &pin)?;
     if !counted && !rate_take(&rate_key, kind) {
         return Err(GiveUp::RateLimited);
@@ -843,7 +843,7 @@ pub fn pam_mode(forced: Option<Kind>, env: &PamEnv) -> Result<String, GiveUp> {
 /// `--test`: a dry ask as the user, from Settings, checked against root's
 /// pin. Exit 0 approved, 1 refused or no answer, 2 not set up.
 fn test_mode() -> i32 {
-    let Ok(state_dir) = pocketdesk_core::local::paths::state_dir() else {
+    let Ok(state_dir) = friday_mobile_core::local::paths::state_dir() else {
         eprintln!("No state folder.");
         return 2;
     };
@@ -869,10 +869,10 @@ fn test_mode() -> i32 {
             return 2;
         }
     };
-    let running = pocketdesk_core::local::server::is_running(&state_dir);
+    let running = friday_mobile_core::local::server::is_running(&state_dir);
     let ask = Ask {
         kind: Kind::Admin,
-        service: "pocketdesk-test",
+        service: "friday-mobile-test",
         user: &user,
         requester: None,
         remote: false,
@@ -895,13 +895,13 @@ fn test_mode() -> i32 {
     let approval = Approval {
         id: uuid::Uuid::new_v4().to_string(),
         kind: Kind::Admin,
-        service: "pocketdesk-test".to_string(),
+        service: "friday-mobile-test".to_string(),
         user: user.clone(),
         requester: user.clone(),
         action: String::new(),
         command: "A test from Settings: nothing runs".to_string(),
         tty: String::new(),
-        origin: "pocketdesk-app".to_string(),
+        origin: "friday-mobile-app".to_string(),
         pinned: pinned_list(&phones),
         computer: pin.computer.clone(),
         nonce,
@@ -939,9 +939,9 @@ struct PinAnswer {
 /// attested key for `approval`, and return their answer.
 fn pin_child(account: &User, mut approval: Approval) -> Result<PinAnswer, String> {
     become_user(account).map_err(|e| e.said())?;
-    let state = account.home.join(".local/state/pocketdesk");
+    let state = account.home.join(".local/state/friday-mobile");
     let cert = read_users_file(
-        &state.join(pocketdesk_core::local::paths::CERT_FILE),
+        &state.join(friday_mobile_core::local::paths::CERT_FILE),
         account.uid,
         64 * 1024,
     )?;
@@ -950,7 +950,7 @@ fn pin_child(account: &User, mut approval: Approval) -> Result<PinAnswer, String
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect();
-    if !pocketdesk_core::local::server::is_running(&state) {
+    if !friday_mobile_core::local::server::is_running(&state) {
         return Err("Pocketdesk is not running for this user".to_string());
     }
     // Advisory only: which phones turned it on, to ask them.
@@ -1007,7 +1007,8 @@ fn check_pin_answer(
     if got.answer != Answer::Yes {
         return Err("declined on the phone".to_string());
     }
-    if !is_plain_name(&got.device_id) && !pocketdesk_core::protocol::ask::is_ask_id(&got.device_id)
+    if !is_plain_name(&got.device_id)
+        && !friday_mobile_core::protocol::ask::is_ask_id(&got.device_id)
     {
         return Err("the phone's id is not one".to_string());
     }
@@ -1286,7 +1287,7 @@ fn pin_mode(user: &str, attested: bool, debug_app: bool) -> i32 {
 
 fn write_pin(pin: &Pin) -> std::io::Result<()> {
     use std::os::unix::fs::{DirBuilderExt as _, PermissionsExt as _};
-    for dir in ["/etc/pocketdesk", PIN_DIR] {
+    for dir in ["/etc/friday-mobile", PIN_DIR] {
         match std::fs::DirBuilder::new().mode(0o755).create(dir) {
             Ok(()) => {}
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
@@ -1330,7 +1331,7 @@ fn unpin_mode(user: &str) -> i32 {
 
 fn usage() {
     eprintln!(
-        "pocketdesk-pam-ask: approve sudo, polkit and the lock screen on your phone.\n\
+        "friday-mobile-pam-ask: approve sudo, polkit and the lock screen on your phone.\n\
          Run by PAM (pam_exec); never edits /etc/pam.d.\n\
          \n  --lines                          the PAM lines to add yourself\n\
          \x20 --test                           a dry ask, as you\n\
@@ -1352,7 +1353,7 @@ pub fn run(args: &[String], vars: &[(String, String)]) -> i32 {
                 Err(e) => {
                     // pam_exec's `stdout` shows it; the journal keeps
                     // pam_exec's own failure line.
-                    eprintln!("pocketdesk-pam-ask: {}", e.said());
+                    eprintln!("friday-mobile-pam-ask: {}", e.said());
                     if matches!(e, GiveUp::NoAnswer | GiveUp::Refused(_)) {
                         say("Not approved on the phone.");
                     }
@@ -1361,7 +1362,7 @@ pub fn run(args: &[String], vars: &[(String, String)]) -> i32 {
             }
         }
         Mode::BadLine(why) => {
-            eprintln!("pocketdesk-pam-ask: {}", GiveUp::BadLine(why).said());
+            eprintln!("friday-mobile-pam-ask: {}", GiveUp::BadLine(why).said());
             1
         }
         Mode::Lines => {
@@ -1480,7 +1481,7 @@ mod tests {
             vec!["--kind", "root"],
             vec!["--kind", "admin", "--lines"],
             vec!["quiet"],
-            vec!["stdout", "/usr/lib/pocketdesk/pocketdesk-pam-ask"],
+            vec!["stdout", "/usr/lib/friday-mobile/friday-mobile-pam-ask"],
         ] {
             assert!(
                 matches!(mode_of(&args(&line), true), Mode::BadLine(_)),
@@ -1568,7 +1569,7 @@ mod tests {
             pinned_list(std::slice::from_ref(&key)),
             key.fingerprint.replace(' ', "")
         );
-        assert!(pocketdesk_core::protocol::approve::is_pinned_list(
+        assert!(friday_mobile_core::protocol::approve::is_pinned_list(
             &pinned_list(&[key.clone(), key])
         ));
     }

@@ -1,4 +1,4 @@
-//! Pair a computer nearby, in the app (`pocketdesk_core::local::nearby`).
+//! Pair a computer nearby, in the app (`friday_mobile_core::local::nearby`).
 //! [`NearbyView`] is the top of Pair → Computer: the Pocketdesk computers
 //! found on this network by their announcement, live while the page is
 //! open, each with Pair (or "Paired"), and this computer's ask as it goes,
@@ -10,9 +10,9 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::computers::{self, ComputerAsk, ComputersFile};
-use pocketdesk_core::local::nearby::{self, AskState, NearbyRequest};
-use pocketdesk_core::tailscale::lan::Browse;
+use friday_mobile_core::local::computers::{self, ComputerAsk, ComputersFile};
+use friday_mobile_core::local::nearby::{self, AskState, NearbyRequest};
+use friday_mobile_core::tailscale::lan::Browse;
 
 use crate::model::Device;
 
@@ -152,7 +152,7 @@ impl NearbyView {
             return;
         }
         self.file = computers::read(state_dir);
-        self.own_id = pocketdesk_core::local::identity::device_id(state_dir);
+        self.own_id = friday_mobile_core::local::identity::device_id(state_dir);
         self.read_at = Some(Instant::now());
     }
 
@@ -177,7 +177,7 @@ impl NearbyView {
         if let Some(note) = tried_note(self.file.nearby_tried, now_unix) {
             ui.label(RichText::new(note).color(crate::theme::warn(ui)));
         }
-        let local_minute = pocketdesk_core::local::quiet_hours::local_now().map(|t| t.minute);
+        let local_minute = friday_mobile_core::local::quiet_hours::local_now().map(|t| t.minute);
         if let Some(note) = paused_note(self.file.nearby_paused_until, now_unix, local_minute) {
             ui.label(RichText::new(note).color(crate::theme::warn(ui)));
         }
@@ -536,7 +536,7 @@ mod tests {
             name: "Test Tower".to_string(),
             address: "192.0.2.50".to_string(),
             code: "482913".to_string(),
-            unix: pocketdesk_core::local::pin::now_unix(),
+            unix: friday_mobile_core::local::pin::now_unix(),
         }
     }
 
@@ -558,7 +558,7 @@ mod tests {
         assert!(!prompt.update(Some(request("a1"))), "the same");
         let state = dir.clone();
         let mut harness = egui_kittest::Harness::new_ui(move |ui| {
-            prompt.show(ui.ctx(), &state, pocketdesk_core::local::pin::now_unix());
+            prompt.show(ui.ctx(), &state, friday_mobile_core::local::pin::now_unix());
         });
         harness.run();
         assert!(
@@ -569,7 +569,7 @@ mod tests {
         assert!(harness.query_by_label("482 913").is_some());
         harness.get_by_label("Accept").click();
         harness.run();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let asks: Vec<ComputerAsk> = computers::take_all(&dir, now)
             .into_iter()
             .map(|r| r.ask)
@@ -594,12 +594,12 @@ mod tests {
         prompt.update(Some(request("b2")));
         let state = dir.clone();
         let mut harness = egui_kittest::Harness::new_ui(move |ui| {
-            prompt.show(ui.ctx(), &state, pocketdesk_core::local::pin::now_unix());
+            prompt.show(ui.ctx(), &state, friday_mobile_core::local::pin::now_unix());
         });
         harness.run();
         harness.key_press(egui::Key::Escape);
         harness.run();
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let asks: Vec<ComputerAsk> = computers::take_all(&dir, now)
             .into_iter()
             .map(|r| r.ask)
@@ -673,7 +673,7 @@ mod tests {
                 &state,
                 &[],
                 true,
-                pocketdesk_core::local::pin::now_unix(),
+                friday_mobile_core::local::pin::now_unix(),
             );
         });
         harness.run_steps(2);
@@ -686,7 +686,7 @@ mod tests {
         harness.run_steps(2);
         harness.get_by_label("Pair").click();
         harness.run_steps(2);
-        let now = pocketdesk_core::local::pin::now_unix();
+        let now = friday_mobile_core::local::pin::now_unix();
         let taken = computers::take_all(&dir, now);
         assert_eq!(taken.len(), 1);
         assert_eq!(
@@ -721,7 +721,7 @@ mod tests {
         harness.get_by_label(CONFIRM).click();
         harness.run_steps(2);
         let confirmed: Vec<ComputerAsk> =
-            computers::take_all(&dir, pocketdesk_core::local::pin::now_unix())
+            computers::take_all(&dir, friday_mobile_core::local::pin::now_unix())
                 .into_iter()
                 .map(|r| r.ask)
                 .collect();

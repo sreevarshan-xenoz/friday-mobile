@@ -3,7 +3,7 @@
 # check that all of it went (BH2). For a throwaway Debian/Ubuntu machine or a
 # CI runner; it needs sudo.
 #
-#   sh packaging/linux/smoke-test.sh release/pocketdesk-<version>-linux-amd64.deb
+#   sh packaging/linux/smoke-test.sh release/friday-mobile-<version>-linux-amd64.deb
 set -u
 
 deb=$(realpath "${1:?the .deb to test}")
@@ -15,29 +15,29 @@ check() {
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$deb" >/dev/null
 installed=$?
 check '[ "$installed" -eq 0 ]' "apt installed it"
-check '[ -x /usr/lib/pocketdesk/pocketdesk-pam-ask ] && [ "$(stat -c %U /usr/lib/pocketdesk/pocketdesk-pam-ask)" = root ]' "installed the PAM helper, root's"
-check '! grep -rqs pocketdesk-pam-ask /etc/pam.d' "left /etc/pam.d alone"
-for bin in pocketdesk pocketdesk-app pocketdesk-tray; do
+check '[ -x /usr/lib/friday-mobile/friday-mobile-pam-ask ] && [ "$(stat -c %U /usr/lib/friday-mobile/friday-mobile-pam-ask)" = root ]' "installed the PAM helper, root's"
+check '! grep -rqs friday-mobile-pam-ask /etc/pam.d' "left /etc/pam.d alone"
+for bin in friday-mobile friday-mobile-app friday-mobile-tray; do
   check "[ -x /usr/bin/$bin ]" "installed /usr/bin/$bin"
 done
-check '/usr/bin/pocketdesk --version >/dev/null' "pocketdesk --version runs ($(/usr/bin/pocketdesk --version 2>&1))"
-check 'grep -q "^ExecStart=/usr/bin/pocketdesk start" /usr/lib/systemd/user/pocketdesk.service' "the user unit starts /usr/bin/pocketdesk"
-check '[ "$(systemctl --global is-enabled pocketdesk.service 2>/dev/null)" = enabled ]' "the user unit is on for every user"
-check '[ -f /usr/share/applications/dev.pocketdesk.Pocketdesk.desktop ]' "the menu entry"
+check '/usr/bin/friday-mobile --version >/dev/null' "friday-mobile --version runs ($(/usr/bin/friday-mobile --version 2>&1))"
+check 'grep -q "^ExecStart=/usr/bin/friday-mobile start" /usr/lib/systemd/user/friday-mobile.service' "the user unit starts /usr/bin/friday-mobile"
+check '[ "$(systemctl --global is-enabled friday-mobile.service 2>/dev/null)" = enabled ]' "the user unit is on for every user"
+check '[ -f /usr/share/applications/dev.friday.Mobile.desktop ]' "the menu entry"
 if command -v desktop-file-validate >/dev/null 2>&1; then
-  check 'desktop-file-validate /usr/share/applications/dev.pocketdesk.Pocketdesk.desktop' "the menu entry is valid"
+  check 'desktop-file-validate /usr/share/applications/dev.friday.Mobile.desktop' "the menu entry is valid"
 fi
 check '[ -f /usr/share/icons/hicolor/512x512/apps/pocketdesk.png ]' "the icon"
-check '[ -f /usr/share/man/man1/pocketdesk.1.gz ]' "the man page"
-check '[ -f /usr/share/doc/pocketdesk/copyright ]' "the copyright file"
+check '[ -f /usr/share/man/man1/friday-mobile.1.gz ]' "the man page"
+check '[ -f /usr/share/doc/friday-mobile/copyright ]' "the copyright file"
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get remove -y pocketdesk >/dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get remove -y friday-mobile >/dev/null
 removed=$?
 check '[ "$removed" -eq 0 ]' "apt removed it"
-check '[ ! -e /usr/bin/pocketdesk ] && [ ! -e /usr/bin/pocketdesk-app ] && [ ! -e /usr/lib/pocketdesk/pocketdesk-pam-ask ]' "removed the programs"
-check '[ ! -e /usr/lib/systemd/user/pocketdesk.service ]' "removed the user unit"
-check '[ ! -e /etc/systemd/user/graphical-session.target.wants/pocketdesk.service ]' "no enable link left behind"
-check '[ ! -e /usr/share/applications/dev.pocketdesk.Pocketdesk.desktop ]' "removed the menu entry"
+check '[ ! -e /usr/bin/friday-mobile ] && [ ! -e /usr/bin/friday-mobile-app ] && [ ! -e /usr/lib/friday-mobile/friday-mobile-pam-ask ]' "removed the programs"
+check '[ ! -e /usr/lib/systemd/user/friday-mobile.service ]' "removed the user unit"
+check '[ ! -e /etc/systemd/user/graphical-session.target.wants/friday-mobile.service ]' "no enable link left behind"
+check '[ ! -e /usr/share/applications/dev.friday.Mobile.desktop ]' "removed the menu entry"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2

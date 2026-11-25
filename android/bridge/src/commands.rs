@@ -5,7 +5,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use pocketdesk_core::protocol::command::{valid_name, valid_text};
+use friday_mobile_core::protocol::command::{valid_name, valid_text};
 
 /// How many commands wait for the app at most.
 const MAX_WAITING: usize = 16;

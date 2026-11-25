@@ -6,10 +6,10 @@
 
 use std::path::Path;
 
-use pocketdesk_core::error::Result;
-use pocketdesk_core::local::notes;
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
-use pocketdesk_core::protocol::note::{NOTE, NOTE_SAVED, clean_note, saved_body};
+use friday_mobile_core::error::Result;
+use friday_mobile_core::local::notes;
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, Plugin};
+use friday_mobile_core::protocol::note::{NOTE, NOTE_SAVED, clean_note, saved_body};
 
 /// Keep the note in `body` in the file `notes_file` names; why not, if not.
 fn keep(

@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::protocol::kdeconnect::NetworkPacket;
+use friday_mobile_core::protocol::kdeconnect::NetworkPacket;
 
 pub(crate) const TASKS: &str = "kdeconnect.pocketdesk.tasks";
 pub(crate) const TASK_RUN: &str = "kdeconnect.pocketdesk.task_run";

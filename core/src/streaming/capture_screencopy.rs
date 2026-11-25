@@ -1417,7 +1417,7 @@ impl Drop for ShmBuffer {
 }
 
 pub(super) fn make_memfd(len: u64) -> Result<OwnedFd> {
-    let name = std::ffi::CString::new("pocketdesk-screencopy").unwrap();
+    let name = std::ffi::CString::new("friday-mobile-screencopy").unwrap();
     // SAFETY: plain memfd_create; fd checked below.
     let fd = unsafe { libc::memfd_create(name.as_ptr(), libc::MFD_CLOEXEC) };
     if fd < 0 {

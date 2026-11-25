@@ -12,8 +12,8 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, RichText};
-use pocketdesk_core::local::phone_photos::{self as store, Ask, Kept};
-use pocketdesk_core::local::received::{self, ReceivedFile};
+use friday_mobile_core::local::phone_photos::{self as store, Ask, Kept};
+use friday_mobile_core::local::received::{self, ReceivedFile};
 
 const REFRESH: Duration = Duration::from_secs(1);
 
@@ -65,7 +65,7 @@ pub struct PhotosView {
     chosen: std::collections::BTreeSet<(String, u64)>,
     /// The phones files reach now (a control link files can ride), read
     /// with the photos: only those can be asked for a photo (F3 review).
-    reach: Option<pocketdesk_core::local::sessions::LiveMirror>,
+    reach: Option<friday_mobile_core::local::sessions::LiveMirror>,
 }
 
 /// The phones files reach now, from the live sessions' mirror: those
@@ -73,10 +73,10 @@ pub struct PhotosView {
 fn reachable(
     state_dir: &Path,
     now_unix: u64,
-) -> Option<pocketdesk_core::local::sessions::LiveMirror> {
-    std::fs::read_to_string(state_dir.join(pocketdesk_core::local::paths::LIVE_FILE))
+) -> Option<friday_mobile_core::local::sessions::LiveMirror> {
+    std::fs::read_to_string(state_dir.join(friday_mobile_core::local::paths::LIVE_FILE))
         .ok()
-        .and_then(|raw| pocketdesk_core::local::sessions::parse_mirror(&raw))
+        .and_then(|raw| friday_mobile_core::local::sessions::parse_mirror(&raw))
         .filter(|m| m.is_fresh(now_unix))
 }
 
@@ -208,7 +208,7 @@ impl PhotosView {
     fn refresh(&mut self, state_dir: &Path) {
         if self.read_at.is_none_or(|t| t.elapsed() >= REFRESH) {
             self.kept = store::read(state_dir);
-            self.reach = reachable(state_dir, pocketdesk_core::local::pin::now_unix());
+            self.reach = reachable(state_dir, friday_mobile_core::local::pin::now_unix());
             self.read_at = Some(Instant::now());
         }
     }
@@ -653,7 +653,7 @@ mod tests {
     #[test]
     fn the_grid_shows_each_photo_with_its_actions() {
         use egui_kittest::kittest::Queryable;
-        use pocketdesk_core::protocol::phone_photos::{Photo, Photos};
+        use friday_mobile_core::protocol::phone_photos::{Photo, Photos};
         let dir = std::env::temp_dir().join(format!("pd-photos-view-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();

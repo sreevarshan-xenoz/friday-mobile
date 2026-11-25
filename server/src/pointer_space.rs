@@ -33,8 +33,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use pocketdesk_core::streaming::capture;
-use pocketdesk_core::streaming::{AbsoluteSpace, AbsoluteSpaces};
+use friday_mobile_core::streaming::capture;
+use friday_mobile_core::streaming::{AbsoluteSpace, AbsoluteSpaces};
 use wayland_client::backend::WaylandError;
 use wayland_client::protocol::wl_output::{self, WlOutput};
 use wayland_client::protocol::wl_registry::{self, WlRegistry};
@@ -126,7 +126,7 @@ static WATCHING: AtomicBool = AtomicBool::new(false);
 /// Nothing is followed yet: an injector that spans the compositor's layout
 /// starts it as it is made.
 pub fn install() {
-    pocketdesk_core::streaming::set_absolute_space(AbsoluteSpaces { bind, space });
+    friday_mobile_core::streaming::set_absolute_space(AbsoluteSpaces { bind, space });
 }
 
 /// Whether the screens are to be followed: only where the backend spans the

@@ -20,8 +20,8 @@
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 
-use pocketdesk_core::protocol::wake_helper::{DUTY, Duties, DutyMessage, INFO, Info};
-use pocketdesk_core::streaming::wake_helper_net::{
+use friday_mobile_core::protocol::wake_helper::{DUTY, Duties, DutyMessage, INFO, Info};
+use friday_mobile_core::streaming::wake_helper_net::{
     Helper, HelperState, HelperTarget, NetworkSender, ask as ask_helper,
 };
 use serde_json::Value;
@@ -114,7 +114,7 @@ fn key_path() -> Result<std::path::PathBuf, String> {
 pub(crate) async fn start() -> Result<String, String> {
     let mut slot = HELPER.lock().await;
     if slot.is_none() {
-        let key = pocketdesk_core::streaming::load_or_create_device_key(&key_path()?)
+        let key = friday_mobile_core::streaming::load_or_create_device_key(&key_path()?)
             .map_err(|e| format!("{e:#}"))?;
         let helper = Helper::start_default(key, Arc::clone(&STATE))
             .await

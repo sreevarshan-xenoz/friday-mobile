@@ -21,12 +21,12 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 use common::{Cleanup, folders, pair, pairing_link, pocketdesk, wait_for};
-use pocketdesk_core::local::computers::{self, ComputerAsk};
-use pocketdesk_core::local::paths::{LIVE_FILE, TRUST_FILE};
-use pocketdesk_core::local::view::{self as wire, Message, Phase};
-use pocketdesk_core::local::{identity, pin, sessions};
-use pocketdesk_core::protocol::kdeconnect::TrustStore;
-use pocketdesk_core::protocol::permissions::Capability;
+use friday_mobile_core::local::computers::{self, ComputerAsk};
+use friday_mobile_core::local::paths::{LIVE_FILE, TRUST_FILE};
+use friday_mobile_core::local::view::{self as wire, Message, Phase};
+use friday_mobile_core::local::{identity, pin, sessions};
+use friday_mobile_core::protocol::kdeconnect::TrustStore;
+use friday_mobile_core::protocol::permissions::Capability;
 
 /// What the stand-in window saw of one view.
 #[derive(Debug, Default)]
@@ -145,12 +145,12 @@ fn a_computers_screen_is_shown_on_another_by_both_roads() {
     for (config, state) in [(&a_config, &a_state), (&b_config, &b_state)] {
         run.servers.push(
             pocketdesk(config, state)
-                .env(pocketdesk_core::streaming::test_pattern::VAR, "1")
+                .env(friday_mobile_core::streaming::test_pattern::VAR, "1")
                 // B's entry for A has Audio off, so no sound is captured or
                 // sent; were any to come, A writes it here, never to the
                 // speakers.
                 .env(
-                    pocketdesk_server::computer_view::SOUND_SEAM,
+                    friday_mobile_server::computer_view::SOUND_SEAM,
                     state.parent().unwrap().join("view-sound.wav"),
                 )
                 .arg("start")

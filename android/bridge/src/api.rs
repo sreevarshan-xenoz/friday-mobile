@@ -1,13 +1,13 @@
 //! Client session API ported from the Flutter-era bridge (git 4bf3c73).
 //! Plain polling functions; JNI wrappers live in lib.rs.
 
-use pocketdesk_core::protocol::connection::{ConnectionManager, ControlDuplex};
-use pocketdesk_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
-use pocketdesk_core::protocol::transfer::{self, Pace, TransferError};
-use pocketdesk_core::protocol::v2::{ALPN_V2, IdentityPacketV2, perform_v2_handshake};
-use pocketdesk_core::streaming::QuinnConnection;
-use pocketdesk_core::streaming::StreamingClient;
-use pocketdesk_core::tailscale::TailscaleClient;
+use friday_mobile_core::protocol::connection::{ConnectionManager, ControlDuplex};
+use friday_mobile_core::protocol::kdeconnect::{DeviceSender, NetworkPacket, TcpDeviceSender};
+use friday_mobile_core::protocol::transfer::{self, Pace, TransferError};
+use friday_mobile_core::protocol::v2::{ALPN_V2, IdentityPacketV2, perform_v2_handshake};
+use friday_mobile_core::streaming::QuinnConnection;
+use friday_mobile_core::streaming::StreamingClient;
+use friday_mobile_core::tailscale::TailscaleClient;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -16,8 +16,8 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
 
-use pocketdesk_core::streaming::InputPacket;
-use pocketdesk_core::streaming::{SAMPLE_DECODE, SAMPLE_RENDER, report_samples};
+use friday_mobile_core::streaming::InputPacket;
+use friday_mobile_core::streaming::{SAMPLE_DECODE, SAMPLE_RENDER, report_samples};
 
 use crate::{
     AUDIO_RX, CONNECTION_STATE, CONTROL_PEER, CONTROL_WRITER, DECODE_SAMPLES,
@@ -81,9 +81,9 @@ pub(crate) fn pin_peer_certificate_in(
         *byte = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16)
             .map_err(|_| "the fingerprint is not hex".to_string())?;
     }
-    let manager = pocketdesk_core::streaming::transport::CertManager::load_or_create(cert_dir)
+    let manager = friday_mobile_core::streaming::transport::CertManager::load_or_create(cert_dir)
         .map_err(|e| e.to_string())?;
-    let label = pocketdesk_core::streaming::transport::peer_label_for_ip(ip);
+    let label = friday_mobile_core::streaming::transport::peer_label_for_ip(ip);
     // Anything can open a pairing link, so one must never replace the
     // certificate this phone already trusts for an address: a different
     // fingerprint there is a different computer. Removing the computer in
@@ -129,7 +129,7 @@ pub fn copy_peer_certificate(from: String, to: String) -> Result<bool, String> {
         .unwrap()
         .clone()
         .ok_or_else(|| "no data directory configured".to_string())?;
-    pocketdesk_core::streaming::transport::CertManager::load_or_create(&dir)
+    friday_mobile_core::streaming::transport::CertManager::load_or_create(&dir)
         .map_err(|e| e.to_string())?
         .copy_pin(&from, &to)
         .map_err(|e| e.to_string())
@@ -141,10 +141,11 @@ pub(crate) fn forget_peer_certificate_in(
 ) -> Result<bool, String> {
     // The label the control channel pinned it under: its IP, or the name a
     // computer saved by name was dialed with.
-    let Some(label) = pocketdesk_core::streaming::transport::peer_label_for_address(address) else {
+    let Some(label) = friday_mobile_core::streaming::transport::peer_label_for_address(address)
+    else {
         return Ok(false);
     };
-    let manager = pocketdesk_core::streaming::transport::CertManager::load_or_create(cert_dir)
+    let manager = friday_mobile_core::streaming::transport::CertManager::load_or_create(cert_dir)
         .map_err(|e| e.to_string())?;
     manager.remove_peer(&label).map_err(|e| e.to_string())
 }
@@ -159,7 +160,7 @@ pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-use pocketdesk_core::error::PocketdeskError;
+use friday_mobile_core::error::PocketdeskError;
 
 /// Structured error information for the client.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -272,7 +273,7 @@ fn device_name() -> String {
 /// Set the name this phone gives itself to computers (U3); an identity
 /// already made takes it from its next connection. Whether it changed.
 pub fn set_device_name(name: String) -> bool {
-    let name = pocketdesk_core::protocol::kdeconnect::clean_device_name(&name);
+    let name = friday_mobile_core::protocol::kdeconnect::clean_device_name(&name);
     let changed = {
         let mut slot = crate::DEVICE_NAME.lock().unwrap_or_else(|e| e.into_inner());
         let changed = *slot != name;
@@ -322,7 +323,7 @@ pub async fn close_control_link_to(address: &str) -> bool {
 }
 
 /// Get or create the persistent device identity for this Android client.
-pub(crate) fn client_identity() -> pocketdesk_core::protocol::kdeconnect::DeviceIdentity {
+pub(crate) fn client_identity() -> friday_mobile_core::protocol::kdeconnect::DeviceIdentity {
     let mut guard = crate::DEVICE_IDENTITY.lock().unwrap();
     if let Some(id) = &*guard {
         return id.clone();
@@ -339,8 +340,10 @@ pub(crate) fn client_identity() -> pocketdesk_core::protocol::kdeconnect::Device
     {
         let trimmed = data.trim().to_string();
         if !trimmed.is_empty() {
-            let identity =
-                pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(&trimmed, device_name());
+            let identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
+                &trimmed,
+                device_name(),
+            );
             *guard = Some(identity.clone());
             return identity;
         }
@@ -353,7 +356,7 @@ pub(crate) fn client_identity() -> pocketdesk_core::protocol::kdeconnect::Device
     }
 
     let identity =
-        pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new(&new_id, device_name());
+        friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(&new_id, device_name());
     *guard = Some(identity.clone());
     identity
 }
@@ -381,7 +384,7 @@ pub fn wake(mac: String, targets_json: String) -> Result<usize, String> {
             format!("could not find {}", unresolved.join(", "))
         });
     }
-    pocketdesk_core::tailscale::wol::send_wake(&mac, &addrs).map_err(|e| e.to_string())
+    friday_mobile_core::tailscale::wol::send_wake(&mac, &addrs).map_err(|e| e.to_string())
 }
 
 /// How the computer at `host`:`port` said it can be woken (N6
@@ -475,7 +478,7 @@ pub async fn get_peers() -> Result<Vec<PeerInfoDto>, String> {
 
     // 2. Get LAN peers via mDNS
     crate::MDNS_ACTIVE.store(true, Ordering::Release);
-    let lan_peers = pocketdesk_core::tailscale::lan::scan_lan_once().await;
+    let lan_peers = friday_mobile_core::tailscale::lan::scan_lan_once().await;
     crate::MDNS_ACTIVE.store(false, Ordering::Release);
     for lp in lan_peers {
         // Avoid duplicates if a peer is found on both Tailscale and LAN
@@ -505,7 +508,7 @@ pub(crate) fn control_manager(timeout: Duration) -> Result<ConnectionManager, St
         .unwrap()
         .clone()
         .ok_or_else(|| "no data directory configured".to_string())?;
-    let certs = pocketdesk_core::streaming::transport::CertManager::load_or_create(&dir)
+    let certs = friday_mobile_core::streaming::transport::CertManager::load_or_create(&dir)
         .map_err(|e| format!("This phone's certificate: {e}"))?;
     Ok(ConnectionManager::new(
         timeout,
@@ -528,13 +531,13 @@ pub async fn check_identity_as(
     port: u16,
     pinned_address: String,
 ) -> Result<String, String> {
-    use pocketdesk_core::streaming::transport::IdentityProbe;
+    use friday_mobile_core::streaming::transport::IdentityProbe;
     let dir = crate::CERT_DIR
         .lock()
         .unwrap()
         .clone()
         .ok_or_else(|| "no data directory configured".to_string())?;
-    let certs = pocketdesk_core::streaming::transport::CertManager::load_or_create(&dir)
+    let certs = friday_mobile_core::streaming::transport::CertManager::load_or_create(&dir)
         .map_err(|e| format!("This phone's certificate: {e}"))?;
     let verdict = certs
         .probe_identity_as(&address, port, &pinned_address, Duration::from_secs(3))
@@ -654,7 +657,7 @@ fn control_span(address: &str, transport: &str) -> tracing::Span {
         session = %session_id,
         peer = %address,
         transport = %transport,
-        proto = %pocketdesk_core::protocol::PROTOCOL_VERSION
+        proto = %friday_mobile_core::protocol::PROTOCOL_VERSION
     )
 }
 
@@ -754,9 +757,9 @@ fn pinned_tls(address: &str) -> Result<Option<Arc<tokio_rustls::rustls::ClientCo
         .unwrap()
         .clone()
         .ok_or_else(|| "no data directory configured".to_string())?;
-    let certs = pocketdesk_core::streaming::transport::CertManager::load_or_create(&dir)
+    let certs = friday_mobile_core::streaming::transport::CertManager::load_or_create(&dir)
         .map_err(|e| format!("This phone's certificate: {e}"))?;
-    let pinned = pocketdesk_core::streaming::transport::peer_label_for_address(address)
+    let pinned = friday_mobile_core::streaming::transport::peer_label_for_address(address)
         .is_some_and(|label| certs.is_peer_trusted(&label));
     Ok(pinned.then(|| certs.control_client_config_pinned_only()))
 }
@@ -876,7 +879,7 @@ async fn run_control(
                     // and nothing else to look at in it.
                     if trimmed.contains("shared_input.input")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::phone_screen::INPUT
+                        && pkt.packet_type == friday_mobile_core::protocol::phone_screen::INPUT
                     {
                         for pong in
                             crate::phone_screen::receive(&pkt.body, &from_peer.0, from_peer.1)
@@ -991,7 +994,7 @@ async fn run_control(
                     // dial (L4), kept with its computer.
                     if trimmed.contains("pocketdesk.dial")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::dial::DIAL
+                        && pkt.packet_type == friday_mobile_core::protocol::dial::DIAL
                     {
                         crate::dials::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -999,7 +1002,7 @@ async fn run_control(
                     // owner (BF3), kept with its computer.
                     if trimmed.contains("pocketdesk.ask")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::ask::ASK
+                        && pkt.packet_type == friday_mobile_core::protocol::ask::ASK
                     {
                         crate::asks::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -1007,7 +1010,8 @@ async fn run_control(
                     // of this phone (O2), kept with its computer.
                     if trimmed.contains("pocketdesk.phone_action")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::phone_action::PHONE_ACTION
+                        && pkt.packet_type
+                            == friday_mobile_core::protocol::phone_action::PHONE_ACTION
                     {
                         crate::phone_actions::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -1015,7 +1019,7 @@ async fn run_control(
                     // in order with its computer.
                     if trimmed.contains("pocketdesk.type")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::typing::TYPE
+                        && pkt.packet_type == friday_mobile_core::protocol::typing::TYPE
                     {
                         crate::typing::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -1023,7 +1027,7 @@ async fn run_control(
                     // apps (L6), kept with its computer.
                     if trimmed.contains("pocketdesk.command")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::command::COMMAND
+                        && pkt.packet_type == friday_mobile_core::protocol::command::COMMAND
                     {
                         crate::commands::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -1031,7 +1035,7 @@ async fn run_control(
                     // kept for the app to show.
                     if trimmed.contains("pocketdesk.link")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::link::LINK
+                        && pkt.packet_type == friday_mobile_core::protocol::link::LINK
                     {
                         crate::links::receive(&pkt.body);
                     }
@@ -1117,14 +1121,14 @@ async fn run_control(
                     // N7: whether the computer is in use.
                     if trimmed.contains("in_use_answer")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::in_use::ANSWER
+                        && pkt.packet_type == friday_mobile_core::protocol::in_use::ANSWER
                     {
                         crate::in_use::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
                     // N5: the computer's music, kept for the app.
                     if trimmed.contains("computer_media")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
-                        && pkt.packet_type == pocketdesk_core::protocol::computer_media::PUSH
+                        && pkt.packet_type == friday_mobile_core::protocol::computer_media::PUSH
                     {
                         crate::computer_media::receive(&pkt.body, &from_peer.0, from_peer.1);
                     }
@@ -1139,7 +1143,7 @@ async fn run_control(
                     if trimmed.contains("phone_media_control")
                         && let Ok(pkt) = NetworkPacket::from_wire(&trimmed)
                         && pkt.packet_type
-                            == pocketdesk_core::protocol::phone_media::PHONE_MEDIA_CONTROL
+                            == friday_mobile_core::protocol::phone_media::PHONE_MEDIA_CONTROL
                     {
                         crate::media_presses::receive(&pkt.body);
                     }
@@ -1485,37 +1489,37 @@ pub fn take_sms_requests() -> String {
 /// (C7), which of its features are on (L7), and the runs of its kept folders.
 const PHONE_PACKETS: [&str; 19] = [
     // P2: its apps that open, answering the computer's ask; P10: its contacts.
-    pocketdesk_core::protocol::phone_action::PHONE_APPS,
+    friday_mobile_core::protocol::phone_action::PHONE_APPS,
     // Apps part 1: those apps' icons, and how an ask for them or an open went.
-    pocketdesk_core::protocol::phone_action::PHONE_APP_ICONS,
-    pocketdesk_core::protocol::phone_action::PHONE_APP_OPENED,
-    pocketdesk_core::protocol::phone_action::PHONE_CONTACTS,
+    friday_mobile_core::protocol::phone_action::PHONE_APP_ICONS,
+    friday_mobile_core::protocol::phone_action::PHONE_APP_OPENED,
+    friday_mobile_core::protocol::phone_action::PHONE_CONTACTS,
     // N7: is the computer in use?
-    pocketdesk_core::protocol::in_use::ASK,
+    friday_mobile_core::protocol::in_use::ASK,
     // N5: tell me the computer's music, or stop.
-    pocketdesk_core::protocol::computer_media::WATCH,
+    friday_mobile_core::protocol::computer_media::WATCH,
     // E1: how an answer from the computer went.
-    pocketdesk_core::protocol::notification_action::NOTIFICATION_ANSWERED,
+    friday_mobile_core::protocol::notification_action::NOTIFICATION_ANSWERED,
     // D2: the phone's Do Not Disturb, told to its computer.
-    pocketdesk_core::protocol::quiet::QUIET_STATE,
+    friday_mobile_core::protocol::quiet::QUIET_STATE,
     "kdeconnect.sms.messages",
     "kdeconnect.pocketdesk.sms_sent",
     "kdeconnect.battery",
-    pocketdesk_core::protocol::phone_media::PHONE_MEDIA,
-    pocketdesk_core::protocol::phone_files::LISTING,
-    pocketdesk_core::protocol::phone_photos::PHOTOS,
+    friday_mobile_core::protocol::phone_media::PHONE_MEDIA,
+    friday_mobile_core::protocol::phone_files::LISTING,
+    friday_mobile_core::protocol::phone_photos::PHOTOS,
     // L7: which of its features are on, beside the battery.
     "kdeconnect.pocketdesk.switches",
     // BF3: the owner's answer to the computer's question.
-    pocketdesk_core::protocol::ask::ASK_ANSWER,
+    friday_mobile_core::protocol::ask::ASK_ANSWER,
     // Approve with my phone: its approval key, given or taken back.
-    pocketdesk_core::protocol::approve::APPROVE_KEY,
+    friday_mobile_core::protocol::approve::APPROVE_KEY,
     // A run of a folder this phone keeps on the computer: its start, its
     // deletions and its end.
-    pocketdesk_core::protocol::kept::KEEP_RUN,
+    friday_mobile_core::protocol::kept::KEEP_RUN,
     // Phone location: its answer to the computer's ask, a place or why not
     // (it was missing, so no answer ever went: device batch 2026-11-01).
-    pocketdesk_core::protocol::phone_location::FIX,
+    friday_mobile_core::protocol::phone_location::FIX,
 ];
 
 /// Send one of [`PHONE_PACKETS`] with `body` (a JSON object) to the desktop.
@@ -1722,10 +1726,10 @@ mod reply_tests {
     #[test]
     fn the_phones_answers_are_packets_it_may_send() {
         for answer in [
-            pocketdesk_core::protocol::phone_location::FIX,
-            pocketdesk_core::protocol::phone_action::PHONE_APPS,
-            pocketdesk_core::protocol::phone_action::PHONE_APP_OPENED,
-            pocketdesk_core::protocol::ask::ASK_ANSWER,
+            friday_mobile_core::protocol::phone_location::FIX,
+            friday_mobile_core::protocol::phone_action::PHONE_APPS,
+            friday_mobile_core::protocol::phone_action::PHONE_APP_OPENED,
+            friday_mobile_core::protocol::ask::ASK_ANSWER,
         ] {
             assert!(super::PHONE_PACKETS.contains(&answer), "{answer}");
         }
@@ -2158,7 +2162,7 @@ fn clipboard_state(body: &serde_json::Value) -> serde_json::Value {
 /// back for the bytes, inside TLS with the pinned desktop, and answers
 /// "saved" only once its clipboard holds the image; a refusal ends the wait.
 pub async fn send_clipboard_image(address: String, port: u16, path: String) -> Result<(), String> {
-    use pocketdesk_core::protocol::clipboard::{CLIPBOARD_IMAGE, MAX_CLIPBOARD_IMAGE};
+    use friday_mobile_core::protocol::clipboard::{CLIPBOARD_IMAGE, MAX_CLIPBOARD_IMAGE};
     let mut file = tokio::fs::File::open(&path)
         .await
         .map_err(|e| format!("Failed to open the image: {e}"))?;
@@ -2299,7 +2303,7 @@ pub async fn send_file_fd(
     // SAFETY: the caller gives up `fd` (ParcelFileDescriptor.detachFd), so
     // this File is its only owner and closes it.
     let file = unsafe { std::fs::File::from_raw_fd(fd) };
-    let source = pocketdesk_core::protocol::partials::valid_source(&source).then_some(source);
+    let source = friday_mobile_core::protocol::partials::valid_source(&source).then_some(source);
     send_stream(
         address,
         port,
@@ -2346,7 +2350,7 @@ fn tag_body(body: &mut serde_json::Value, source: Option<&str>, tags: &ShareTags
         body["keep"] = serde_json::json!(true);
     }
     if let Some(ms) = tags.modified {
-        body[pocketdesk_core::protocol::file_time::FIELD] = serde_json::json!(ms);
+        body[friday_mobile_core::protocol::file_time::FIELD] = serde_json::json!(ms);
     }
 }
 
@@ -2504,11 +2508,11 @@ pub(crate) fn transfer_acceptor_in(
     dir: &std::path::Path,
     address: &str,
 ) -> Result<tokio_rustls::TlsAcceptor, String> {
-    let certs = pocketdesk_core::streaming::transport::CertManager::load_or_create(dir)
+    let certs = friday_mobile_core::streaming::transport::CertManager::load_or_create(dir)
         .map_err(|e| format!("This phone's certificate: {e}"))?;
     // The pin's label is the one the control channel used for `address`:
     // its IP, or the name of a computer saved by name.
-    let label = pocketdesk_core::streaming::transport::peer_label_for_address(address)
+    let label = friday_mobile_core::streaming::transport::peer_label_for_address(address)
         .ok_or_else(|| format!("{address} is not an address"))?;
     let pinned = certs
         .known_peers()
@@ -2590,7 +2594,7 @@ where
         .await
         .map_err(|_| "no TLS handshake")?
         .map_err(|_| "not the computer")?;
-    if stream.get_ref().1.alpn_protocol() != Some(pocketdesk_core::protocol::ALPN_TRANSFER) {
+    if stream.get_ref().1.alpn_protocol() != Some(friday_mobile_core::protocol::ALPN_TRANSFER) {
         return Err("not a file transfer");
     }
     Ok(stream)
@@ -2646,7 +2650,7 @@ pub async fn connect_streaming(
     port: u16,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Result<(), String> {
     let streaming_port = streaming_port_for(port);
     // F2: Idempotent session check — the same desktop *and* monitor; a
@@ -2678,8 +2682,8 @@ pub async fn connect_streaming(
 /// of its video and its sound.
 type Dialed = (
     StreamingClient,
-    tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::EncodedPacket>,
-    tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::AudioPacket>,
+    tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::EncodedPacket>,
+    tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::AudioPacket>,
 );
 
 /// Why a dial gave no session: what to tell the app, and the record the
@@ -2730,8 +2734,8 @@ impl DialFailed {
 /// In a real KDE Connect implementation this would be negotiated or
 /// discovery-based.
 fn streaming_port_for(port: u16) -> u16 {
-    if port == pocketdesk_core::DEFAULT_CONTROL_PORT {
-        pocketdesk_core::DEFAULT_STREAMING_PORT
+    if port == friday_mobile_core::DEFAULT_CONTROL_PORT {
+        friday_mobile_core::DEFAULT_STREAMING_PORT
     } else {
         port
     }
@@ -2742,8 +2746,8 @@ fn streaming_port_for(port: u16) -> u16 {
 /// the one the watch reads, and the others (a remote, the sound, the camera,
 /// a window, a cast) keep the connection's own 15 s, as iroh's 5 s, with no
 /// radio wake every second for nothing.
-fn watches_link(mode: pocketdesk_core::streaming::SessionMode) -> bool {
-    mode == pocketdesk_core::streaming::SessionMode::Screen
+fn watches_link(mode: friday_mobile_core::streaming::SessionMode) -> bool {
+    mode == friday_mobile_core::streaming::SessionMode::Screen
 }
 
 /// What a connect found when it went to take the session's place.
@@ -2763,7 +2767,7 @@ async fn claim_session(
     address: &str,
     ports: &[u16],
     monitor_index: Option<u32>,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Claim {
     let mut handle_guard = (*STREAMING_HANDLE).lock().await;
     if let Some(handle) = &*handle_guard {
@@ -2801,7 +2805,7 @@ async fn dial_home(
     streaming_port: u16,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Result<Dialed, DialFailed> {
     let addr = format!("{address}:{streaming_port}");
     tracing::info!("Connecting to streaming server at {addr}");
@@ -2813,13 +2817,13 @@ async fn dial_home(
         let guard = crate::CERT_DIR.lock().unwrap();
         match guard.as_ref() {
             Some(dir) => std::sync::Arc::new(
-                pocketdesk_core::streaming::transport::CertManager::load_or_create(dir)
+                friday_mobile_core::streaming::transport::CertManager::load_or_create(dir)
                     .map_err(|e| DialFailed::plain(e.to_string()))?,
             ),
             None => {
                 tracing::warn!("No data dir configured — cert trust is ephemeral");
                 std::sync::Arc::new(
-                    pocketdesk_core::streaming::transport::CertManager::new()
+                    friday_mobile_core::streaming::transport::CertManager::new()
                         .map_err(|e| DialFailed::plain(e.to_string()))?,
                 )
             }
@@ -2908,7 +2912,7 @@ pub async fn connect_streaming_race(
     identity_json: String,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Result<&'static str, String> {
     use crate::dial_race::{INTERNET_HEAD_START, Road, race};
     let target = match WanTarget::parse(&identity_json) {
@@ -3091,16 +3095,16 @@ impl WanTarget {
 /// the same handshake as at home. `use_relays` is false only in tests.
 pub(crate) async fn dial_internet_control(
     target: &WanTarget,
-    identity: &pocketdesk_core::protocol::kdeconnect::DeviceIdentity,
+    identity: &friday_mobile_core::protocol::kdeconnect::DeviceIdentity,
     address: &str,
     use_relays: bool,
 ) -> Result<ControlDuplex, String> {
     let dht = if target.dht {
-        pocketdesk_core::streaming::dht_resolver().await.ok()
+        friday_mobile_core::streaming::dht_resolver().await.ok()
     } else {
         None
     };
-    let stream = pocketdesk_core::streaming::IrohDial::dial_control(
+    let stream = friday_mobile_core::streaming::IrohDial::dial_control(
         &target.endpoint_id,
         &target.relay_urls,
         &target.direct_addrs,
@@ -3113,11 +3117,12 @@ pub(crate) async fn dial_internet_control(
     .map_err(|e| format!("{e:#}"))?;
     // The streams the computer opens on this connection for transfers (2d).
     let acceptor = stream.link_acceptor();
-    let (stream, claims) = pocketdesk_core::protocol::connection::internet_control_handshake_named(
-        stream, address, identity,
-    )
-    .await
-    .map_err(|e| e.to_string())?;
+    let (stream, claims) =
+        friday_mobile_core::protocol::connection::internet_control_handshake_named(
+            stream, address, identity,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
     crate::peer_names::note(address, claims);
     if let Some(acceptor) = acceptor {
         crate::link::spawn_acceptor(acceptor);
@@ -3138,7 +3143,7 @@ pub async fn connect_streaming_wan(
     identity_json: String,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Result<(), String> {
     let target = WanTarget::parse(&identity_json)?;
 
@@ -3174,8 +3179,8 @@ async fn dial_wan(
     target: WanTarget,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
-) -> Result<(Dialed, pocketdesk_core::streaming::IrohDial), DialFailed> {
+    mode: friday_mobile_core::streaming::SessionMode,
+) -> Result<(Dialed, friday_mobile_core::streaming::IrohDial), DialFailed> {
     let WanTarget {
         endpoint_id,
         relay_urls,
@@ -3185,7 +3190,7 @@ async fn dial_wan(
     // Built only now that a dial will happen: it resolves the DHT's bootstrap
     // nodes and binds a socket.
     let dht = if dht {
-        match pocketdesk_core::streaming::dht_resolver().await {
+        match friday_mobile_core::streaming::dht_resolver().await {
             Ok(lookup) => Some(lookup),
             Err(e) => {
                 // The cached address may still work.
@@ -3203,7 +3208,7 @@ async fn dial_wan(
 
     // Device keys: dial as this phone's own key, the one it named on LAN.
     let dialed = if watches_link(mode) {
-        pocketdesk_core::streaming::IrohDial::dial_watched(
+        friday_mobile_core::streaming::IrohDial::dial_watched(
             &endpoint_id,
             &relay_urls,
             &direct_addrs,
@@ -3214,7 +3219,7 @@ async fn dial_wan(
         )
         .await
     } else {
-        pocketdesk_core::streaming::IrohDial::dial(
+        friday_mobile_core::streaming::IrohDial::dial(
             &endpoint_id,
             &relay_urls,
             &direct_addrs,
@@ -3257,9 +3262,9 @@ pub async fn connect_streaming_bluetooth(
     fd: std::os::fd::OwnedFd,
     monitor_index: Option<u32>,
     codec_caps: u8,
-    mode: pocketdesk_core::streaming::SessionMode,
+    mode: friday_mobile_core::streaming::SessionMode,
 ) -> Result<(), String> {
-    use pocketdesk_core::streaming::byte_stream::{ByteStreamConnection, Role};
+    use friday_mobile_core::streaming::byte_stream::{ByteStreamConnection, Role};
     let mut stream =
         crate::bluetooth::stream_of(fd).map_err(|e| format!("The Bluetooth stream: {e}"))?;
     let Some(tls) = pinned_tls(&address)? else {
@@ -3307,7 +3312,7 @@ pub async fn connect_streaming_bluetooth(
         });
         message
     };
-    let hello = pocketdesk_core::protocol::bluetooth::format_stream_hello();
+    let hello = friday_mobile_core::protocol::bluetooth::format_stream_hello();
     stream
         .write_all(hello.as_bytes())
         .await
@@ -3325,10 +3330,10 @@ pub async fn connect_streaming_bluetooth(
         .get_ref()
         .1
         .peer_certificates()
-        .and_then(pocketdesk_core::streaming::PeerKey::from_tls_certs);
+        .and_then(friday_mobile_core::streaming::PeerKey::from_tls_certs);
     tracing::info!(peer = %address, "Stream session over Bluetooth: TLS up");
     // A Bluetooth link has no address.
-    let connection: pocketdesk_core::streaming::SharedConnection = ByteStreamConnection::new(
+    let connection: friday_mobile_core::streaming::SharedConnection = ByteStreamConnection::new(
         tls,
         Role::Dialer,
         std::net::SocketAddr::from(([0, 0, 0, 0], 0)),
@@ -3360,13 +3365,13 @@ pub async fn connect_streaming_bluetooth(
 /// the desktop can bind its WAN sessions to it (device keys). `None` without
 /// a data directory, or if the key cannot be read; the dial then uses a
 /// throwaway key, which a desktop that has bound one refuses.
-pub(crate) fn device_wan_key() -> Option<pocketdesk_core::streaming::IrohSecretKey> {
+pub(crate) fn device_wan_key() -> Option<friday_mobile_core::streaming::IrohSecretKey> {
     // One caller at a time: two first calls at once (a LAN connect and a WAN
     // dial) must not each make a key.
     static ONE: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let _one = ONE.lock().unwrap_or_else(|e| e.into_inner());
     let dir = crate::CERT_DIR.lock().ok()?.clone()?;
-    match pocketdesk_core::streaming::load_or_create_device_key(&dir.join("iroh_device.key")) {
+    match friday_mobile_core::streaming::load_or_create_device_key(&dir.join("iroh_device.key")) {
         Ok(key) => Some(key),
         Err(e) => {
             tracing::warn!("WAN key unavailable: {e}");
@@ -3410,12 +3415,12 @@ async fn teardown_streaming_handle(handle: StreamingHandle) {
 async fn install_streaming(
     generation: u64,
     mut client: StreamingClient,
-    packet_rx: tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::EncodedPacket>,
-    audio_rx: tokio::sync::mpsc::Receiver<pocketdesk_core::streaming::AudioPacket>,
+    packet_rx: tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::EncodedPacket>,
+    audio_rx: tokio::sync::mpsc::Receiver<friday_mobile_core::streaming::AudioPacket>,
     address: String,
     port: u16,
     monitor_index: Option<u32>,
-    wan_dial: Option<pocketdesk_core::streaming::IrohDial>,
+    wan_dial: Option<friday_mobile_core::streaming::IrohDial>,
 ) -> Result<(), String> {
     // A stop or a newer connect came while this one was connecting: it must
     // not take over. Checked again under the handle lock below, where it
@@ -3454,15 +3459,15 @@ async fn install_streaming(
     let remote = client.remote();
     let input_only = remote.input_only;
     let mode = if remote.phone_sound {
-        pocketdesk_core::streaming::SessionMode::PhoneSound
+        friday_mobile_core::streaming::SessionMode::PhoneSound
     } else if remote.cast {
-        pocketdesk_core::streaming::SessionMode::Cast
+        friday_mobile_core::streaming::SessionMode::Cast
     } else if remote.sound {
-        pocketdesk_core::streaming::SessionMode::Sound
+        friday_mobile_core::streaming::SessionMode::Sound
     } else if input_only {
-        pocketdesk_core::streaming::SessionMode::InputOnly
+        friday_mobile_core::streaming::SessionMode::InputOnly
     } else {
-        pocketdesk_core::streaming::SessionMode::Screen
+        friday_mobile_core::streaming::SessionMode::Screen
     };
     let task = tokio::spawn(async move {
         client.start().await;
@@ -3562,8 +3567,8 @@ async fn install_streaming(
     // The phone's sound alone (M7) sends a cast's sound streams.
     if matches!(
         mode,
-        pocketdesk_core::streaming::SessionMode::Cast
-            | pocketdesk_core::streaming::SessionMode::PhoneSound
+        friday_mobile_core::streaming::SessionMode::Cast
+            | friday_mobile_core::streaming::SessionMode::PhoneSound
     ) {
         crate::cast::start(connection.clone(), client_cancel.clone());
     }
@@ -3613,13 +3618,13 @@ pub async fn connect_v2(address: String, port: u16) -> Result<(), String> {
         let guard = crate::CERT_DIR.lock().unwrap();
         match guard.as_ref() {
             Some(dir) => std::sync::Arc::new(
-                pocketdesk_core::streaming::transport::CertManager::load_or_create(dir)
+                friday_mobile_core::streaming::transport::CertManager::load_or_create(dir)
                     .map_err(|e| e.to_string())?,
             ),
             None => {
                 tracing::warn!("No data dir configured — cert trust is ephemeral");
                 std::sync::Arc::new(
-                    pocketdesk_core::streaming::transport::CertManager::new()
+                    friday_mobile_core::streaming::transport::CertManager::new()
                         .map_err(|e| e.to_string())?,
                 )
             }
@@ -3663,8 +3668,8 @@ pub async fn connect_v2(address: String, port: u16) -> Result<(), String> {
         let local_identity = IdentityPacketV2 {
             device_id: identity.device_id,
             device_name: identity.device_name,
-            min_version: pocketdesk_core::protocol::v2::V2_MIN_VERSION,
-            max_version: pocketdesk_core::protocol::v2::V2_MAX_VERSION,
+            min_version: friday_mobile_core::protocol::v2::V2_MIN_VERSION,
+            max_version: friday_mobile_core::protocol::v2::V2_MAX_VERSION,
             capabilities: vec!["streaming".to_string(), "input".to_string()],
         };
 
@@ -3689,7 +3694,7 @@ pub async fn connect_v2(address: String, port: u16) -> Result<(), String> {
                     break;
                 }
                 let len = u32::from_be_bytes(len_buf) as usize;
-                if len > pocketdesk_core::protocol::v2::MAX_CONTROL_PAYLOAD_SIZE {
+                if len > friday_mobile_core::protocol::v2::MAX_CONTROL_PAYLOAD_SIZE {
                     tracing::error!("v2 payload exceeds limit: {}", len);
                     break;
                 }
@@ -3724,10 +3729,11 @@ pub async fn connect_v2(address: String, port: u16) -> Result<(), String> {
         Ok(_) => Ok(()),
         Err(e) => {
             let err_msg: String = e;
-            let err_dto =
-                PocketdeskErrorDto::from(pocketdesk_core::error::PocketdeskError::ProtocolError {
+            let err_dto = PocketdeskErrorDto::from(
+                friday_mobile_core::error::PocketdeskError::ProtocolError {
                     detail: err_msg.clone(),
-                });
+                },
+            );
             *crate::SESSION_STATUS.lock().unwrap() = SessionStatus::Error(err_dto);
             Err(err_msg)
         }
@@ -3769,7 +3775,7 @@ pub async fn reconnect_streaming(
         port,
         monitor_index,
         codec_caps,
-        pocketdesk_core::streaming::SessionMode::Screen,
+        friday_mobile_core::streaming::SessionMode::Screen,
     )
     .await
 }
@@ -3825,8 +3831,8 @@ pub fn stream_quiet_ms() -> u64 {
 /// For a sound session (N5), what the computer said it allows, as JSON
 /// fields to follow the state: both when it said nothing (a computer that
 /// does not say). Empty for any other session.
-fn sound_grants(flags: Option<&pocketdesk_core::streaming::RemoteFlags>) -> String {
-    use pocketdesk_core::streaming::{SOUND_GRANT_AUDIO, SOUND_GRANT_MIC};
+fn sound_grants(flags: Option<&friday_mobile_core::streaming::RemoteFlags>) -> String {
+    use friday_mobile_core::streaming::{SOUND_GRANT_AUDIO, SOUND_GRANT_MIC};
     let Some(flags) = flags.filter(|f| f.sound) else {
         return String::new();
     };
@@ -3853,17 +3859,20 @@ pub fn cast_state() -> String {
 }
 
 /// Whether a cast's computer said it plays the phone's sound (K5).
-fn cast_sound_taken(remote: &pocketdesk_core::streaming::RemoteFlags) -> bool {
+fn cast_sound_taken(remote: &friday_mobile_core::streaming::RemoteFlags) -> bool {
     remote.cast
         && remote
             .screen_features
             .load(std::sync::atomic::Ordering::Acquire)
-            & pocketdesk_core::streaming::client::REMOTE_FEATURE_PHONE_SOUND
+            & friday_mobile_core::streaming::client::REMOTE_FEATURE_PHONE_SOUND
             != 0
 }
 
 /// The state of an input-only session's `flags`; with `cast`, only of a cast.
-fn state_name(flags: Option<&pocketdesk_core::streaming::RemoteFlags>, cast: bool) -> &'static str {
+fn state_name(
+    flags: Option<&friday_mobile_core::streaming::RemoteFlags>,
+    cast: bool,
+) -> &'static str {
     use std::sync::atomic::Ordering;
     match flags {
         None => "none",
@@ -3883,8 +3892,8 @@ pub async fn stop_cast() {
         if guard.as_ref().is_some_and(|h| {
             matches!(
                 h.mode,
-                pocketdesk_core::streaming::SessionMode::Cast
-                    | pocketdesk_core::streaming::SessionMode::PhoneSound
+                friday_mobile_core::streaming::SessionMode::Cast
+                    | friday_mobile_core::streaming::SessionMode::PhoneSound
             )
         }) {
             guard.take()
@@ -3902,7 +3911,7 @@ pub async fn stop_cast() {
 
 #[cfg(test)]
 mod laser_tests {
-    use pocketdesk_core::streaming::{REMOTE_FEATURE_LASER, REMOTE_FEATURES_SAID, RemoteFlags};
+    use friday_mobile_core::streaming::{REMOTE_FEATURE_LASER, REMOTE_FEATURES_SAID, RemoteFlags};
 
     /// G4: the laser only on a remote whose computer said it draws one.
     #[test]
@@ -3953,7 +3962,7 @@ mod hud_window_tests {
 
 #[cfg(test)]
 mod watched_link_tests {
-    use pocketdesk_core::streaming::SessionMode;
+    use friday_mobile_core::streaming::SessionMode;
 
     /// BG6: only the screen session pings every second. The decoder's watch
     /// reads that session alone, so each other mode (the remote, the sound,
@@ -3994,7 +4003,7 @@ mod home_skip_tests {
             4716,
             None,
             0,
-            pocketdesk_core::streaming::SessionMode::Screen,
+            friday_mobile_core::streaming::SessionMode::Screen,
         )
         .await;
         let took = started.elapsed();
@@ -4012,7 +4021,7 @@ mod cast_state_tests {
     /// K5: a cast takes its sound when its computer said so, and only a cast.
     #[test]
     fn a_cast_s_sound_is_taken_when_its_computer_said_so() {
-        use pocketdesk_core::streaming::client::{
+        use friday_mobile_core::streaming::client::{
             REMOTE_FEATURE_PHONE_SOUND, REMOTE_FEATURES_SAID,
         };
         let flags = |cast: bool, byte: u8| {
@@ -4035,7 +4044,7 @@ mod cast_state_tests {
         assert!(!cast_sound_taken(&flags(true, 0)), "a computer before K5");
         assert!(!cast_sound_taken(&flags(false, said)), "a remote");
     }
-    use pocketdesk_core::streaming::{
+    use friday_mobile_core::streaming::{
         RemoteFlags, SOUND_GRANT_AUDIO, SOUND_GRANT_MIC, SOUND_GRANT_SAID,
     };
 
@@ -4210,12 +4219,12 @@ pub fn get_streaming_stats() -> StreamingStatsDto {
         // R4 E3: real compositor-true estimate (capture→send age measured
         // on the desktop clock + one network leg), EWMA'd in the core
         // client. 0 until the session's first video packet.
-        e2e_latency_ms: pocketdesk_core::streaming::client::e2e_estimate_ms(),
+        e2e_latency_ms: friday_mobile_core::streaming::client::e2e_estimate_ms(),
         // Frames whose sequence number never arrived, counted by the client's
         // receive loop — see `missed_video_frames` in core. This replaced a
         // literal 0 that asserted a healthy link the phone had never
         // measured (roadmap 2051/2052).
-        frame_drops: pocketdesk_core::streaming::client::missed_video_frames(),
+        frame_drops: friday_mobile_core::streaming::client::missed_video_frames(),
         link_state: match crate::LINK_STATE.load(Ordering::Relaxed) {
             1 => "lan",
             2 => "wan_direct",
@@ -4721,7 +4730,7 @@ pub fn pen_supported() -> bool {
         .as_ref()
         .is_some_and(|f| {
             f.load(std::sync::atomic::Ordering::Acquire)
-                & pocketdesk_core::streaming::SCREEN_FEATURE_PEN
+                & friday_mobile_core::streaming::SCREEN_FEATURE_PEN
                 != 0
         })
 }
@@ -4738,14 +4747,14 @@ pub fn laser_supported() -> bool {
 
 /// Whether `remote`'s computer offered it the laser: a remote, never a sound
 /// session, whose ready byte has the laser bit.
-fn laser_offered(remote: &pocketdesk_core::streaming::RemoteFlags) -> bool {
+fn laser_offered(remote: &friday_mobile_core::streaming::RemoteFlags) -> bool {
     remote.input_only
         && !remote.sound
         && !remote.cast
         && remote
             .screen_features
             .load(std::sync::atomic::Ordering::Acquire)
-            & pocketdesk_core::streaming::REMOTE_FEATURE_LASER
+            & friday_mobile_core::streaming::REMOTE_FEATURE_LASER
             != 0
 }
 
@@ -4770,7 +4779,7 @@ pub async fn send_laser(dx: i16, dy: i16, show: bool) -> Result<(), String> {
 }
 
 /// Send one pen sample (E3) on the screen session.
-pub async fn send_pen(sample: pocketdesk_core::streaming::PenSample) -> Result<(), String> {
+pub async fn send_pen(sample: friday_mobile_core::streaming::PenSample) -> Result<(), String> {
     let conn = {
         let guard = (*STREAMING_HANDLE).lock().await;
         guard.as_ref().map(|h| h.connection.clone())
@@ -5057,7 +5066,7 @@ pub async fn send_quality_preset(preset: u8) -> Result<(), String> {
 // cross-compile here (audiopus_sys builds libopus via CMake, which fights
 // cargo-ndk) — so the bridge only frames and forwards finished packets.
 // Format both ends agree on: 48 kHz mono, 20 ms frames.
-async fn stream_connection() -> Result<pocketdesk_core::streaming::SharedConnection, String> {
+async fn stream_connection() -> Result<friday_mobile_core::streaming::SharedConnection, String> {
     (*STREAMING_HANDLE)
         .lock()
         .await
@@ -5067,7 +5076,7 @@ async fn stream_connection() -> Result<pocketdesk_core::streaming::SharedConnect
 }
 
 async fn send_mic_frame(
-    conn: &pocketdesk_core::streaming::SharedConnection,
+    conn: &friday_mobile_core::streaming::SharedConnection,
     enabled: bool,
     opus: Vec<u8>,
 ) -> Result<(), String> {
@@ -5087,7 +5096,7 @@ async fn send_mic_frame(
 }
 
 /// Open the phone→desktop mic: sends the start frame, which makes the
-/// server create its "Pocketdesk Mic" PipeWire source. Pairs with
+/// server create its "FRIDAY Mobile Mic" PipeWire source. Pairs with
 /// `send_mic_opus`/`stop_mic`.
 pub async fn start_mic() -> Result<(), String> {
     let conn = stream_connection().await?;
@@ -5425,7 +5434,7 @@ fn android_to_evdev_keycode(android_keycode: i32) -> u16 {
 
 #[cfg(test)]
 mod transfer_pin_tests {
-    use pocketdesk_core::streaming::transport::{CertManager, peer_label_for_address};
+    use friday_mobile_core::streaming::transport::{CertManager, peer_label_for_address};
 
     fn dir(name: &str) -> std::path::PathBuf {
         let dir =
@@ -5526,7 +5535,7 @@ mod keymap_tests {
         emitted.dedup();
         assert_eq!(
             emitted,
-            pocketdesk_core::input::keys::phone_emittable_codes()
+            friday_mobile_core::input::keys::phone_emittable_codes()
         );
     }
 
@@ -5546,7 +5555,7 @@ mod keymap_tests {
 #[cfg(test)]
 mod pin_certificate_tests {
     use super::{forget_peer_certificate_in, pin_peer_certificate_in};
-    use pocketdesk_core::streaming::transport::{CertManager, peer_label_for_ip};
+    use friday_mobile_core::streaming::transport::{CertManager, peer_label_for_ip};
 
     /// BC6: the desktops paired with were kept in a file nothing read, and
     /// nothing forgot with a computer; it goes as the data folder is set.
@@ -5576,7 +5585,7 @@ mod pin_certificate_tests {
         let had = crate::CERT_DIR.lock().unwrap().replace(certs.clone());
         crate::peer_names::note(
             "192.0.2.80",
-            pocketdesk_core::protocol::connection::PeerClaims {
+            friday_mobile_core::protocol::connection::PeerClaims {
                 name: Some("Study PC".to_string()),
                 sends: None,
                 version: None,
@@ -5680,8 +5689,8 @@ mod receive_tests {
     pub(super) static SESSION_STATICS: std::sync::LazyLock<tokio::sync::Mutex<()>> =
         std::sync::LazyLock::new(|| tokio::sync::Mutex::new(()));
 
-    fn frame(sequence: u64) -> pocketdesk_core::streaming::EncodedPacket {
-        pocketdesk_core::streaming::EncodedPacket {
+    fn frame(sequence: u64) -> friday_mobile_core::streaming::EncodedPacket {
+        friday_mobile_core::streaming::EncodedPacket {
             data: vec![0, 0, 0, 1],
             is_keyframe: true,
             timestamp: std::time::Instant::now(),
@@ -5744,7 +5753,7 @@ mod receive_tests {
         );
 
         audio_tx
-            .send(pocketdesk_core::streaming::AudioPacket {
+            .send(friday_mobile_core::streaming::AudioPacket {
                 data: vec![9],
                 sequence: 41,
                 timestamp: std::time::Instant::now(),
@@ -5780,7 +5789,7 @@ mod wake_relay_tests {
 #[cfg(test)]
 mod send_file_tests {
     use super::{presents_key, send_over, source_id, transfer_progress};
-    use pocketdesk_core::protocol::transfer::{self, Have, Memory, Pace};
+    use friday_mobile_core::protocol::transfer::{self, Have, Memory, Pace};
     use std::time::Duration;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -5871,7 +5880,7 @@ mod send_file_tests {
 5",
         );
         assert_eq!(a.len(), 32);
-        assert!(pocketdesk_core::protocol::partials::valid_source(&a));
+        assert!(friday_mobile_core::protocol::partials::valid_source(&a));
         assert_eq!(
             a,
             source_id(
@@ -6091,7 +6100,7 @@ mod wake_tests {
 
 #[cfg(test)]
 mod teardown_tests {
-    use pocketdesk_core::streaming::{
+    use friday_mobile_core::streaming::{
         Connection, ConnectionError, ConnectionStats, InStream, OutStream, SharedConnection,
         TransportFamily,
     };
@@ -6140,7 +6149,7 @@ mod teardown_tests {
             address: "192.0.2.10".into(),
             port: 4716,
             monitor_index: None,
-            mode: pocketdesk_core::streaming::SessionMode::Screen,
+            mode: friday_mobile_core::streaming::SessionMode::Screen,
             cancel: tokio_util::sync::CancellationToken::new(),
             task: tokio::spawn(async {}),
             rtt_task: tokio::spawn(async {}),
@@ -6159,7 +6168,7 @@ mod teardown_tests {
 #[cfg(test)]
 mod internet_road_tests {
     use super::*;
-    use pocketdesk_core::protocol::{ALPN_CONTROL, HANDSHAKE_HELLO, HANDSHAKE_OK};
+    use friday_mobile_core::protocol::{ALPN_CONTROL, HANDSHAKE_HELLO, HANDSHAKE_OK};
     use tokio::io::BufReader;
 
     #[tokio::test]
@@ -6340,8 +6349,10 @@ mod internet_road_tests {
             direct_addrs: direct,
             dht: false,
         };
-        let identity =
-            pocketdesk_core::protocol::kdeconnect::DeviceIdentity::new("road-phone", "Road Phone");
+        let identity = friday_mobile_core::protocol::kdeconnect::DeviceIdentity::new(
+            "road-phone",
+            "Road Phone",
+        );
         let _stream = dial_internet_control(&target, &identity, "desktop", false)
             .await
             .expect("the internet road");
@@ -6414,9 +6425,9 @@ mod share_tag_tests {
 #[cfg(all(test, unix))]
 mod bluetooth_road_tests {
     use super::*;
-    use pocketdesk_core::protocol::bluetooth::{LINK_PACKET, PACKET};
-    use pocketdesk_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
-    use pocketdesk_core::streaming::transport::CertManager;
+    use friday_mobile_core::protocol::bluetooth::{LINK_PACKET, PACKET};
+    use friday_mobile_core::protocol::{HANDSHAKE_HELLO, HANDSHAKE_OK};
+    use friday_mobile_core::streaming::transport::CertManager;
     use tokio::io::BufReader;
 
     /// The computer's end of a control link: TLS as its server, the
@@ -6528,7 +6539,7 @@ mod bluetooth_road_tests {
         assert!(info.contains("00:00:5E:00:53:01"), "{info}");
         assert_eq!(road_after, 0);
         let label =
-            pocketdesk_core::streaming::transport::peer_label_for_address("192.0.2.61").unwrap();
+            friday_mobile_core::streaming::transport::peer_label_for_address("192.0.2.61").unwrap();
         assert!(
             pinned.contains(&(label, fingerprint)),
             "pinned by the computer's address, as at home"
@@ -6649,8 +6660,8 @@ mod bluetooth_road_tests {
     /// byte stream (the device's id among them).
     #[tokio::test]
     async fn connect_streaming_bluetooth_runs_a_session() {
-        use pocketdesk_core::streaming::Connection;
-        use pocketdesk_core::streaming::byte_stream::{ByteStreamConnection, Role};
+        use friday_mobile_core::streaming::Connection;
+        use friday_mobile_core::streaming::byte_stream::{ByteStreamConnection, Role};
         // The session's statics (the connect generation a stop retires) are
         // other tests' too.
         let _session = super::receive_tests::SESSION_STATICS.lock().await;
@@ -6686,7 +6697,7 @@ mod bluetooth_road_tests {
                 .get_ref()
                 .1
                 .peer_certificates()
-                .and_then(pocketdesk_core::streaming::PeerKey::from_tls_certs);
+                .and_then(friday_mobile_core::streaming::PeerKey::from_tls_certs);
             let conn = ByteStreamConnection::new(
                 tls,
                 Role::Listener,
@@ -6716,7 +6727,7 @@ mod bluetooth_road_tests {
             std::os::fd::OwnedFd::from(phone_end),
             None,
             0,
-            pocketdesk_core::streaming::SessionMode::Screen,
+            friday_mobile_core::streaming::SessionMode::Screen,
         )
         .await;
         let computer = computer_side.await.unwrap();
@@ -6731,11 +6742,11 @@ mod bluetooth_road_tests {
         assert!(started.is_ok(), "{started:?}");
         assert_eq!(
             hello,
-            pocketdesk_core::protocol::bluetooth::format_stream_hello()
+            friday_mobile_core::protocol::bluetooth::format_stream_hello()
         );
         assert_eq!(
             key,
-            Some(pocketdesk_core::streaming::PeerKey::Tls(phone_cert)),
+            Some(friday_mobile_core::streaming::PeerKey::Tls(phone_cert)),
             "the phone's own certificate, presented"
         );
         let id = client_identity().device_id;
@@ -6761,7 +6772,7 @@ mod bluetooth_road_tests {
             std::os::fd::OwnedFd::from(phone_end),
             None,
             0,
-            pocketdesk_core::streaming::SessionMode::Screen,
+            friday_mobile_core::streaming::SessionMode::Screen,
         )
         .await;
         // The phone's end was closed: the computer's side reads its end.
@@ -6777,7 +6788,8 @@ mod bluetooth_road_tests {
 
     /// This phone's pin of `fingerprint` for `address`, in `certs`.
     fn pin(certs: &std::path::Path, address: &str, fingerprint: [u8; 32]) {
-        let label = pocketdesk_core::streaming::transport::peer_label_for_address(address).unwrap();
+        let label =
+            friday_mobile_core::streaming::transport::peer_label_for_address(address).unwrap();
         CertManager::load_or_create(certs)
             .unwrap()
             .pin_peer(&label, fingerprint)

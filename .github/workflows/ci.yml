@@ -63,8 +63,8 @@ jobs:
       # from the server).
       - name: The desktop's zbus stays on async-io
         run: |
-          if cargo tree -p pocketdesk-desktop -e features -i zbus | grep -q 'zbus feature "tokio"'; then
-            echo "pocketdesk-desktop pulls zbus with tokio"; exit 1
+          if cargo tree -p friday-mobile-desktop -e features -i zbus | grep -q 'zbus feature "tokio"'; then
+            echo "friday-mobile-desktop pulls zbus with tokio"; exit 1
           fi
 
       # The test-harness feature turns a test binary's state and config to
@@ -72,8 +72,8 @@ jobs:
       # never what a release, a package or the Android bridge builds.
       - name: Core's test-harness stays out of normal builds
         run: |
-          if cargo tree --target all -p pocketdesk-server -p pocketdesk-desktop -p pocketdesk-android-bridge -e features,normal,build -i pocketdesk-core | grep -q 'feature "test-harness"'; then
-            echo "a normal build turns on pocketdesk-core's test-harness"; exit 1
+          if cargo tree --target all -p friday-mobile-server -p friday-mobile-desktop -p friday-mobile-android-bridge -e features,normal,build -i friday-mobile-core | grep -q 'feature "test-harness"'; then
+            echo "a normal build turns on friday-mobile-core's test-harness"; exit 1
           fi
 
       - name: Test
@@ -112,11 +112,11 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Clippy (pocketdesk-server --no-default-features)
-        run: cargo clippy -p pocketdesk-server --no-default-features --all-targets -- -D warnings
+      - name: Clippy (friday-mobile-server --no-default-features)
+        run: cargo clippy -p friday-mobile-server --no-default-features --all-targets -- -D warnings
 
-      - name: Tests (pocketdesk-server --no-default-features, lib)
-        run: cargo test -p pocketdesk-server --no-default-features --lib
+      - name: Tests (friday-mobile-server --no-default-features, lib)
+        run: cargo test -p friday-mobile-server --no-default-features --lib
 
   profiles:
     runs-on: ubuntu-latest
@@ -159,11 +159,11 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Clippy (${{ matrix.features }})
-        run: cargo clippy -p pocketdesk-core --no-default-features --features ${{ matrix.features }} --all-targets -- -D warnings
+        run: cargo clippy -p friday-mobile-core --no-default-features --features ${{ matrix.features }} --all-targets -- -D warnings
 
       - name: Tests (${{ matrix.features }})
         if: matrix.features == 'wan' || matrix.features == 'encode'
-        run: cargo test -p pocketdesk-core --features ${{ matrix.features }}
+        run: cargo test -p friday-mobile-core --features ${{ matrix.features }}
 
   # The Windows host (W0-W5, feat/windows-host). The Android bridge and the
   # iroh spike are not Windows targets. Live tests — GPU encoders, capture,
@@ -206,15 +206,15 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy (workspace, all targets)
-        run: cargo clippy --workspace --all-targets --exclude pocketdesk-android-bridge --exclude iroh-spike -- -D warnings
+        run: cargo clippy --workspace --all-targets --exclude friday-mobile-android-bridge --exclude iroh-spike -- -D warnings
 
       # The desktop snapshots' renderer builds on Windows only while the lock
       # gives gpu-allocator the windows crate wgpu-hal uses (C4 review).
       - name: Clippy (desktop with snapshots)
-        run: cargo clippy -p pocketdesk-desktop --all-targets --features snapshots -- -D warnings
+        run: cargo clippy -p friday-mobile-desktop --all-targets --features snapshots -- -D warnings
 
       - name: Test
-        run: cargo test --workspace --exclude pocketdesk-android-bridge --exclude iroh-spike
+        run: cargo test --workspace --exclude friday-mobile-android-bridge --exclude iroh-spike
 
   # The bridge .so is gitignored, so the app build has to produce it first —
   # assembleDebug alone would link whatever stale binary was last copied in,
@@ -282,7 +282,7 @@ jobs:
             --profile minimal --target aarch64-linux-android
 
       - name: Bridge clippy (host target)
-        run: cargo clippy -p pocketdesk-android-bridge --all-targets -- -D warnings
+        run: cargo clippy -p friday-mobile-android-bridge --all-targets -- -D warnings
 
       - name: Build the arm64 bridge
         run: sh android/bridge/build-android.sh
@@ -343,13 +343,13 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build the CLI
-        run: cargo build --release -p pocketdesk-server --bin pocketdesk
+        run: cargo build --release -p friday-mobile-server --bin friday-mobile
 
       - name: Encoder benchmark against the committed baseline
         shell: bash
         run: |
           set +e
-          ./target/release/pocketdesk bench \
+          ./target/release/friday-mobile bench \
             --target software --repeat 3 --tolerance-pct 50 \
             --baseline bench/baselines --record "$RUNNER_TEMP/bench"
           code=$?
@@ -401,14 +401,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Clippy (with snapshots)
-        run: cargo clippy -p pocketdesk-desktop --all-targets --features snapshots -- -D warnings
+        run: cargo clippy -p friday-mobile-desktop --all-targets --features snapshots -- -D warnings
 
       - name: Snapshots
         run: |
           if ls desktop/tests/snapshots/*_light.png >/dev/null 2>&1; then
-            cargo test -p pocketdesk-desktop --features snapshots snapshots
+            cargo test -p friday-mobile-desktop --features snapshots snapshots
           else
-            UPDATE_SNAPSHOTS=1 cargo test -p pocketdesk-desktop --features snapshots snapshots
+            UPDATE_SNAPSHOTS=1 cargo test -p friday-mobile-desktop --features snapshots snapshots
             echo "::error::No snapshots were committed: drew them (see the artifact); commit them to desktop/tests/snapshots/."
             exit 1
           fi
