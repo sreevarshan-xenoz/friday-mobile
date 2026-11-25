@@ -10,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "dev.pocketdesk.android"
+        applicationId = "dev.friday.mobile"
         minSdk = 26
         targetSdk = 37
         versionCode = 12

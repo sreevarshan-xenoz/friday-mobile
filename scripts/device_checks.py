@@ -42,7 +42,8 @@ import zlib
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-APP = "dev.pocketdesk.android"
+APP = "dev.friday.mobile"  # the application id
+CODE = "dev.pocketdesk.android"  # the Kotlin package: class, action and extra names
 FIXTURE = "dev.pocketdesk.fixture"
 DUMP = "/data/local/tmp/device_checks.xml"
 # A moment more once the control service says it is back.
@@ -398,7 +399,7 @@ class Phone:
         return "POST_NOTIFICATIONS: granted=true" in adb("shell", "dumpsys", "package", package)
 
     def accessibility_on(self) -> bool:
-        return f"{APP}/{APP}.control.ControlService" in adb("shell", "settings", "get", "secure", "enabled_accessibility_services")
+        return f"{APP}/{CODE}.control.ControlService" in adb("shell", "settings", "get", "secure", "enabled_accessibility_services")
 
     def scroll_up(self) -> list[str]:
         """`input swipe` arguments that scroll a list up about a third of a screen,
@@ -1409,8 +1410,8 @@ def automation(action: str, name: str) -> None:
     """O1's broadcast, as an automation app sends it, for the throwaway
     saved at 127.0.0.1."""
     adb("logcat", "-c")
-    am("broadcast", "-n", f"{APP}/.automation.AutomationReceiver", "-a", f"{APP}.action.{action}",
-       "--es", f"{APP}.extra.ADDRESS", "127.0.0.1", "--es", f"{APP}.extra.NAME", name)
+    am("broadcast", "-n", f"{APP}/{CODE}.automation.AutomationReceiver", "-a", f"{CODE}.action.{action}",
+       "--es", f"{CODE}.extra.ADDRESS", "127.0.0.1", "--es", f"{CODE}.extra.NAME", name)
 
 
 @check("o1-task", "§184")
@@ -3919,7 +3920,7 @@ def phone_size(path: str) -> Optional[int]:
 def transfers_state() -> Optional[bool]:
     """Whether the phone's TransferService runs; None when dumpsys did not
     answer as it does (AF2 review: a failed adb call is not "ended")."""
-    out = adb("shell", "dumpsys", "activity", "services", f"{APP}/.service.TransferService")
+    out = adb("shell", "dumpsys", "activity", "services", f"{APP}/{CODE}.service.TransferService")
     if "ServiceRecord" in out:
         return True
     return False if "ACTIVITY MANAGER SERVICES" in out else None
@@ -4195,7 +4196,7 @@ def media_volume() -> Optional[int]:
 def session_service_state() -> Optional[bool]:
     """Whether the phone's SessionForegroundService runs; None when dumpsys
     did not answer as it does."""
-    out = adb("shell", "dumpsys", "activity", "services", f"{APP}/.service.SessionForegroundService")
+    out = adb("shell", "dumpsys", "activity", "services", f"{APP}/{CODE}.service.SessionForegroundService")
     if "ServiceRecord" in out:
         return True
     return False if "ACTIVITY MANAGER SERVICES" in out else None
@@ -4779,7 +4780,7 @@ def bf4_note_to_computer(ctx: Ctx) -> tuple[str, str]:
         adb("logcat", "-c")
         adb(
             "shell", "am", "start", "-a", "android.intent.action.SEND", "-t", "text/plain",
-            "--es", "android.intent.extra.TEXT", shlex.quote(line), "-n", f"{APP}/.NoteToComputer",
+            "--es", "android.intent.extra.TEXT", shlex.quote(line), "-n", f"{APP}/{CODE}.NoteToComputer",
         )
         said = wait_for(lambda: re.search(r"share: (.*)", adb("logcat", "-d", "-s", "ShareActivity:I")), 30, 2)
         return said.group(1).strip() if said else ""
@@ -6643,7 +6644,7 @@ def fire_connect_shortcut(address: str, paired_id: str) -> None:
     """Open the app as a pinned Connect shortcut does: its action, the
     computer's address, and the paired id it was made for."""
     am("start", "-f", "0x30000000", "-a", "dev.pocketdesk.android.action.CONNECT",
-       "-n", f"{APP}/.MainActivity", "--es", "dev.pocketdesk.android.extra.ADDRESS", address,
+       "-n", f"{APP}/{CODE}.MainActivity", "--es", "dev.pocketdesk.android.extra.ADDRESS", address,
        "--es", "dev.pocketdesk.android.extra.PAIRED_ID", paired_id)
 
 

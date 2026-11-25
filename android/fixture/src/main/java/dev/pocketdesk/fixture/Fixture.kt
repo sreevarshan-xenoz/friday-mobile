@@ -213,7 +213,7 @@ class ShareOutActivity : Activity() {
             .setType("application/octet-stream")
             .putExtra(Intent.EXTRA_STREAM, uri)
             .putExtra("dev.pocketdesk.android.extra.ADDRESS", intent.getStringExtra("address"))
-            .setClassName("dev.pocketdesk.android", "dev.pocketdesk.android.ShareActivity")
+            .setClassName("dev.friday.mobile", "dev.pocketdesk.android.ShareActivity")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         // The grant rides the clip as a share sheet's does.
         send.clipData = ClipData.newRawUri(name, uri)

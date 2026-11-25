@@ -2,36 +2,36 @@ package dev.pocketdesk.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Brand fallback palette (seed: pine green #166B5D), used when dynamic
-// color is off or unavailable (< API 31). Tones follow Material 3 rules.
-val Pine40 = Color(0xFF196B5C)
+// Brand fallback palette (seed: FRIDAY Core red #D42D51, obsidian #111318), used
+// when dynamic color is off or unavailable (< API 31). Tones follow Material 3 rules.
+val Pine40 = Color(0xFFD42D51)
 val OnPine = Color(0xFFFFFFFF)
-val PineContainer = Color(0xFFA9F2DF)
-val OnPineContainer = Color(0xFF002019)
+val PineContainer = Color(0xFFFFD9DD)
+val OnPineContainer = Color(0xFF400010)
 
-val SlateGreen30 = Color(0xFF356557)
+val SlateGreen30 = Color(0xFF75565B)
 val OnSlateGreen = Color(0xFFFFFFFF)
-val SlateGreenContainer = Color(0xFFBCEBD9)
-val OnSlateGreenContainer = Color(0xFF002016)
+val SlateGreenContainer = Color(0xFFFFD9DD)
+val OnSlateGreenContainer = Color(0xFF2C151A)
 
-val SurfaceLight = Color(0xFFF6FBF7)
-val OnSurfaceLight = Color(0xFF171D1A)
-val SurfaceVariantLight = Color(0xFFDBE5E0)
-val OnSurfaceVariantLight = Color(0xFF3F4945)
-val OutlineLight = Color(0xFF6F7976)
+val SurfaceLight = Color(0xFFFFF8F7)
+val OnSurfaceLight = Color(0xFF22191A)
+val SurfaceVariantLight = Color(0xFFF4DDDF)
+val OnSurfaceVariantLight = Color(0xFF524345)
+val OutlineLight = Color(0xFF857375)
 
-val SurfaceDark = Color(0xFF101413)
-val OnSurfaceDark = Color(0xFFDEE4E0)
-val Pine80 = Color(0xFF8ED8C3)
-val OnPineDark = Color(0xFF00382E)
-val PineContainerDark = Color(0xFF005144)
-val OnPineContainerDark = Color(0xFFA9F2DF)
+val SurfaceDark = Color(0xFF111318)
+val OnSurfaceDark = Color(0xFFE2E2E6)
+val Pine80 = Color(0xFFFFB2B9)
+val OnPineDark = Color(0xFF65001E)
+val PineContainerDark = Color(0xFF8D002D)
+val OnPineContainerDark = Color(0xFFFFD9DD)
 
-val SlateGreenContainerDark = Color(0xFF1C4C3F)
-val OnSlateGreenContainerDark = Color(0xFFBCEBD9)
-val SurfaceVariantDark = Color(0xFF3F4945)
-val OnSurfaceVariantDark = Color(0xFFBFC9C4)
-val OutlineDark = Color(0xFF89938F)
+val SlateGreenContainerDark = Color(0xFF5B3F44)
+val OnSlateGreenContainerDark = Color(0xFFFFD9DD)
+val SurfaceVariantDark = Color(0xFF252830)
+val OnSurfaceVariantDark = Color(0xFFD3D4DC)
+val OutlineDark = Color(0xFF8E9098)
 
 val ErrorLight = Color(0xFFBA1A1A)
 val OnErrorLight = Color(0xFFFFFFFF)

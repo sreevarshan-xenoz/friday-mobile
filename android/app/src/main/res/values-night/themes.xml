@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Pocketdesk" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.Pocketdesk" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/friday_primary</item>
+        <item name="android:colorAccent">@color/friday_accent</item>
+        <item name="android:windowBackground">@color/friday_dark_background</item>
+        <item name="android:colorBackground">@color/friday_dark_background</item>
+    </style>
 </resources>
