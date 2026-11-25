@@ -127,7 +127,7 @@ async fn main_async() -> Result<()> {
         None
     };
 
-    tracing::info!("Pocketdesk server starting");
+    tracing::info!("FRIDAY Mobile server starting");
 
     let command = cli
         .command
