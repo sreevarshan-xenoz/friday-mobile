@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 
 $app = Join-Path $env:ProgramFiles 'FRIDAY Mobile'
 $shortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\FRIDAY Mobile.lnk'
-$uninstallKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{8D3F6C2E-5B1A-4E7C-9A2F-3C6D1E8B4A70}_is1'
+$uninstallKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{9BAAED2E-FAFC-4316-B5B2-1C1BD75B7566}_is1'
 $schtasks = Join-Path $env:SystemRoot 'System32\schtasks.exe'
 $failures = @()
 

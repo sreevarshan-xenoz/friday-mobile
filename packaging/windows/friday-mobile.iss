@@ -26,7 +26,7 @@
 #define RepoRoot "..\.."
 
 [Setup]
-AppId={{8D3F6C2E-5B1A-4E7C-9A2F-3C6D1E8B4A70}
+AppId={{9BAAED2E-FAFC-4316-B5B2-1C1BD75B7566}
 AppName=FRIDAY Mobile
 AppVersion={#AppVersion}
 AppVerName=FRIDAY Mobile {#AppVersion}
