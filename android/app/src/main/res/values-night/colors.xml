@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="friday_primary">#D42D51</color>
-    <color name="friday_accent">#D42D51</color>
+    <color name="friday_primary">#FFB2B9</color>
+    <color name="friday_accent">#FFB2B9</color>
     <color name="friday_dark_background">#111318</color>
     <color name="friday_dark_surface">#111318</color>
 </resources>

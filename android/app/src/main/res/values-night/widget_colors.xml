@@ -6,6 +6,6 @@
     <color name="widget_tile">#33FFFFFF</color>
     <!-- Drawn at the bar's own 30 % (I2). -->
     <color name="widget_track">#FFFFFFFF</color>
-    <color name="widget_accent">#FFD42D51</color>
+    <color name="widget_accent">#FFFFB2B9</color>
     <color name="widget_warning">#FFFFB68A</color>
 </resources>
