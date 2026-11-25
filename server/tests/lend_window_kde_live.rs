@@ -144,8 +144,8 @@ async fn a_kde_window_is_lent_to_look_at_through_a_kwin_script_and_the_portal() 
         std::env::remove_var("DISPLAY");
         std::env::remove_var("SWAYSOCK");
         std::env::remove_var("HYPRLAND_INSTANCE_SIGNATURE");
-        std::env::set_var("POCKETDESK_STATE_DIR", &state);
-        std::env::set_var("POCKETDESK_CONFIG_DIR", &config);
+        std::env::set_var("FRIDAY_MOBILE_STATE_DIR", &state);
+        std::env::set_var("FRIDAY_MOBILE_CONFIG_DIR", &config);
     }
     std::fs::write(config.join("config.toml"), "lend_windows = true\n").unwrap();
     TrustStore::update(state.join(TRUST_FILE), |s| {

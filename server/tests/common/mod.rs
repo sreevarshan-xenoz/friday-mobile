@@ -40,8 +40,8 @@ pub fn folders(test: &str, name: &str, control: u16, streaming: u16) -> (PathBuf
 pub fn pocketdesk(config: &Path, state: &Path) -> Command {
     let mut command = Command::new(EXE);
     command
-        .env("POCKETDESK_CONFIG_DIR", config)
-        .env("POCKETDESK_STATE_DIR", state)
+        .env("FRIDAY_MOBILE_CONFIG_DIR", config)
+        .env("FRIDAY_MOBILE_STATE_DIR", state)
         .env("POCKETDESK_CLIPBOARD_FILE", clipboard(state))
         .env("POCKETDESK_CLIPBOARD_IMAGE_FILE", clipboard_image(state))
         .env("POCKETDESK_DOWNLOAD_DIR", downloads(state))

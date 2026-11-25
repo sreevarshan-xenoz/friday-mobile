@@ -195,7 +195,7 @@ pub(crate) const PERMISSIONS: [(Capability, &str, &str); 27] = [
     (
         Capability::FridayAsk,
         "Ask FRIDAY",
-        "Ask FRIDAY: the phone can send text to FRIDAY on this computer and get its answer back (needs FRIDAY installed).",
+        "Ask FRIDAY: the phone can send text to FRIDAY on this computer and get its answer back, as a new conversation each time. FRIDAY answers it as if typed here, so it can use the tools you allow for typed asks (needs FRIDAY installed).",
     ),
     (
         Capability::Peek,

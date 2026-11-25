@@ -1,6 +1,6 @@
 //! "Send to phone" in the file manager (T10e): Explorer's Send To menu on
 //! Windows; a Nautilus and Nemo script and a Dolphin service menu on Linux.
-//! Each runs `pocketdesk send-to-phone` with the files chosen. The server's
+//! Each runs `friday-mobile send-to-phone` with the files chosen. The server's
 //! `send-menu` command and the desktop app's Settings add and remove them.
 
 use std::io;
@@ -11,6 +11,10 @@ pub const COMMAND: &str = "send-to-phone";
 
 /// What each entry is called in the menu.
 pub const LABEL: &str = "Send to phone";
+
+/// The Nautilus and Nemo script's file name, which is also its menu label:
+/// not plain "Send to phone", so it never replaces Pocketdesk's script.
+pub const SCRIPT_NAME: &str = "Send to phone (FRIDAY Mobile)";
 
 /// One file an entry consists of.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,7 +27,7 @@ pub struct Place {
 pub enum Kind {
     /// A script or a `.desktop` file, written as is and made executable.
     File(String),
-    /// A Windows shortcut (`.lnk`) to `pocketdesk.exe send-to-phone`.
+    /// A Windows shortcut (`.lnk`) to `friday-mobile.exe send-to-phone`.
     Shortcut,
 }
 
@@ -97,11 +101,11 @@ pub fn places(data: &Path, exe: &Path) -> Vec<Place> {
     } else {
         vec![
             Place {
-                path: data.join("nautilus").join("scripts").join(LABEL),
+                path: data.join("nautilus").join("scripts").join(SCRIPT_NAME),
                 kind: Kind::File(file_manager_script(exe)),
             },
             Place {
-                path: data.join("nemo").join("scripts").join(LABEL),
+                path: data.join("nemo").join("scripts").join(SCRIPT_NAME),
                 kind: Kind::File(file_manager_script(exe)),
             },
             Place {
@@ -185,7 +189,7 @@ fn make_shortcut(path: &Path, exe: &Path) -> io::Result<()> {
     // The paths reach the script as environment variables, never in its
     // text: no name can end a string and run code there.
     let script = format!(
-        "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($env:PD_LNK); $s.TargetPath = $env:PD_EXE; $s.Arguments = '{COMMAND} --'; $s.WindowStyle = 7; $s.Description = 'Send to your phone with Pocketdesk'; $s.Save()"
+        "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($env:PD_LNK); $s.TargetPath = $env:PD_EXE; $s.Arguments = '{COMMAND} --'; $s.WindowStyle = 7; $s.Description = 'Send to your phone with FRIDAY Mobile'; $s.Save()"
     );
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
@@ -295,7 +299,10 @@ mod tests {
             assert!(!installed_in(&data));
             install_in(&data, exe).unwrap();
             assert!(installed_in(&data));
-            assert!(data.join("nautilus/scripts/Send to phone").exists());
+            assert!(
+                data.join("nautilus/scripts/Send to phone (FRIDAY Mobile)")
+                    .exists()
+            );
             remove_in(&data).unwrap();
             assert!(!installed_in(&data));
         }

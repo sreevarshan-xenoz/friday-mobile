@@ -35,8 +35,8 @@ impl Drop for Cleanup {
 fn start(config: &Path, state: &Path) -> Child {
     Command::new(EXE)
         .arg("start")
-        .env("POCKETDESK_CONFIG_DIR", config)
-        .env("POCKETDESK_STATE_DIR", state)
+        .env("FRIDAY_MOBILE_CONFIG_DIR", config)
+        .env("FRIDAY_MOBILE_STATE_DIR", state)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -49,8 +49,8 @@ fn stop_promptly(config: &Path, state: &Path, server: &mut Child, when: &str) {
     let asked = Instant::now();
     let out = Command::new(EXE)
         .arg("stop")
-        .env("POCKETDESK_CONFIG_DIR", config)
-        .env("POCKETDESK_STATE_DIR", state)
+        .env("FRIDAY_MOBILE_CONFIG_DIR", config)
+        .env("FRIDAY_MOBILE_STATE_DIR", state)
         .stderr(Stdio::null())
         .output()
         .unwrap();

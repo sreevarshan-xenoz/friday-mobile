@@ -13,11 +13,11 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 /// The host's name, as the extension and the browsers' registrations call it.
-pub const HOST_NAME: &str = "dev.pocketdesk.host";
+pub const HOST_NAME: &str = "dev.friday.mobile.host";
 /// The extension's id in Chromium browsers (fixed by the `key` in its manifest).
-pub const CHROMIUM_EXTENSION_ID: &str = "abojofjjnpcmejhdonndlegfaolfkcif";
+pub const CHROMIUM_EXTENSION_ID: &str = "eidbdedohbfmkekopnafnpmekfaeeond";
 /// The extension's id in Firefox (`browser_specific_settings.gecko.id`).
-pub const FIREFOX_EXTENSION_ID: &str = "pocketdesk@pocketdesk.dev";
+pub const FIREFOX_EXTENSION_ID: &str = "friday-mobile@friday.dev";
 
 /// The longest message either way (the browsers' own limit from a host is
 /// 1 MiB; ours to it is far more, but no request of ours comes near).
@@ -582,7 +582,7 @@ pub fn remove() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// `pocketdesk browser-host --install | --remove`: say what was done.
+/// `friday-mobile browser-host --install | --remove`: say what was done.
 pub fn run_install(remove_it: bool) -> anyhow::Result<()> {
     if remove_it {
         remove()?;
@@ -804,7 +804,7 @@ mod tests {
         assert_eq!(done, vec!["Chrome", "Firefox"]);
         let chrome: Value = serde_json::from_str(
             &std::fs::read_to_string(
-                home.join(".config/google-chrome/NativeMessagingHosts/dev.pocketdesk.host.json"),
+                home.join(".config/google-chrome/NativeMessagingHosts/dev.friday.mobile.host.json"),
             )
             .unwrap(),
         )
@@ -816,7 +816,7 @@ mod tests {
         assert_eq!(chrome["path"], "/usr/bin/friday-mobile");
         let firefox: Value = serde_json::from_str(
             &std::fs::read_to_string(
-                home.join(".mozilla/native-messaging-hosts/dev.pocketdesk.host.json"),
+                home.join(".mozilla/native-messaging-hosts/dev.friday.mobile.host.json"),
             )
             .unwrap(),
         )
@@ -829,7 +829,7 @@ mod tests {
         remove_linux(&home);
         assert!(
             !home
-                .join(".mozilla/native-messaging-hosts/dev.pocketdesk.host.json")
+                .join(".mozilla/native-messaging-hosts/dev.friday.mobile.host.json")
                 .exists()
         );
         let _ = std::fs::remove_dir_all(&home);

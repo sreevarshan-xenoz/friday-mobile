@@ -65,8 +65,8 @@ fn a_server_with_the_internet_path_off_binds_no_wan_endpoint() {
     run.server = Some(
         Command::new(EXE)
             .arg("start")
-            .env("POCKETDESK_CONFIG_DIR", &config)
-            .env("POCKETDESK_STATE_DIR", &state)
+            .env("FRIDAY_MOBILE_CONFIG_DIR", &config)
+            .env("FRIDAY_MOBILE_STATE_DIR", &state)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()

@@ -201,9 +201,9 @@ fn missing(what: &str) -> io::Error {
 }
 
 /// `<config dir>/friday-mobile` (`%APPDATA%\friday-mobile`, `~/.config/friday-mobile`).
-/// `POCKETDESK_CONFIG_DIR` names another folder, so a second server (for
+/// `FRIDAY_MOBILE_CONFIG_DIR` names another folder, so a second server (for
 /// tests, or a second set of settings) has its own `config.toml` (its own
-/// ports) and its own iroh identity; set `POCKETDESK_STATE_DIR` with it for
+/// ports) and its own iroh identity; set `FRIDAY_MOBILE_STATE_DIR` with it for
 /// its own pairings and device id.
 pub fn config_dir() -> io::Result<PathBuf> {
     if let Some(dir) = CONFIG_DIR_OVERRIDE.get() {
@@ -268,8 +268,8 @@ pub fn use_test_dirs(name: &str) -> &'static std::path::Path {
 /// the owner's pairings. `Some` is then the folder to use (state or config,
 /// as `config` says); `None` otherwise.
 ///
-/// An override set in-process, then `POCKETDESK_STATE_DIR` /
-/// `POCKETDESK_CONFIG_DIR`, are read before this: a test run from a shell
+/// An override set in-process, then `FRIDAY_MOBILE_STATE_DIR` /
+/// `FRIDAY_MOBILE_CONFIG_DIR`, are read before this: a test run from a shell
 /// that exported one of them uses that folder.
 fn instead_in_tests(what: &str, config: bool) -> Option<PathBuf> {
     if cfg!(test) {
@@ -373,7 +373,7 @@ mod harness {
 }
 
 /// `<state dir>/friday-mobile`, falling back to local data (`%LOCALAPPDATA%` on
-/// Windows, which has no state dir). `POCKETDESK_STATE_DIR` names another
+/// Windows, which has no state dir). `FRIDAY_MOBILE_STATE_DIR` names another
 /// folder (a portable install, or a separate set of pairings).
 pub fn state_dir() -> io::Result<PathBuf> {
     if let Some(dir) = STATE_DIR_OVERRIDE.get() {
@@ -415,9 +415,9 @@ pub fn protect_state_dir(dir: &std::path::Path) -> io::Result<bool> {
 }
 
 /// The variable that moves the state folder.
-pub const STATE_DIR_VAR: &str = "POCKETDESK_STATE_DIR";
+pub const STATE_DIR_VAR: &str = "FRIDAY_MOBILE_STATE_DIR";
 /// The variable that moves the config folder.
-pub const CONFIG_DIR_VAR: &str = "POCKETDESK_CONFIG_DIR";
+pub const CONFIG_DIR_VAR: &str = "FRIDAY_MOBILE_CONFIG_DIR";
 
 /// The folder the variable `name` names, if it is set. It must be absolute:
 /// a relative one would resolve against each process's own working folder,

@@ -1028,7 +1028,7 @@ On the A71, 2026-10-14:
 
 Owed:
 - [x] Linux: after `pocketdesk start`, the state folder is `700` and the first start said "owner-only" once (the Azure VM, Ubuntu 24.04, 2026-10-24).
-- [x] Linux: a `POCKETDESK_STATE_DIR` the user cannot chmod logs a warning and the server still starts. (where: linux)
+- [x] Linux: a `FRIDAY_MOBILE_STATE_DIR` the user cannot chmod logs a warning and the server still starts. (where: linux)
       (2026-10-30 on the Linux laptop: a throwaway server whose state folder was root's, mode 777, logged "Could not make … owner-only, so other local users may read it: Operation not permitted (os error 1)", then its control listener came up and `pocketdesk status` answered; the folder stayed root's, 777.)
 - [ ] Wake through a relay computer with Power off for the phone: the phone says the relay did not answer and asks about Power, not "Wake sent". With a target off the relay's networks: "The relay computer refused: not on this computer's network".
 - [ ] The desktop app's Devices tab reads "Lock, sleep, privacy and wake others".

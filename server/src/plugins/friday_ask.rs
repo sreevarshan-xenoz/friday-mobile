@@ -59,7 +59,9 @@ pub fn find_friday_ctl() -> Option<PathBuf> {
     None
 }
 
-/// Run `friday-ctl goal --json <request>` (args, never a shell).
+/// Run `friday-ctl goal --json --new-conversation <request>` (args, never a
+/// shell). A new conversation each time, so a phone ask neither sees nor
+/// joins what was asked at the desk.
 pub async fn run_goal(
     binary: &Path,
     request: &str,
@@ -67,6 +69,7 @@ pub async fn run_goal(
     let mut cmd = tokio::process::Command::new(binary);
     cmd.arg("goal")
         .arg("--json")
+        .arg("--new-conversation")
         .arg(request)
         .env("FRIDAY_CTL_WAIT_SECS", "120")
         .stdout(std::process::Stdio::piped())

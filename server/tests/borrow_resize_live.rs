@@ -182,8 +182,8 @@ fn a_lent_window_takes_the_size_its_viewers_window_has() {
         std::env::remove_var("WAYLAND_SOCKET");
         std::env::remove_var("XDG_CURRENT_DESKTOP");
         std::env::remove_var("HYPRLAND_INSTANCE_SIGNATURE");
-        std::env::set_var("POCKETDESK_STATE_DIR", &state);
-        std::env::set_var("POCKETDESK_CONFIG_DIR", &config);
+        std::env::set_var("FRIDAY_MOBILE_STATE_DIR", &state);
+        std::env::set_var("FRIDAY_MOBILE_CONFIG_DIR", &config);
         std::env::set_var("SWAYSOCK", &sway_socket);
     }
     std::fs::write(config.join("config.toml"), "lend_windows = true\n").unwrap();

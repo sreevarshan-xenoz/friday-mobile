@@ -38,8 +38,8 @@ function Median($xs) {
     return $s[[int][math]::Floor($s.Count / 2)]
 }
 
-$env:POCKETDESK_STATE_DIR = (Resolve-Path $StateDir).Path
-$env:POCKETDESK_CONFIG_DIR = (Resolve-Path $ConfigDir).Path
+$env:FRIDAY_MOBILE_STATE_DIR = (Resolve-Path $StateDir).Path
+$env:FRIDAY_MOBILE_CONFIG_DIR = (Resolve-Path $ConfigDir).Path
 $server = Start-Process (Join-Path $bin "friday-mobile.exe") -ArgumentList "start" -PassThru -WindowStyle Hidden `
     -RedirectStandardOutput (Join-Path $StateDir "memory-at-rest.log") `
     -RedirectStandardError (Join-Path $StateDir "memory-at-rest.err")

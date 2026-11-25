@@ -121,8 +121,8 @@ async fn a_gnome_window_is_lent_to_look_at_when_the_shell_gives_its_list() {
         std::env::remove_var("DISPLAY");
         std::env::remove_var("SWAYSOCK");
         std::env::remove_var("HYPRLAND_INSTANCE_SIGNATURE");
-        std::env::set_var("POCKETDESK_STATE_DIR", &state);
-        std::env::set_var("POCKETDESK_CONFIG_DIR", &config);
+        std::env::set_var("FRIDAY_MOBILE_STATE_DIR", &state);
+        std::env::set_var("FRIDAY_MOBILE_CONFIG_DIR", &config);
     }
     // "Unattended on GNOME" is off until the owner turns it on.
     std::fs::write(
