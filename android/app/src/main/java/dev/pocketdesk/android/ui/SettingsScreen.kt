@@ -631,30 +631,41 @@ fun SettingsScreen(onBack: () -> Unit, initialQuery: String = "") {
             }
 
             SettingsGroup(stringResource(R.string.settings_appearance)) {
-                SettingsBlock(stringResource(R.string.settings_palette)) {
-                Column(Modifier.selectableGroup()) {
-                    val paletteNames = mapOf(
-                        "core" to R.string.palette_core,
-                        "ember" to R.string.palette_ember,
-                        "frost" to R.string.palette_frost,
-                        "moss" to R.string.palette_moss,
-                        "polar" to R.string.palette_polar,
-                        "dawn" to R.string.palette_dawn,
-                    )
-                    dev.pocketdesk.android.ui.theme.Palettes.all.forEach { p ->
-                        val selected = Prefs.palette(context) == p.id
-                        ListItem(
-                            headlineContent = {
-                                Text(stringResource(paletteNames.getValue(p.id)), style = MaterialTheme.typography.bodyLarge)
-                            },
-                            leadingContent = { RadioButton(selected = selected, onClick = null) },
-                            trailingContent = { PaletteSwatch(p) },
-                            modifier = Modifier.selectable(selected = selected, role = Role.RadioButton) {
-                                Prefs.setPalette(context, p.id)
-                            },
+                SettingsBlock(
+                    stringResource(R.string.settings_palette),
+                    stringResource(R.string.palette_core),
+                    stringResource(R.string.palette_ember),
+                    stringResource(R.string.palette_frost),
+                    stringResource(R.string.palette_moss),
+                    stringResource(R.string.palette_polar),
+                    stringResource(R.string.palette_dawn),
+                    "theme",
+                    "light",
+                    "dark",
+                ) {
+                    Column(Modifier.selectableGroup()) {
+                        val paletteNames = mapOf(
+                            "core" to R.string.palette_core,
+                            "ember" to R.string.palette_ember,
+                            "frost" to R.string.palette_frost,
+                            "moss" to R.string.palette_moss,
+                            "polar" to R.string.palette_polar,
+                            "dawn" to R.string.palette_dawn,
                         )
+                        dev.pocketdesk.android.ui.theme.Palettes.all.forEach { p ->
+                            val selected = Prefs.palette(context) == p.id
+                            ListItem(
+                                headlineContent = {
+                                    Text(stringResource(paletteNames.getValue(p.id)), style = MaterialTheme.typography.bodyLarge)
+                                },
+                                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                                trailingContent = { PaletteSwatch(p) },
+                                modifier = Modifier.selectable(selected = selected, role = Role.RadioButton) {
+                                    Prefs.setPalette(context, p.id)
+                                },
+                            )
+                        }
                     }
-                }
                 }
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     SettingSwitch(
