@@ -71,7 +71,7 @@ function tell(message) {
   chrome.notifications.create({
     type: "basic",
     iconUrl: "icon-128.png",
-    title: "Pocketdesk",
+    title: "FRIDAY Mobile",
     message,
   });
 }
@@ -107,12 +107,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (/not found|no such native application/i.test(why)) {
       tell(
         "FRIDAY Mobile is not set up for this browser: run `friday-mobile browser-host --install` " +
-          '(or Settings, "Send from the browser", in the Pocketdesk app).',
+          '(or Settings, "Send from the browser", in the FRIDAY Mobile app).',
       );
     } else {
-      tell("Pocketdesk could not answer: " + why);
+      tell("FRIDAY Mobile could not answer: " + why);
     }
     return;
   }
-  tell((answer && (answer.ok || answer.error)) || "No answer from Pocketdesk.");
+  tell((answer && (answer.ok || answer.error)) || "No answer from FRIDAY Mobile.");
 });
