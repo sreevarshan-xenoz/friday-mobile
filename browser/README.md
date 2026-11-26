@@ -11,8 +11,8 @@ It talks only to the Pocketdesk program on this computer, through the browser's 
 
 1. **Register FRIDAY Mobile with your browsers.** Run `friday-mobile browser-host --install`, or switch on Settings, "Send from the browser", in the Pocketdesk desktop app. This covers Chrome, Chromium, Edge, Brave, Vivaldi and Firefox. On Linux, only browsers whose settings folder exists are registered.
 2. **Load this folder as an extension:**
-   - **Chromium browsers:** open `chrome://extensions`, turn on Developer mode, choose "Load unpacked" and pick this `browser/` folder. The extension's id is fixed by the `key` in `manifest.json` (`abojofjjnpcmejhdonndlegfaolfkcif`), which is the id the registration allows.
-   - **Firefox 121 or later:** open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on…" and pick `manifest.json`. Its id is `pocketdesk@pocketdesk.dev`.
+   - **Chromium browsers:** open `chrome://extensions`, turn on Developer mode, choose "Load unpacked" and pick this `browser/` folder. The extension's id is fixed by the `key` in `manifest.json` (`eidbdedohbfmkekopnafnpmekfaeeond`), which is the id the registration allows.
+   - **Firefox 121 or later:** open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on…" and pick `manifest.json`. Its id is `friday-mobile@friday.dev`.
 
 `friday-mobile browser-host --remove` undoes step 1.
 
