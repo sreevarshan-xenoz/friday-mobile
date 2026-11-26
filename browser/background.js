@@ -1,5 +1,5 @@
-// Pocketdesk: send to phone (ecosystem phase 1d). Right-click a page, a
-// link or an image; the request goes to Pocketdesk on this computer through
+// FRIDAY Mobile: send to phone (ecosystem phase 1d). Right-click a page, a
+// link or an image; the request goes to FRIDAY Mobile on this computer through
 // native messaging (`friday-mobile browser-host`), which sends it to the phone.
 
 const HOST = "dev.friday.mobile.host";
@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-/** What a menu click asks Pocketdesk for, or null when there is nothing to send. */
+/** What a menu click asks FRIDAY Mobile for, or null when there is nothing to send. */
 function request(menuItemId, info, tab) {
   switch (menuItemId) {
     case "page":
@@ -33,7 +33,7 @@ function request(menuItemId, info, tab) {
   }
 }
 
-// D6: the longest link Pocketdesk sends (core::protocol::link).
+// D6: the longest link FRIDAY Mobile sends (core::protocol::link).
 const MAX_LINK = 2048;
 
 /**
