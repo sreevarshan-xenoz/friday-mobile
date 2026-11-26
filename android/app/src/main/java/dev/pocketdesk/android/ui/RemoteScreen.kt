@@ -1136,7 +1136,7 @@ fun RemoteScreen(
                 ) {
                     Surface(
                         shape = Space.sheet,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         tonalElevation = 6.dp,
                         modifier = Modifier.padding(horizontal = 40.dp),
@@ -1224,7 +1224,7 @@ fun RemoteScreen(
                 ) {
                     Surface(
                         shape = Space.sheet,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         tonalElevation = 6.dp,
                         modifier = Modifier.padding(horizontal = 40.dp),
@@ -1262,7 +1262,7 @@ fun RemoteScreen(
                 ) {
                     Surface(
                         shape = MaterialTheme.shapes.large,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         tonalElevation = 6.dp,
                         modifier = Modifier.padding(top = 12.dp),
