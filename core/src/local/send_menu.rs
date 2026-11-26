@@ -80,7 +80,7 @@ pub fn file_manager_script(exe: &Path) -> String {
 /// The Dolphin service menu, for every file and folder.
 pub fn dolphin_menu(exe: &Path) -> String {
     format!(
-        "[Desktop Entry]\nType=Service\nMimeType=all/allfiles;inode/directory;\nActions=sendToPhone\nX-KDE-Priority=TopLevel\n\n[Desktop Action sendToPhone]\nName={LABEL}\nIcon=phone\nExec={} {} -- %F\n",
+        "[Desktop Entry]\nType=Service\nMimeType=all/allfiles;inode/directory;\nActions=sendToPhone\nX-KDE-Priority=TopLevel\n\n[Desktop Action sendToPhone]\nName={SCRIPT_NAME}\nIcon=phone\nExec={} {} -- %F\n",
         desktop_exec_quote(&exe.to_string_lossy()),
         COMMAND
     )
@@ -236,7 +236,7 @@ mod tests {
         assert!(script.contains("set -f"));
         let menu = dolphin_menu(exe);
         assert!(menu.contains(r#"Exec="/opt/pocket desk/it's/friday-mobile" send-to-phone -- %F"#));
-        assert!(menu.contains("Name=Send to phone"));
+        assert!(menu.contains("Name=Send to phone (FRIDAY Mobile)"));
     }
 
     #[test]
