@@ -1,6 +1,7 @@
 package dev.pocketdesk.android
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
@@ -134,11 +135,19 @@ object Prefs {
 
     /**
      * FRIDAY's palette (ui/theme/Palettes.kt): Core unless chosen. Someone who
-     * had pinned the light theme gets Dawn, FRIDAY's light palette.
+     * had pinned the light theme, or was following the system in light mode,
+     * gets Dawn, FRIDAY's light palette.
      */
     fun palette(ctx: Context): String =
         prefs(ctx).getString(KEY_PALETTE, null)
-            ?: if (themeMode(ctx) == THEME_LIGHT) "dawn" else "core"
+            ?: when (themeMode(ctx)) {
+                THEME_LIGHT -> "dawn"
+                THEME_SYSTEM -> {
+                    val light = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+                    if (light) "dawn" else "core"
+                }
+                else -> "core"
+            }
 
     fun setPalette(ctx: Context, id: String) {
         prefs(ctx).edit { putString(KEY_PALETTE, id) }
