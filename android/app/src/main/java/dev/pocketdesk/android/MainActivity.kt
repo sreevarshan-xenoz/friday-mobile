@@ -364,7 +364,8 @@ class MainActivity : ComponentActivity() {
             PocketdeskTheme {
                 // FRIDAY's frosted glass: the palette's wallpaper under every
                 // screen (not with Material You colors, which are opaque).
-                if (!Prefs.dynamicColor(this)) {
+                val dynamic = Prefs.dynamicColor(this) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                if (!dynamic) {
                     dev.pocketdesk.android.ui.theme.FridayBackdrop(
                         dev.pocketdesk.android.ui.theme.Palettes.byId(Prefs.palette(this)),
                     )
