@@ -23,9 +23,7 @@
     <string name="settings_title">அமைப்புகள்</string>
     <string name="settings_back">பின்செல்</string>
     <string name="settings_appearance">தோற்றம்</string>
-    <string name="theme_system">சிஸ்டத்தைப் பின்பற்று</string>
-    <string name="theme_light">ஒளி</string>
-    <string name="theme_dark">இருள்</string>
+    <string name="settings_palette">FRIDAY வண்ணத் தொகுப்பு</string>
     <string name="settings_dynamic">Material You நிறங்கள்</string>
     <string name="settings_dynamic_summary">திசைப்படத்துடன் நிறத்தொகுதியை ஒத்துப்போ (Android 12+)</string>
     <string name="settings_session">அமர்வு</string>

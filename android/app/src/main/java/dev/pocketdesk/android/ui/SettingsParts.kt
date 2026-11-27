@@ -88,8 +88,15 @@ private val LocalSettingsGroup = compositionLocalOf { "" }
 @Composable
 fun SettingsGroup(label: String, content: @Composable () -> Unit) {
     val filter = LocalSettingsFilter.current
-    if (SettingsSearch.groupShown(filter.query, filter.found(label))) SettingsHeader(label)
-    CompositionLocalProvider(LocalSettingsGroup provides label) { content() }
+    if (SettingsSearch.groupShown(filter.query, filter.found(label))) {
+        SettingsHeader(label)
+        // FRIDAY's frosted glass: each shown group on its own panel.
+        dev.pocketdesk.android.ui.theme.GlassPanel {
+            CompositionLocalProvider(LocalSettingsGroup provides label) { content() }
+        }
+    } else {
+        CompositionLocalProvider(LocalSettingsGroup provides label) { content() }
+    }
 }
 
 /**

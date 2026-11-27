@@ -1,6 +1,7 @@
 package dev.pocketdesk.android
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
@@ -21,6 +22,7 @@ object Prefs {
     private const val PREFS = "pocketdesk-ui"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+    private const val KEY_PALETTE = "palette"
     private const val KEY_KEEP_SCREEN_ON = "keep_screen_on"
     private const val KEY_AUTO_RECONNECT = "auto_reconnect"
     private const val KEY_RETRY_TRANSFERS = "retry_transfers"
@@ -127,9 +129,30 @@ object Prefs {
         bump()
     }
 
-    /** Material You wallpaper colors on Android 12+; hand palette below that. */
+    /** Material You wallpaper colors on Android 12+, instead of FRIDAY's palette. Off until chosen. */
     fun dynamicColor(ctx: Context): Boolean =
-        prefs(ctx).getBoolean(KEY_DYNAMIC_COLOR, true)
+        prefs(ctx).getBoolean(KEY_DYNAMIC_COLOR, false)
+
+    /**
+     * FRIDAY's palette (ui/theme/Palettes.kt): Core unless chosen. Someone who
+     * had pinned the light theme, or was following the system in light mode,
+     * gets Dawn, FRIDAY's light palette.
+     */
+    fun palette(ctx: Context): String =
+        prefs(ctx).getString(KEY_PALETTE, null)
+            ?: when (themeMode(ctx)) {
+                THEME_LIGHT -> "dawn"
+                THEME_SYSTEM -> {
+                    val light = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+                    if (light) "dawn" else "core"
+                }
+                else -> "core"
+            }
+
+    fun setPalette(ctx: Context, id: String) {
+        prefs(ctx).edit { putString(KEY_PALETTE, id) }
+        bump()
+    }
 
     fun setDynamicColor(ctx: Context, enabled: Boolean) {
         prefs(ctx).edit { putBoolean(KEY_DYNAMIC_COLOR, enabled) }
