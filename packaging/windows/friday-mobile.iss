@@ -94,8 +94,8 @@ Source: "{#RepoRoot}\assets\brand\friday\friday.ico"; DestDir: "{app}"; Flags: i
 Source: "{#RepoRoot}\config.toml.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RepoRoot}\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RepoRoot}\LICENSE-MIT"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RepoRoot}\LICENSE-APACHE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RepoRoot}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RepoRoot}\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\FRIDAY Mobile"; Filename: "{app}\friday-mobile-app.exe"; IconFilename: "{app}\friday.ico"; Comment: "Your desktop, on your phone"
